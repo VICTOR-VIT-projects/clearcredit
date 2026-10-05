@@ -34,7 +34,7 @@ class Claim(BaseModel):
     developer: str = Field(pattern=r"^0x[0-9a-fA-F]{40}$", description="Developer wallet address")
     projectType: ProjectType
     vintageYear: int = Field(ge=2000, le=2100)
-    claimedCredits: int = Field(gt=0, lt=2**64)
+    claimedCredits: int = Field(gt=0, le=2**53 - 1, description="Capped at 2^53-1 so JavaScript verifiers hash it exactly")
     creditUnit: Literal["tCO2e"] = "tCO2e"
     boundary: Boundary
     boundaryCrs: Literal["EPSG:4326"] = "EPSG:4326"

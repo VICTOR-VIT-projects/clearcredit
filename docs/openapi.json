@@ -429,9 +429,10 @@
      },
      "claimedCredits": {
       "type": "integer",
-      "exclusiveMaximum": 1.8446744073709552e+19,
+      "maximum": 9007199254740991.0,
       "exclusiveMinimum": 0.0,
-      "title": "Claimedcredits"
+      "title": "Claimedcredits",
+      "description": "Capped at 2^53-1 so JavaScript verifiers hash it exactly"
      },
      "creditUnit": {
       "type": "string",
@@ -460,6 +461,19 @@
       ],
       "title": "Sourceregistry",
       "description": "Registry name and external ID"
+     },
+     "boundarySource": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 300
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Boundarysource",
+      "description": "Where the boundary came from and how it was processed"
      },
      "dataLabel": {
       "$ref": "#/components/schemas/DataLabel",
