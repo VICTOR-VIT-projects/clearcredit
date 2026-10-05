@@ -1,0 +1,110 @@
+{
+  "_label": "SYNTHETIC TEST CASES (handoff §10.2). These are not real carbon projects. Boundaries are 0.05-degree boxes chosen for their real satellite evidence (cached in data/cache/evidence/ev2-*.json); every claim carries dataLabel=synthetic.",
+  "_developers": "DEV = key 0x11..11 (32 bytes), DEV2 = key 0x22..22. Public test keys: never fund them on a real network.",
+  "_run": "cd backend && .venv/Scripts/python -m pytest tests/test_synthetic_cases.py -v",
+  "cases": [
+    {
+      "case": 1,
+      "title": "Clean project passes with a high score",
+      "why": "Intact forest in central Amazonas: 99% tree cover in 2000, 0 ha loss 2019-2025, stable NDVI (+0.005/yr). 30,000 credits on ~3,070 ha = 9.8 t/ha.",
+      "claim": {
+        "projectId": "SYN-01-CLEAN",
+        "developer": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 30000,
+        "boundary": {"type": "Polygon", "coordinates": [[[-65.05, -4.05], [-65.0, -4.05], [-65.0, -4.0], [-65.05, -4.0], [-65.05, -4.05]]]},
+        "boundarySource": "Synthetic 0.05-degree box, Amazonas, Brazil. Not a real project boundary.",
+        "dataLabel": "synthetic"
+      },
+      "expect": {"status": 201, "band": "high", "issuable": true}
+    },
+    {
+      "case": 2,
+      "title": "Duplicate claim: same land, same vintage, different developer is blocked",
+      "why": "Identical boundary to case 1, vintage 2023, signed by DEV2.",
+      "claim": {
+        "projectId": "SYN-02-DUPLICATE",
+        "developer": "0x1563915e194D8CfBA1943570603F7606A3115508",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 30000,
+        "boundary": {"type": "Polygon", "coordinates": [[[-65.05, -4.05], [-65.0, -4.05], [-65.0, -4.0], [-65.05, -4.0], [-65.05, -4.05]]]},
+        "boundarySource": "Synthetic copy of SYN-01-CLEAN's boundary.",
+        "dataLabel": "synthetic"
+      },
+      "signer": "DEV2",
+      "expect": {"status": 409, "error": "OVERLAP_DETECTED", "overlapWith": "SYN-01-CLEAN", "overlapFraction": 1.0}
+    },
+    {
+      "case": 3,
+      "title": "Partial overlap is blocked and reports the overlapping fraction",
+      "why": "Case 1's box shifted 0.02 degrees east: 60% of the new boundary lies on SYN-01-CLEAN's land for the same vintage.",
+      "claim": {
+        "projectId": "SYN-03-PARTIAL",
+        "developer": "0x1563915e194D8CfBA1943570603F7606A3115508",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 30000,
+        "boundary": {"type": "Polygon", "coordinates": [[[-65.03, -4.05], [-64.98, -4.05], [-64.98, -4.0], [-65.03, -4.0], [-65.03, -4.05]]]},
+        "boundarySource": "Synthetic: SYN-01-CLEAN's box shifted 0.02 degrees east.",
+        "dataLabel": "synthetic"
+      },
+      "signer": "DEV2",
+      "expect": {"status": 409, "error": "OVERLAP_DETECTED", "overlapWith": "SYN-01-CLEAN", "overlapFraction": 0.6}
+    },
+    {
+      "case": 4,
+      "title": "Same land, different vintage is allowed",
+      "why": "Rule: uniqueness is per (land, vintage). A later vintage on the same land is the next crediting period, not a double count (see DECISIONS.md).",
+      "claim": {
+        "projectId": "SYN-04-NEXT-VINTAGE",
+        "developer": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2024,
+        "claimedCredits": 30000,
+        "boundary": {"type": "Polygon", "coordinates": [[[-65.05, -4.05], [-65.0, -4.05], [-65.0, -4.0], [-65.05, -4.0], [-65.05, -4.05]]]},
+        "boundarySource": "Synthetic: SYN-01-CLEAN's boundary, next vintage.",
+        "dataLabel": "synthetic"
+      },
+      "expect": {"status": 201, "band": "high"}
+    },
+    {
+      "case": 5,
+      "title": "Claim contradicted by satellite gets a low score and cannot issue",
+      "why": "Avoided-deforestation claim on a Nova Mamoré (Rondônia) deforestation frontier: Hansen GFC shows 8% of the remaining forest lost inside the box in the claimed vintage (2022). It registers, with a low score and a LOW_INTEGRITY_SCORE warning; the contract refuses issuance (score < 60).",
+      "claim": {
+        "projectId": "SYN-05-CONTRADICTED",
+        "developer": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2022,
+        "claimedCredits": 30000,
+        "boundary": {"type": "Polygon", "coordinates": [[[-64.45, -9.45], [-64.4, -9.45], [-64.4, -9.4], [-64.45, -9.4], [-64.45, -9.45]]]},
+        "boundarySource": "Synthetic 0.05-degree box, Rondônia, Brazil. Not a real project boundary.",
+        "dataLabel": "synthetic"
+      },
+      "expect": {"status": 201, "band": "low", "reason": "FOREST_LOSS_HIGH", "warning": "LOW_INTEGRITY_SCORE", "issuable": false}
+    },
+    {
+      "case": 6,
+      "title": "Retrying the same submission creates no duplicate record",
+      "uses": "SYN-01-CLEAN",
+      "action": "Re-send case 1 with the same Idempotency-Key.",
+      "expect": {"status": 201, "replayed": true, "newRecords": 0, "newTransactions": 0}
+    },
+    {
+      "case": 7,
+      "title": "Over-retirement reverts",
+      "uses": "SYN-01-CLEAN",
+      "action": "Developer issues 100 credits, retires 100, then tries to retire 1 more.",
+      "expect": {"revert": "ExceedsIssued"}
+    },
+    {
+      "case": 8,
+      "title": "Tampering with the stored claim is detected",
+      "uses": "SYN-01-CLEAN",
+      "action": "Edit claimedCredits in the backend database after registration, then call /claims/SYN-01-CLEAN/verify.",
+      "expect": {"verifyMatch": false}
+    }
+  ]
+}
