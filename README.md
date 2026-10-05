@@ -36,7 +36,15 @@ The same forest can back credits in two registries, or two projects can claim ov
 
 ## Evaluation
 
-The rule-based score is evaluated against a uniqueness-only baseline on **injected faults**: duplicates, shifted overlaps, inflated credits, and claims relocated onto land with recorded clearing. False alarms are measured on the real projects as published. See `docs/EVALUATION.md`. These metrics measure detection of injected faults on a seeded dataset, **not real-world fraud prevalence**.
+Faults are injected into the 30 real claims: duplicates, shifted overlaps, ×5 credit inflation, and claims relocated onto frontier land with recorded clearing. The rule-based score is compared with a uniqueness-only baseline (overlap check, no evidence layer). Thresholds were frozen before running.
+
+| | ClearCredit | Uniqueness-only baseline |
+|---|---|---|
+| Recall (102 injected faults) | **0.72** | 0.58 |
+| Relocated onto cleared land | **11/12** | 0/12 |
+| False alarms on the 30 real projects | 2/30 | 0/30 |
+
+What it misses is documented too: moderate credit inflation (3/30 caught) and light clearing below ~2% of remaining forest per year. Both false alarms are explained: a dryland project the canopy rule misjudges, and a disturbance whose cause the data cannot attribute. Details: `docs/EVALUATION.md`. These metrics measure detection of injected faults on a seeded dataset, **not real-world fraud prevalence**.
 
 ## Architecture
 
