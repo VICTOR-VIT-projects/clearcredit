@@ -1,0 +1,49 @@
+# ClearCredit Threat Model
+
+**What the system claims:** the chain proves that a registered claim record was **not altered**, and it **enforces uniqueness** of (land cell, vintage) and of retirements. Satellite and registry data are **evidence**, not certification.
+
+**What the system does not claim:** that a registered project physically exists, that it reduced emissions, or that a low score proves fraud. Low-scoring claims are *flagged as suspicious*.
+
+Only standard primitives are used:
+- keccak-256 hashing
+- ECDSA/secp256k1 signatures over EIP-712 typed data (OpenZeppelin `ECDSA`, `EIP712`)
+- OpenZeppelin `AccessControl` for roles
+
+There is no custom cryptography.
+
+## Assets and trust boundaries
+
+| Component | Trusted for | Not trusted for |
+|---|---|---|
+| `ClearCreditRegistry` contract | Uniqueness of `claimHash`, `projectId`, (H3 cell, vintage) and retirement serials; append-only attestation history; role checks | Geometry beyond the cell cover; physical truth |
+| Developer wallet | Consent to a specific claim (EIP-712 signature) | Truth of the claim |
+| Backend (registrar + verifier key) | Relaying signed claims; exact geometry checks; computing evidence and scores | Being uncompromised (see T5) |
+| Off-chain DB | Convenience copy of claims and results | Integrity (it is checked against on-chain hashes) |
+| Public datasets (Hansen GFC, Sentinel-2) | Independent evidence | Ground truth (clouds, resolution, update lag) |
+
+## Threats
+
+| # | Threat | Addressed by | Evidence it works | Residual risk |
+|---|---|---|---|---|
+| T1 | **Same land claimed twice in the same vintage** | (a) Off-chain exact overlap with shapely; ≥1% overlap of either boundary blocks the claim (`OVERLAP_DETECTED`). (b) On-chain `cellClaim[cell][vintage]` uniqueness, checked by a `checkCells` pre-check and enforced again in `registerProject`/`addCells`. | `test_overlap_same_vintage_blocked_with_fraction`; contract test "blocks the same cell in the same vintage"; `test_onchain_uniqueness_holds_even_if_backend_db_is_bypassed` (a second backend with an empty DB is still blocked by the contract) | Overlaps smaller than one H3 cell center (~74 ha cells) can pass the on-chain check; the off-chain check catches them only if the same backend sees both claims. Different registries must share the contract for cross-registry uniqueness. |
+| T2 | **Boundary-cell false positives** (neighbours sharing an edge) | Cover by **cell-center containment**: a cell belongs to the boundary that contains its center, and centers are points, so non-overlapping boundaries can never share a cell. | `test_h3_cover_…adjacent_projects_never_share_cells`; `test_shared_edge_is_not_an_overlap` | None for touching boundaries. A sliver overlap that contains a cell center blocks the whole claim; the resolution path is admin review plus redrawing the boundary. |
+| T3 | **Duplicate or replayed submission** (client retry, network retry) | `Idempotency-Key` stored per request hash. Same key + same body → original response, no new record or transaction. Same key + different body → `IDEMPOTENCY_KEY_REUSED`. Concurrent duplicate → `REQUEST_IN_PROGRESS`. The contract also reverts on a known `claimHash` or `projectId`, even if the backend is bypassed. | `test_retry_with_same_key_returns_original_and_creates_nothing`; `test_retry_after_success_sends_no_new_transactions` (nonce unchanged); contract tests for duplicate `claimHash` and `projectId` | None for exact replays. |
+| T4 | **Relay failure mid-registration** (RPC outage between transactions) | The relay is resumable: each step reads on-chain status first. Re-adding a cell the project already owns is a no-op, so a retried batch cannot fail or double count. The idempotency key is released on `RELAY_FAILED` so the retry resumes. | `test_relay_resumes_after_mid_flight_failure` (registerProject sent exactly once); contract test "a retried batch is a no-op" | A project can sit in `Pending` holding cells if the operator never retries. Mitigation: monitoring; production could add an admin cancel. |
+| T5 | **Compromised verifier/registrar key** posts false attestations or relays junk | Roles via `AccessControl`; the admin can revoke and grant (rotation). Attestations are append-only and versioned (`modelVersion`, `evidenceHash`), so a bad one is visible and can be superseded but not erased. `evidenceHash` lets anyone recompute the evidence bundle. The registrar **cannot** register a claim the developer did not sign. | Contract test "stop working after the verifier role is revoked (key rotation)"; `test_bad_signature_rejected` | Until rotation, a compromised verifier can post inflated scores, which would unlock issuance for already-registered projects. Production: separate registrar and verifier keys, HSM/multisig, and multiple independent verifiers with a quorum. |
+| T6 | **Claim edited after the fact** in the off-chain DB | The canonical hash is on-chain. `GET /claims/{id}/verify` and the browser "recompute hash" button recompute from the stored claim. | `test_tampered_offchain_record_is_detected` | The DB can still be altered, but the alteration is detectable by anyone. |
+| T7 | **Forged developer identity** (registering in someone else's name) | The EIP-712 signature must recover to `developer`. The domain binds chainId and contract (no cross-chain replay). Unique `claimHash` prevents same-chain replay. The contract verifies the signature, not just the backend. | Contract tests "rejects a signature from someone other than the developer" and "…over different claim fields (tampered credits)" | Wallet address ≠ legal identity. Production needs KYC or registry-verified addresses (see T10). |
+| T8 | **Double retirement** of the same credits | Cumulative cap `retired ≤ issued` and **sequential serial ranges** `[retiredBefore, retiredBefore + amount)`, so ranges cannot overlap by construction. | Contract tests "assigns sequential, non-overlapping serial ranges", "blocks over-retirement" | None within this contract. Credits retired on another registry are invisible unless that registry anchors here. |
+| T9 | **Over-issuance** | Issuance requires `Registered` status, an attestation whose latest score is ≥ `issueThresholdBps`, and cumulative `issued ≤ claimedCredits`. | Contract tests "requires an attestation", "is gated by the latest attestation score", "caps cumulative issuance" | `claimedCredits` is the developer's own number; scoring flags implausible credits per hectare but does not prove the right amount. |
+| T10 | **Fabricated project on unclaimed land** | Satellite plausibility only: forest cover, loss in the vintage year, NDVI trend, credits per hectare. | Scoring tests | **Cannot be fully prevented.** The system flags inconsistencies; it does not certify that real mitigation exists. |
+| T11 | **Sybil developers** | Out of scope for the prototype. | — | Production needs identity/KYC and registry partnerships. |
+| T12 | **Manipulated or stale satellite evidence** | Public datasets only, with the dataset name and version, query date and `evidenceHash` stored with the attestation. The cache is precomputed and inspectable. | `data/probes/SATELLITE_ACCESS.md` | Depends on upstream quality: clouds, 30 m resolution, loss data lagging about a year (vintages after the last covered year cannot be checked and are labelled so), and sensor processing changes (e.g. the Sentinel-2 2022 baseline offset, which we correct). |
+| T13 | **Gaming the scoring rules** | Rules and thresholds are published (`app/scoring.py`) and versioned; evaluation uses held-out injected faults. | `docs/EVALUATION.md` | Adversaries can tune claims to just pass known rules. Production needs rule rotation, human audit of borderline claims, and more evidence sources. |
+| T14 | **Denial of service / gas exhaustion** via huge boundaries | Off-chain limits (≤ 20,000 vertices, ≤ 3,000,000 ha); on-chain cap of 300 cells per transaction with batching; registration is registrar-only. | Contract test "caps cells per transaction"; geometry validation tests | API rate limiting is not implemented in the prototype. |
+
+## Known limitations (stated plainly)
+
+- The blockchain enforces uniqueness and tamper evidence; it does **not** prove a project is real or effective.
+- Exact geometric overlap is checked **off-chain**; the on-chain cell index is a conservative backstop.
+- Seed boundaries come from a published research dataset (Karnik et al. 2024) via CarbonPlan's display-grade vector tiles. Some were simplified or repaired, and this is recorded in each claim's `boundarySource`. They are not byte-identical registry files.
+- Seed claims use **demo developer wallets** derived from the project ID. They are not the real project proponents.
+- Evaluation metrics measure detection of **injected faults** on a seeded dataset, not real-world fraud prevalence.
