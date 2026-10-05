@@ -1,0 +1,200 @@
+[
+ {
+  "projectId": "GLD3025",
+  "result": "registered",
+  "score": 90,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1085",
+  "result": "registered",
+  "score": 70,
+  "band": "medium"
+ },
+ {
+  "projectId": "VCS1112",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1115",
+  "result": "registered",
+  "score": 70,
+  "band": "medium"
+ },
+ {
+  "projectId": "VCS1133",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1202",
+  "result": "registered",
+  "score": 70,
+  "band": "medium"
+ },
+ {
+  "projectId": "VCS1218",
+  "result": "registered",
+  "score": 90,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1233",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1326",
+  "result": "registered",
+  "score": 70,
+  "band": "medium"
+ },
+ {
+  "projectId": "VCS1329",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1382",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1391",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1392",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS142",
+  "result": "registered",
+  "score": 70,
+  "band": "medium"
+ },
+ {
+  "projectId": "VCS1663",
+  "result": "registered",
+  "score": 80,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1684",
+  "result": "registered",
+  "score": 80,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS1899",
+  "result": "registered",
+  "score": 90,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS2079",
+  "result": "registered",
+  "score": 80,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS2085",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS2293",
+  "result": "registered",
+  "score": 70,
+  "band": "medium"
+ },
+ {
+  "projectId": "VCS562",
+  "result": "registered",
+  "score": 50,
+  "band": "medium"
+ },
+ {
+  "projectId": "VCS647",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS658",
+  "result": "registered",
+  "score": 90,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS665",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS799",
+  "result": "registered",
+  "score": 60,
+  "band": "medium"
+ },
+ {
+  "projectId": "VCS812",
+  "result": "registered",
+  "score": 30,
+  "band": "low"
+ },
+ {
+  "projectId": "VCS818",
+  "result": "registered",
+  "score": 70,
+  "band": "medium"
+ },
+ {
+  "projectId": "VCS852",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS856",
+  "result": "registered",
+  "score": 90,
+  "band": "high"
+ },
+ {
+  "projectId": "VCS934",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "SYN-01-CLEAN",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "SYN-04-NEXT-VINTAGE",
+  "result": "registered",
+  "score": 100,
+  "band": "high"
+ },
+ {
+  "projectId": "SYN-05-CONTRADICTED",
+  "result": "registered",
+  "score": 40,
+  "band": "low"
+ }
+]

@@ -53,7 +53,7 @@ def _hex(b: bytes) -> str:
 
 
 class Chain:
-    def __init__(self, rpc_url: str, private_key: str, address: str, batch: int = 300):
+    def __init__(self, rpc_url: str, private_key: str, address: str, batch: int = 200):
         self.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 60}))
         self.account = Account.from_key(private_key)
         self.address = Web3.to_checksum_address(address)
