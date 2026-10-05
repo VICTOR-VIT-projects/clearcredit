@@ -1,0 +1,43 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "projectId": "SYN-01-CLEAN",
+    "vintageYear": 2023,
+    "claimedCredits": 30000,
+    "projectType": "avoided_deforestation",
+    "dataLabel": "synthetic",
+    "note": "Clean project passes with a high score"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -65.05,
+       -4.05
+      ],
+      [
+       -65.0,
+       -4.05
+      ],
+      [
+       -65.0,
+       -4.0
+      ],
+      [
+       -65.05,
+       -4.0
+      ],
+      [
+       -65.05,
+       -4.05
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

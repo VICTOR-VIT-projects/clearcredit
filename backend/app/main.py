@@ -52,6 +52,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
         allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Idempotent-Replayed"],  # browsers hide non-safelisted headers otherwise
     )
     store = store or Store()
 

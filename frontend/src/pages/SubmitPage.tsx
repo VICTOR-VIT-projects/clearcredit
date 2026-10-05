@@ -85,6 +85,7 @@ export function SubmitPage() {
   const [idempotencyKey, setIdempotencyKey] = useState('')
   const [signature, setSignature] = useState('')
   const [result, setResult] = useState<ClaimView | null>(null)
+  const [replays, setReplays] = useState(0)
   const [error, setError] = useState<ReturnType<typeof errorInfo> | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -161,8 +162,9 @@ export function SubmitPage() {
     setError(null)
     setStage('relaying')
     try {
-      const registration = await submitClaim(preparedClaim, nextSignature, idempotencyKey)
-      setResult(registration)
+      const { view, replayed } = await submitClaim(preparedClaim, nextSignature, idempotencyKey)
+      setResult(view)
+      setReplays((count) => (replayed ? count + 1 : 0))
       setStage('registered')
     } catch (requestError) {
       setError(errorInfo(requestError))
@@ -282,7 +284,8 @@ export function SubmitPage() {
           <span className="success-icon">✓</span>
           <div><p className="eyebrow">Registered</p><h2>{result.projectId} is on the registry.</h2><p>The record is now tamper-evident. Review the evidence and on-chain state on the public Verify page.</p>
             {result.warnings?.map((warning) => <div className="notice notice-warning" key={warning.code}><strong>{warning.code.replaceAll('_', ' ')}</strong><p>{warning.message}</p></div>)}
-            <div className="button-row"><Link className="button button-primary" to={`/verify/${encodeURIComponent(result.projectId)}`}>Open Verify page</Link>{result.transactions.map((transaction) => transaction.url ? <a key={transaction.tx} className="button button-secondary" href={transaction.url} target="_blank" rel="noreferrer">{transaction.step} ↗</a> : null)}</div>
+            {replays > 0 && <div className="notice notice-success"><strong>Same request replayed{replays > 1 ? ` ×${replays}` : ''}</strong><p>The API recognised the Idempotency-Key and returned the original result. No new record and no new transaction were created.</p></div>}
+            <div className="button-row"><Link className="button button-primary" to={`/verify/${encodeURIComponent(result.projectId)}`}>Open Verify page</Link>{signature && <button className="button button-secondary" type="button" onClick={() => void relay(signature)}>Send the same request again</button>}{result.transactions.map((transaction) => transaction.url ? <a key={transaction.tx} className="button button-secondary" href={transaction.url} target="_blank" rel="noreferrer">{transaction.step} ↗</a> : null)}</div>
           </div>
         </section>
       )}

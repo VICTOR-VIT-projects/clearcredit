@@ -4,7 +4,7 @@ Signs each claim with its DEMO developer key (derived from the project ID — pu
 derivable, holds nothing of value, and is not the real project proponent). The
 Idempotency-Key is the claim's submissionKey, so re-running the seed is a no-op replay.
 
-    python -m scripts.seed [data/claims/real data/synthetic/cases.json ...] [--api http://localhost:8000]
+    python -m scripts.seed [data/claims/real] [data/synthetic/cases.json] [--api http://localhost:8000]
 """
 from __future__ import annotations
 
@@ -52,7 +52,9 @@ def sign(typed: dict, account) -> str:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("paths", nargs="*", default=[str(ROOT / "data" / "claims" / "real"), str(ROOT / "data" / "synthetic" / "cases.json")])
+    # Default: real claims only, so the demo can submit the synthetic cases live (data/demo/*.geojson).
+    # Pass data/synthetic/cases.json too to pre-seed the synthetic cases that should register.
+    ap.add_argument("paths", nargs="*", default=[str(ROOT / "data" / "claims" / "real")])
     ap.add_argument("--api", default="http://localhost:8000")
     args = ap.parse_args()
     report = []

@@ -17,7 +17,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, init?: RequestInit, meta?: { replayed?: boolean }): Promise<T> {
   let response: Response
   try {
     response = await fetch(`${API_URL}${path}`, {
@@ -27,6 +27,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } catch (error) {
     throw new ApiError(0, { error: { code: 'NETWORK_ERROR', message: error instanceof Error ? error.message : 'The API could not be reached.' } })
   }
+  if (meta) meta.replayed = response.headers.get('Idempotent-Replayed') === 'true'
   const body = (await response.json().catch(() => ({}))) as ApiErrorBody | T
   if (!response.ok) throw new ApiError(response.status, body as ApiErrorBody)
   return body as T
@@ -36,12 +37,15 @@ export function previewClaim(claim: Claim): Promise<PreviewResponse> {
   return request('/claims/preview', { method: 'POST', body: JSON.stringify(claim) })
 }
 
-export function submitClaim(claim: Claim, signature: string, idempotencyKey: string): Promise<ClaimView> {
-  return request('/claims', {
+/** `replayed` is true when the API returned the stored result for a repeated Idempotency-Key. */
+export async function submitClaim(claim: Claim, signature: string, idempotencyKey: string): Promise<{ view: ClaimView; replayed: boolean }> {
+  const meta: { replayed?: boolean } = {}
+  const view = await request<ClaimView>('/claims', {
     method: 'POST',
     headers: { 'Idempotency-Key': idempotencyKey },
     body: JSON.stringify({ claim, signature }),
-  })
+  }, meta)
+  return { view, replayed: Boolean(meta.replayed) }
 }
 
 export function getClaim(ref: string): Promise<ClaimView> {

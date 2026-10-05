@@ -92,3 +92,13 @@ def test_lookup_by_hash_and_verify_offline(client):
 def test_schema_endpoint(client):
     s = client.get("/schema").json()
     assert s["schemaVersion"] == "1.0" and "dataLabel" in s["jsonSchema"]["properties"]
+
+
+def test_replay_header_is_visible_to_browsers(client):
+    # Without Access-Control-Expose-Headers, cross-origin JS cannot read Idempotent-Replayed.
+    origin = {"Origin": "http://localhost:5173"}
+    c = make_claim()
+    client.post("/claims", json={"claim": c, "signature": sign(None)}, headers={"Idempotency-Key": "k1", **origin})
+    r = client.post("/claims", json={"claim": c, "signature": sign(None)}, headers={"Idempotency-Key": "k1", **origin})
+    assert r.headers["Idempotent-Replayed"] == "true"
+    assert "idempotent-replayed" in r.headers["access-control-expose-headers"].lower()

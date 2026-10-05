@@ -1,0 +1,43 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "projectId": "SYN-03-PARTIAL",
+    "vintageYear": 2023,
+    "claimedCredits": 30000,
+    "projectType": "avoided_deforestation",
+    "dataLabel": "synthetic",
+    "note": "Partial overlap is blocked and reports the overlapping fraction"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -65.03,
+       -4.05
+      ],
+      [
+       -64.98,
+       -4.05
+      ],
+      [
+       -64.98,
+       -4.0
+      ],
+      [
+       -65.03,
+       -4.0
+      ],
+      [
+       -65.03,
+       -4.05
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

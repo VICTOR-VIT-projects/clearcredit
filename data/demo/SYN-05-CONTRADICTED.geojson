@@ -1,0 +1,43 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "projectId": "SYN-05-CONTRADICTED",
+    "vintageYear": 2022,
+    "claimedCredits": 30000,
+    "projectType": "avoided_deforestation",
+    "dataLabel": "synthetic",
+    "note": "Claim contradicted by satellite gets a low score and cannot issue"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -64.45,
+       -9.45
+      ],
+      [
+       -64.4,
+       -9.45
+      ],
+      [
+       -64.4,
+       -9.4
+      ],
+      [
+       -64.45,
+       -9.4
+      ],
+      [
+       -64.45,
+       -9.45
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}
