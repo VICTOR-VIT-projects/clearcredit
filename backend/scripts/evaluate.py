@@ -6,7 +6,7 @@ Positives: faults injected into copies of those claims:
   SHIFTED    boundary translated by 30% of its width, same vintage (partial overlap)
   INFLATED   claimed credits x5 on the same land
   RELOCATED  claim moved onto a box where Hansen data shows heavy forest loss in the vintage year
-             (boxes found by scanning the Rondônia frontier; see find_frontier_boxes)
+             (boxes found by scanning the Rondônia frontier, stratified by loss severity 1–2%, 2–5%, 5–15%, >15%)
 
 Detected = blocked by the overlap check, or integrity score < 60 (the contract's issuance threshold).
 Baseline = uniqueness-only: what a registry with an overlap check but no evidence layer catches.
@@ -38,14 +38,15 @@ BOXES = EVAL / "frontier_boxes.json"
 ISSUE_THRESHOLD = 60
 FRONTIER = (-64.0, -10.0, -62.0, -8.0)  # Rondônia, inside Hansen tile 00N_070W
 BOX = 0.05  # degrees (~5.5 km)
+LOSS_BANDS = [(0.01, 0.02), (0.02, 0.05), (0.05, 0.15), (0.15, 1.01)]  # share of 2000 forest lost in one year
 
 
 def box(x0, y0, size=BOX):
     return {"type": "Polygon", "coordinates": [[[x0, y0], [x0 + size, y0], [x0 + size, y0 + size], [x0, y0 + size], [x0, y0]]]}
 
 
-def find_frontier_boxes(n: int = 10):
-    """Scan the frontier at 30 m and pick the boxes with the highest single-year loss rate 2021–2024."""
+def find_frontier_boxes(per_band: int = 3):
+    """Scan the frontier at 30 m and pick boxes across bands of single-year loss rate (2021–2024)."""
     url = "/vsicurl/" + satellite.GFC_URL.format(v=satellite.GFC_VERSION, layer="{}", tile="00N_070W")
     with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"):
         with rasterio.open(url.format("lossyear")) as ly, rasterio.open(url.format("treecover2000")) as tc:
@@ -62,20 +63,23 @@ def find_frontier_boxes(n: int = 10):
             for year in range(2021, 2025):
                 rate = ((lb == year - 2000) & cb).sum() / forest
                 cands.append((rate, year, FRONTIER[0] + c * 0.00025, FRONTIER[3] - (r + step) * 0.00025))
+    # Stratify by severity so the test includes subtle clearing, not only near-total clear-cuts.
+    # Within each band take the most severe candidates at distinct locations (deterministic).
     cands.sort(reverse=True)
     chosen, used = [], set()
-    for rate, year, x0, y0 in cands:
-        if (x0, y0) in used:
-            continue
-        used.add((x0, y0))
-        chosen.append({"vintageYear": year, "lossRate": round(float(rate), 4), "boundary": box(round(x0, 5), round(y0, 5))})
-        if len(chosen) == n:
-            break
+    for lo, hi in LOSS_BANDS:
+        picked = 0
+        for rate, year, x0, y0 in cands:
+            if lo <= rate < hi and (x0, y0) not in used and picked < per_band:
+                used.add((x0, y0))
+                picked += 1
+                chosen.append({"vintageYear": year, "lossRate": round(float(rate), 4), "band": f"{lo:.0%}-{hi:.0%}",
+                               "boundary": box(round(x0, 5), round(y0, 5))})
     EVAL.mkdir(parents=True, exist_ok=True)
     BOXES.write_text(json.dumps(chosen, indent=1), encoding="utf-8")
     for b in chosen:
         e = satellite.get_evidence(b["boundary"])
-        print(f"box {b['boundary']['coordinates'][0][0]} vintage {b['vintageYear']} loss {b['lossRate']:.1%} → evidence {e['evidenceHash'][:10]}", flush=True)
+        print(f"box {b['boundary']['coordinates'][0][0]} vintage {b['vintageYear']} loss {b['lossRate']:.1%} -> evidence {e['evidenceHash'][:10]}", flush=True)
 
 
 def evaluate(claim: dict, boundary: dict, others: dict, evidence: dict | None) -> dict:

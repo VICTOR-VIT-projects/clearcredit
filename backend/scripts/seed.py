@@ -4,7 +4,7 @@ Signs each claim with its DEMO developer key (derived from the project ID — pu
 derivable, holds nothing of value, and is not the real project proponent). The
 Idempotency-Key is the claim's submissionKey, so re-running the seed is a no-op replay.
 
-    python -m scripts.seed [data/claims/real ...] [--api http://localhost:8000]
+    python -m scripts.seed [data/claims/real data/synthetic/cases.json ...] [--api http://localhost:8000]
 """
 from __future__ import annotations
 
@@ -20,8 +20,29 @@ from eth_utils import keccak
 ROOT = Path(__file__).resolve().parents[2]
 
 
+# Public test keys used by the synthetic cases (data/synthetic/cases.json) — worthless by design.
+TEST_ACCOUNTS = {a.address: a for a in (Account.from_key("0x" + "11" * 32), Account.from_key("0x" + "22" * 32))}
+
+
 def demo_account(project_id: str):
     return Account.from_key(keccak(text=f"clearcredit-demo-developer:{project_id}"))
+
+
+def signer_for(claim: dict):
+    acct = demo_account(claim["projectId"])
+    return acct if acct.address == claim["developer"] else TEST_ACCOUNTS.get(claim["developer"])
+
+
+def load_claims(paths: list[str]) -> list[dict]:
+    """Claim files from directories, plus data/synthetic/cases.json (only cases expected to register)."""
+    out = []
+    for p in map(Path, paths):
+        if p.is_dir():
+            out += [json.loads(f.read_text(encoding="utf-8")) for f in sorted(p.glob("*.json"))]
+        else:
+            cases = json.loads(p.read_text(encoding="utf-8"))["cases"]
+            out += [c["claim"] for c in cases if "claim" in c and c["expect"].get("status") == 201]
+    return out
 
 
 def sign(typed: dict, account) -> str:
@@ -31,17 +52,15 @@ def sign(typed: dict, account) -> str:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("dirs", nargs="*", default=[str(ROOT / "data" / "claims" / "real")])
+    ap.add_argument("paths", nargs="*", default=[str(ROOT / "data" / "claims" / "real"), str(ROOT / "data" / "synthetic" / "cases.json")])
     ap.add_argument("--api", default="http://localhost:8000")
     args = ap.parse_args()
-    files = sorted(f for d in args.dirs for f in Path(d).glob("*.json"))
     report = []
     with httpx.Client(base_url=args.api, timeout=900) as http:
-        for f in files:
-            claim = json.loads(f.read_text(encoding="utf-8"))
-            account = demo_account(claim["projectId"])
-            if account.address != claim["developer"]:
-                print(f"skip    {claim['projectId']}: developer is not this project's demo wallet")
+        for claim in load_claims(args.paths):
+            account = signer_for(claim)
+            if account is None:
+                print(f"skip    {claim['projectId']}: no demo/test key for developer {claim['developer']}")
                 continue
             pre = http.post("/claims/preview", json=claim)
             if pre.status_code != 200:
