@@ -1,0 +1,56 @@
+{
+  "evidenceVersion": "ev2",
+  "boundaryKey": "ae428577b2668062971f4ca1093b47598643050fe95397115220ca8636107788",
+  "queriedAt": "2026-10-05T19:13:36+00:00",
+  "forestLoss": {
+    "dataset": "Hansen/UMD/Google/USGS/NASA Global Forest Change GFC-2025-v1.13",
+    "license": "CC BY 4.0",
+    "canopyThresholdPct": 30,
+    "forest2000Ha": 3055.31,
+    "lossHaByYear": {
+      "2001": 0.92,
+      "2002": 0.46,
+      "2003": 0.15,
+      "2004": 0.0,
+      "2005": 0.23,
+      "2006": 0.23,
+      "2007": 0.38,
+      "2008": 0.08,
+      "2009": 0.84,
+      "2010": 149.17,
+      "2011": 26.58,
+      "2012": 0.84,
+      "2013": 3.74,
+      "2014": 13.44,
+      "2015": 3.13,
+      "2016": 0.15,
+      "2017": 0.31,
+      "2018": 49.42,
+      "2019": 45.37,
+      "2020": 252.91,
+      "2021": 408.41,
+      "2022": 515.37,
+      "2023": 17.95,
+      "2024": 312.09,
+      "2025": 88.68
+    },
+    "lastCoveredYear": 2025
+  },
+  "ndvi": {
+    "dataset": "Copernicus Sentinel-2 L2A (Microsoft Planetary Computer)",
+    "license": "Copernicus Sentinel data terms; contains modified Copernicus Sentinel data",
+    "method": "per year: 4 least-cloudy scenes (<20%), BOA offset removed for processing baseline >= 04.00, SCL-masked mean NDVI inside boundary, median across scenes",
+    "meanNdviByYear": {
+      "2019": 0.7915,
+      "2020": 0.8464,
+      "2021": 0.7721,
+      "2022": 0.6936,
+      "2023": 0.816,
+      "2024": 0.7759,
+      "2025": 0.7065
+    },
+    "slopePerYear": -0.01257
+  },
+  "computeSeconds": 63.9,
+  "evidenceHash": "0x3c4d052dfcab6c9de0fa037d2cb22056b64bf0caaa06aefce0cb8c77e45f1a58"
+}
