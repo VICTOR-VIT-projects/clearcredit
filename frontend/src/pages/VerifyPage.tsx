@@ -9,7 +9,7 @@ import { MetricChart } from '../components/MetricChart'
 import { ScoreCard } from '../components/ScoreCard'
 import { getClaim, getOverlaps, verifyClaim } from '../lib/api'
 import { claimHash as recomputeClaimHash } from '../lib/canonical'
-import { formatDate, formatNumber, percent } from '../lib/format'
+import { formatDate, formatNumber, humanize, percent } from '../lib/format'
 import type { ClaimView } from '../lib/types'
 
 function downloadClaim(view: ClaimView) {
@@ -97,7 +97,7 @@ export function VerifyPage() {
         const view = query.data
         const onChainHash = view.onChain?.project.claimHash ?? null
         return <>
-          <header className="claim-header"><div><LabelBadge label={view.dataLabel} detailed /><h1>{view.projectId}</h1><p>{view.claim.projectType.replaceAll('_', ' ')} · vintage {view.claim.vintageYear} · {formatNumber(view.claim.claimedCredits, 0)} tCO2e</p></div><span className={`status-pill status-${view.status}`}>{view.status}</span></header>
+          <header className="claim-header"><div><LabelBadge label={view.dataLabel} detailed /><h1>{view.projectId}</h1><p>{humanize(view.claim.projectType)} · vintage {view.claim.vintageYear} · {formatNumber(view.claim.claimedCredits, 0)} tCO2e</p></div><span className={`status-pill status-${view.status}`}>{view.status}</span></header>
           <section className="card hash-card">
             <div><p className="eyebrow">Canonical claim hash</p><CopyValue value={view.claimHash} /></div>
             <div className="hash-actions"><button className="button button-primary" type="button" onClick={() => { const hash = recomputeClaimHash(view.claim as unknown as Record<string, unknown>); setLocalResult({ hash, match: onChainHash === null ? null : hash.toLowerCase() === onChainHash.toLowerCase() }) }}>Recompute hash in your browser</button><button className="button button-secondary" type="button" onClick={() => downloadClaim(view)}>Download claim JSON</button></div>
@@ -107,7 +107,7 @@ export function VerifyPage() {
             {serverVerification.data && <div className="server-result"><div><span>Recomputed</span><code>{serverVerification.data.recomputedHash}</code></div><div><span>On-chain</span><code>{serverVerification.data.onChainHash || 'Not available'}</code></div>{serverVerification.data.note && <p>{serverVerification.data.note}</p>}</div>}
           </section>
           <div className="verify-grid">
-            <section className="card claim-details"><div className="section-heading"><div><p className="eyebrow">Claim record</p><h2>Project details</h2></div></div><dl><div><dt>Developer</dt><dd><CopyValue value={view.claim.developer} /></dd></div><div><dt>Project type</dt><dd>{view.claim.projectType.replaceAll('_', ' ')}</dd></div><div><dt>Vintage year</dt><dd>{view.claim.vintageYear}</dd></div><div><dt>Claimed credits</dt><dd>{formatNumber(view.claim.claimedCredits, 0)} {view.claim.creditUnit}</dd></div><div><dt>Area</dt><dd>{formatNumber(view.areaHa)} ha</dd></div><div><dt>Source registry</dt><dd>{view.claim.sourceRegistry || 'Not provided'}</dd></div><div><dt>Boundary source</dt><dd>{view.claim.boundarySource || 'Not provided'}</dd></div><div><dt>Created</dt><dd>{formatDate(view.createdAt)}</dd></div></dl></section>
+            <section className="card claim-details"><div className="section-heading"><div><p className="eyebrow">Claim record</p><h2>Project details</h2></div></div><dl><div><dt>Developer</dt><dd><CopyValue value={view.claim.developer} /></dd></div><div><dt>Project type</dt><dd>{humanize(view.claim.projectType)}</dd></div><div><dt>Vintage year</dt><dd>{view.claim.vintageYear}</dd></div><div><dt>Claimed credits</dt><dd>{formatNumber(view.claim.claimedCredits, 0)} {view.claim.creditUnit}</dd></div><div><dt>Area</dt><dd>{formatNumber(view.areaHa)} ha</dd></div><div><dt>Source registry</dt><dd>{view.claim.sourceRegistry || 'Not provided'}</dd></div><div><dt>Boundary source</dt><dd>{view.claim.boundarySource || 'Not provided'}</dd></div><div><dt>Created</dt><dd>{formatDate(view.createdAt)}</dd></div></dl></section>
             <BoundaryMap boundary={view.claim.boundary} />
           </div>
           <OverlapsPanel view={view} />

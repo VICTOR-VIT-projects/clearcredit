@@ -19,3 +19,9 @@ export function percent(value: number): string {
 export async function copyText(value: string): Promise<void> {
   await navigator.clipboard.writeText(value)
 }
+
+/** "avoided_deforestation" -> "Avoided deforestation" (sentence case; CSS capitalize would mangle units). */
+export function humanize(value: string): string {
+  const text = value.replaceAll('_', ' ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { getRegistry } from '../lib/api'
 import { LabelBadge } from '../components/LabelBadge'
 import { ErrorNotice, LoadingBlock } from '../components/Inline'
-import { formatNumber } from '../lib/format'
+import { formatNumber, humanize } from '../lib/format'
 
 const PAGE_SIZE = 20
 
@@ -29,7 +29,7 @@ export function RegistryPage() {
                   <tr key={item.claimHash}>
                     <td><Link className="table-link" to={`/verify/${encodeURIComponent(item.projectId)}`}>{item.projectId}</Link>{item.sourceRegistry && <small>{item.sourceRegistry}</small>}</td>
                     <td><LabelBadge label={item.dataLabel} /></td>
-                    <td>{item.projectType.replaceAll('_', ' ')}</td>
+                    <td>{humanize(item.projectType)}</td>
                     <td>{item.vintageYear}</td>
                     <td>{formatNumber(item.claimedCredits, 0)}</td>
                     <td>{formatNumber(item.areaHa)} ha</td>
