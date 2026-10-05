@@ -1,0 +1,125 @@
+{
+ "claimHash": "0xe947a751b9ce8ec79af919a32b0371b0299ad8a3581ee746f8cf6976283010ec",
+ "projectKey": "0xd45fd032ece2e9af54beb79f1e7b4ef5455d60df3b593e6308544201f07d8856",
+ "submissionKey": "0x52f2b7302730538629f3f15bafdd98bb759d584b7d121854276eea771f20c40e",
+ "areaHa": 3032.87,
+ "overlaps": [],
+ "onChainCellConflicts": [],
+ "cellResolution": 8,
+ "cellCount": 42,
+ "score": {
+  "score": 80,
+  "scoreBps": 8000,
+  "band": "high",
+  "reasons": [
+   {
+    "code": "FOREST_LOSS_MODERATE",
+    "severity": "medium",
+    "deduction": 20,
+    "text": "8 ha of forest (0.6% of remaining forest) was lost inside the boundary in 2023, above what a protected forest would show."
+   },
+   {
+    "code": "NO_OVERLAP",
+    "severity": "ok",
+    "deduction": 0,
+    "text": "No overlap with any other claim for vintage 2023."
+   },
+   {
+    "code": "CREDITS_PLAUSIBLE",
+    "severity": "ok",
+    "deduction": 0,
+    "text": "3.3 tCO2e/ha is within the plausible range for this project type."
+   },
+   {
+    "code": "NDVI_STABLE",
+    "severity": "ok",
+    "deduction": 0,
+    "text": "Vegetation greenness trend (+0.002/yr) is consistent with the claim."
+   }
+  ],
+  "features": {
+   "areaHa": 3032.87,
+   "maxOverlapFraction": 0.0,
+   "creditsPerHa": 3.3,
+   "forestCover2000Fraction": 0.5182,
+   "vintageLossRate": 0.006,
+   "ndviSlopePerYear": 0.0018
+  },
+  "modelVersion": "rules-v2",
+  "evidenceHash": "0x04009857320492ce3c9379e6f44f7a345545b66e54fdc1f754d547c1e5bfd738"
+ },
+ "blocked": false,
+ "canonicalClaim": {
+  "schemaVersion": "1.0",
+  "projectId": "SAMPLE-RONDONIA",
+  "developer": "0x19e7e376e7c213b7e7e7e46cc70a5dd086daff2a",
+  "projectType": "avoided_deforestation",
+  "vintageYear": 2023,
+  "claimedCredits": 10000,
+  "creditUnit": "tCO2e",
+  "boundary": {
+   "type": "Polygon",
+   "coordinates": [
+    [
+     [
+      -63100000,
+      -9900000
+     ],
+     [
+      -63050000,
+      -9900000
+     ],
+     [
+      -63050000,
+      -9850000
+     ],
+     [
+      -63100000,
+      -9850000
+     ],
+     [
+      -63100000,
+      -9900000
+     ]
+    ]
+   ]
+  },
+  "boundaryCrs": "EPSG:4326",
+  "dataLabel": "synthetic"
+ },
+ "typedData": {
+  "domain": {
+   "name": "ClearCredit",
+   "version": "1",
+   "chainId": 31337,
+   "verifyingContract": "0x0165878A594ca255338adfa4d48449f69242Eb8F"
+  },
+  "types": {
+   "Claim": [
+    {
+     "name": "projectId",
+     "type": "bytes32"
+    },
+    {
+     "name": "claimHash",
+     "type": "bytes32"
+    },
+    {
+     "name": "vintageYear",
+     "type": "uint16"
+    },
+    {
+     "name": "claimedCredits",
+     "type": "uint64"
+    }
+   ]
+  },
+  "primaryType": "Claim",
+  "message": {
+   "projectId": "0xd45fd032ece2e9af54beb79f1e7b4ef5455d60df3b593e6308544201f07d8856",
+   "claimHash": "0xe947a751b9ce8ec79af919a32b0371b0299ad8a3581ee746f8cf6976283010ec",
+   "vintageYear": 2023,
+   "claimedCredits": 10000
+  }
+ }
+}

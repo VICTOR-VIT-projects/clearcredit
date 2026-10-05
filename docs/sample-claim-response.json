@@ -1,0 +1,193 @@
+{
+ "projectId": "SAMPLE-RONDONIA",
+ "projectKey": "0xd45fd032ece2e9af54beb79f1e7b4ef5455d60df3b593e6308544201f07d8856",
+ "claimHash": "0xe947a751b9ce8ec79af919a32b0371b0299ad8a3581ee746f8cf6976283010ec",
+ "dataLabel": "synthetic",
+ "status": "registered",
+ "claim": {
+  "schemaVersion": "1.0",
+  "projectId": "SAMPLE-RONDONIA",
+  "developer": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+  "projectType": "avoided_deforestation",
+  "vintageYear": 2023,
+  "claimedCredits": 10000,
+  "creditUnit": "tCO2e",
+  "boundary": {
+   "type": "Polygon",
+   "coordinates": [
+    [
+     [
+      -63.1,
+      -9.9
+     ],
+     [
+      -63.05,
+      -9.9
+     ],
+     [
+      -63.05,
+      -9.85
+     ],
+     [
+      -63.1,
+      -9.85
+     ],
+     [
+      -63.1,
+      -9.9
+     ]
+    ]
+   ]
+  },
+  "boundaryCrs": "EPSG:4326",
+  "sourceRegistry": null,
+  "boundarySource": null,
+  "dataLabel": "synthetic",
+  "submittedAt": "2026-10-05T18:37:38+00:00"
+ },
+ "areaHa": 3032.87,
+ "overlaps": [],
+ "cellResolution": 8,
+ "cellCount": 42,
+ "score": {
+  "score": 80,
+  "scoreBps": 8000,
+  "band": "high",
+  "reasons": [
+   {
+    "code": "FOREST_LOSS_MODERATE",
+    "severity": "medium",
+    "deduction": 20,
+    "text": "8 ha of forest (0.6% of remaining forest) was lost inside the boundary in 2023, above what a protected forest would show."
+   },
+   {
+    "code": "NO_OVERLAP",
+    "severity": "ok",
+    "deduction": 0,
+    "text": "No overlap with any other claim for vintage 2023."
+   },
+   {
+    "code": "CREDITS_PLAUSIBLE",
+    "severity": "ok",
+    "deduction": 0,
+    "text": "3.3 tCO2e/ha is within the plausible range for this project type."
+   },
+   {
+    "code": "NDVI_STABLE",
+    "severity": "ok",
+    "deduction": 0,
+    "text": "Vegetation greenness trend (+0.002/yr) is consistent with the claim."
+   }
+  ],
+  "features": {
+   "areaHa": 3032.87,
+   "maxOverlapFraction": 0.0,
+   "creditsPerHa": 3.3,
+   "forestCover2000Fraction": 0.5182,
+   "vintageLossRate": 0.006,
+   "ndviSlopePerYear": 0.0018
+  },
+  "modelVersion": "rules-v2",
+  "evidenceHash": "0x04009857320492ce3c9379e6f44f7a345545b66e54fdc1f754d547c1e5bfd738"
+ },
+ "evidence": {
+  "evidenceVersion": "ev2",
+  "boundaryKey": "affe8eedef120d934f7f598cabe8fe74245fa19cde0918dfa7487e5da2e8b323",
+  "queriedAt": "2026-10-05T18:33:59+00:00",
+  "forestLoss": {
+   "dataset": "Hansen/UMD/Google/USGS/NASA Global Forest Change GFC-2025-v1.13",
+   "license": "CC BY 4.0",
+   "canopyThresholdPct": 30,
+   "forest2000Ha": 1571.76,
+   "lossHaByYear": {
+    "2001": 11.12,
+    "2002": 14.01,
+    "2003": 14.77,
+    "2004": 13.09,
+    "2005": 31.97,
+    "2006": 4.49,
+    "2007": 9.14,
+    "2008": 0.0,
+    "2009": 39.06,
+    "2010": 1.83,
+    "2011": 0.15,
+    "2012": 17.43,
+    "2013": 1.29,
+    "2014": 16.6,
+    "2015": 2.28,
+    "2016": 0.91,
+    "2017": 6.55,
+    "2018": 7.31,
+    "2019": 3.35,
+    "2020": 2.89,
+    "2021": 0.91,
+    "2022": 1.9,
+    "2023": 8.22,
+    "2024": 1.9,
+    "2025": 2.21
+   },
+   "lastCoveredYear": 2025
+  },
+  "ndvi": {
+   "dataset": "Copernicus Sentinel-2 L2A (Microsoft Planetary Computer)",
+   "license": "Copernicus Sentinel data terms; contains modified Copernicus Sentinel data",
+   "method": "per year: 4 least-cloudy scenes (<20%), BOA offset removed for processing baseline >= 04.00, SCL-masked mean NDVI inside boundary, median across scenes",
+   "meanNdviByYear": {
+    "2019": 0.5199,
+    "2020": 0.5634,
+    "2021": 0.5283,
+    "2022": 0.5283,
+    "2023": 0.546,
+    "2024": 0.4795,
+    "2025": 0.5867
+   },
+   "slopePerYear": 0.0018
+  },
+  "computeSeconds": 190.8,
+  "evidenceHash": "0x04009857320492ce3c9379e6f44f7a345545b66e54fdc1f754d547c1e5bfd738"
+ },
+ "transactions": [
+  {
+   "step": "registerProject",
+   "tx": "0xa84b032fb1c4c34798a6da46c5f6a0ecb23de1d9215f522b230700cc32fdf488",
+   "url": null
+  },
+  {
+   "step": "finalizeRegistration",
+   "tx": "0x5ccdc6fac3c7c5135bbef3cd5109622aa9c123a1830963968547817177e99a54",
+   "url": null
+  },
+  {
+   "step": "postAttestation",
+   "tx": "0x5b916e35adbb91e6804909fbe3fc9bd1001840a2f8a9a97d195eade41107f242",
+   "url": null
+  }
+ ],
+ "onChain": {
+  "contract": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+  "chainId": 31337,
+  "explorer": null,
+  "project": {
+   "developer": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+   "claimHash": "0xe947a751b9ce8ec79af919a32b0371b0299ad8a3581ee746f8cf6976283010ec",
+   "vintageYear": 2023,
+   "status": "registered",
+   "claimedCredits": 10000,
+   "issued": 0,
+   "retired": 0,
+   "cellCount": 42,
+   "registeredAt": 1791225464
+  },
+  "attestations": [
+   {
+    "scoreBps": 8000,
+    "evidenceHash": "0x04009857320492ce3c9379e6f44f7a345545b66e54fdc1f754d547c1e5bfd738",
+    "modelVersion": "rules-v2",
+    "verifier": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "timestamp": 1791225466
+   }
+  ],
+  "retirements": []
+ },
+ "createdAt": "2026-10-05T18:37:38+00:00"
+}

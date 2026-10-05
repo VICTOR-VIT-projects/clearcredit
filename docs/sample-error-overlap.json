@@ -1,0 +1,76 @@
+{
+ "error": {
+  "code": "OVERLAP_DETECTED",
+  "message": "The boundary overlaps land already claimed for the same vintage.",
+  "details": {
+   "overlaps": [
+    {
+     "project_id": "SAMPLE-RONDONIA",
+     "intersection_ha": 1819.72,
+     "fraction_of_new": 0.6,
+     "fraction_of_existing": 0.6
+    }
+   ],
+   "onChainCellConflicts": [
+    {
+     "projectId": "SAMPLE-RONDONIA",
+     "cells": [
+      "0x888a220459fffff",
+      "0x888a220601fffff",
+      "0x888a220603fffff",
+      "0x888a220607fffff",
+      "0x888a220609fffff",
+      "0x888a22060bfffff",
+      "0x888a22060dfffff",
+      "0x888a220611fffff",
+      "0x888a220613fffff",
+      "0x888a220615fffff",
+      "0x888a220617fffff",
+      "0x888a220619fffff",
+      "0x888a22061dfffff",
+      "0x888a220631fffff",
+      "0x888a220633fffff",
+      "0x888a220637fffff",
+      "0x888a220639fffff",
+      "0x888a22063bfffff",
+      "0x888a22063dfffff",
+      "0x888a220655fffff"
+     ],
+     "count": 25
+    }
+   ],
+   "score": {
+    "score": 25,
+    "scoreBps": 2500,
+    "band": "low",
+    "reasons": [
+     {
+      "code": "OVERLAP",
+      "severity": "high",
+      "deduction": 60,
+      "text": "60.0% overlap with project SAMPLE-RONDONIA for the same vintage (2023): the same land would be counted twice."
+     },
+     {
+      "code": "NO_EVIDENCE",
+      "severity": "medium",
+      "deduction": 15,
+      "text": "Satellite evidence is not yet available for this boundary; the claim cannot be cross-checked."
+     },
+     {
+      "code": "CREDITS_PLAUSIBLE",
+      "severity": "ok",
+      "deduction": 0,
+      "text": "3.3 tCO2e/ha is within the plausible range for this project type."
+     }
+    ],
+    "features": {
+     "areaHa": 3032.87,
+     "maxOverlapFraction": 0.6,
+     "creditsPerHa": 3.3
+    },
+    "modelVersion": "rules-v2",
+    "evidenceHash": null
+   }
+  }
+ }
+}
