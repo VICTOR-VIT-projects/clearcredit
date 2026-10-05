@@ -124,7 +124,7 @@ def run():
         cph = base["claimedCredits"] / geo.area_ha(geoms[base["projectId"]])
         fake = {**copy.deepcopy(base), "projectId": f"RELOC-{i}", "vintageYear": b["vintageYear"],
                 "claimedCredits": max(1, round(cph * geo.area_ha(shape(b["boundary"]))))}
-        rows.append({"case": f"RELOC-{i} (from {base['projectId']})", "fault": "RELOCATED",
+        rows.append({"case": f"RELOC-{i} (from {base['projectId']})", "fault": "RELOCATED", "stratum": b.get("band"),
                      **evaluate(fake, b["boundary"], {}, satellite.get_evidence(b["boundary"], live=False))})
 
     for r in rows:
@@ -137,17 +137,24 @@ def run():
         tp = sum(r[key] for r in pos)
         fp = sum(r[key] for r in neg)
         per = {f: f"{sum(r[key] for r in rs)}/{len(rs)}" for f, rs in _group(pos).items()}
+        strata = defaultdict(list)
+        for r in pos:
+            if r["fault"] == "RELOCATED":
+                strata[r["stratum"]].append(r[key])
+        per_stratum = {k: f"{sum(v)}/{len(v)}" for k, v in sorted(strata.items())}
         return {
             "recall": round(tp / len(pos), 3) if pos else None,
             "precision": round(tp / (tp + fp), 3) if tp + fp else None,
             "falseAlarmRate": round(fp / len(neg), 3),
             "falseAlarms": f"{fp}/{len(neg)}",
             "perFault": per,
+            "relocatedByLossStratum": per_stratum,
         }
 
     result = {
         "note": "Detection of injected faults on a seeded dataset of 30 real published projects; not real-world fraud prevalence.",
         "detectionRule": f"blocked by overlap OR score < {ISSUE_THRESHOLD}",
+        "thresholdsFrozen": "scoring thresholds were fixed (rules-v2) before this evaluation was run; not tuned to it",
         "scoringModel": scoring.MODEL_VERSION,
         "evidenceVersion": satellite.EVIDENCE_VERSION,
         "clearcredit": metrics("detected"),
