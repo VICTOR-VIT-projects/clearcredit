@@ -24,7 +24,7 @@ def test_clean_project_scores_high_with_reasons():
     assert r["score"] == 100 and r["band"] == "high" and r["scoreBps"] == 10000
     assert {"NO_OVERLAP", "CREDITS_PLAUSIBLE", "FOREST_LOSS_LOW", "NDVI_STABLE"} <= codes(r)
     assert all(r["text"] for r in r["reasons"])
-    assert r["evidenceHash"] == "0xabc" and r["modelVersion"] == "rules-v1"
+    assert r["evidenceHash"] == "0xabc" and r["modelVersion"] == "rules-v2"
 
 
 def test_forest_loss_contradicts_avoided_deforestation():
@@ -32,6 +32,12 @@ def test_forest_loss_contradicts_avoided_deforestation():
     assert {"FOREST_LOSS_HIGH", "NDVI_DECLINING"} <= codes(r)
     assert r["band"] == "low"
     assert r["reasons"][0]["code"] == "FOREST_LOSS_HIGH"  # biggest deduction first
+
+
+def test_forest_loss_alone_blocks_issuance():
+    # Stable NDVI must not rescue a claim the loss data contradicts: score < 60 (contract issue threshold).
+    r = score_claim(claim(), 1000.0, [], evidence(loss_vintage=120.0))
+    assert r["band"] == "low" and r["scoreBps"] < 6000
 
 
 def test_overlap_is_a_major_deduction():

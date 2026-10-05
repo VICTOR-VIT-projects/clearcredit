@@ -5,7 +5,7 @@ independent evidence. Thresholds are deliberately simple and published so they c
 """
 from __future__ import annotations
 
-MODEL_VERSION = "rules-v1"
+MODEL_VERSION = "rules-v2"  # v2: FOREST_LOSS_HIGH 40 -> 60 (a contradicted claim must fall below the 60 issuance threshold)
 BLOCKING_OVERLAP = 0.01  # >= 1% of either boundary overlapping a same-vintage claim
 
 # Plausible issuance ranges, tCO2e per hectare per vintage year (broad literature ranges).
@@ -66,7 +66,7 @@ def score_claim(claim: dict, area_ha: float, overlaps: list[dict], evidence: dic
                 features["vintageLossRate"] = round(rate, 4)
                 text = f"{loss.get(vintage, 0.0):,.0f} ha of forest ({rate:.1%} of remaining forest) was lost inside the boundary in {vintage}"
                 if rate > 0.02:
-                    reasons.append(_reason("FOREST_LOSS_HIGH", 40, f"{text}, which contradicts an avoided-deforestation claim."))
+                    reasons.append(_reason("FOREST_LOSS_HIGH", 60, f"{text}, which contradicts an avoided-deforestation claim."))
                 elif rate > 0.005:
                     reasons.append(_reason("FOREST_LOSS_MODERATE", 20, f"{text}, above what a protected forest would show."))
                 else:

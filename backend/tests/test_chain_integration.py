@@ -91,7 +91,7 @@ def test_register_attest_and_verify(chain, db_path):
     oc = body["onChain"]
     assert oc["project"]["status"] == "registered" and oc["project"]["developer"] == DEV.address
     assert oc["project"]["cellCount"] == body["cellCount"]
-    assert len(oc["attestations"]) == 1 and oc["attestations"][0]["modelVersion"] == "rules-v1"
+    assert len(oc["attestations"]) == 1 and oc["attestations"][0]["modelVersion"] == "rules-v2"
     assert [t["step"] for t in body["transactions"]][0] == "registerProject"
     assert client.get("/claims/TEST-A/verify").json()["match"] is True
 

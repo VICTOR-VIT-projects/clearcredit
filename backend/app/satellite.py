@@ -40,6 +40,7 @@ NDVI_MAX_PX = 256
 SCL_MASK = [0, 1, 3, 8, 9, 10]  # no-data, saturated, cloud shadow, cloud med/high, cirrus
 EARTH_R = 6_371_007.2  # authalic radius (m)
 
+EVIDENCE_VERSION = "ev2"  # bump whenever evidence numbers change; part of the cache key and the hashed bundle
 CACHE_DIR = Path(os.environ.get("EVIDENCE_CACHE", Path(__file__).resolve().parents[2] / "data" / "cache" / "evidence"))
 _GDAL_ENV = dict(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", GDAL_HTTP_MAX_RETRY="3", GDAL_HTTP_RETRY_DELAY="2")
 
@@ -124,12 +125,21 @@ def _scene_ndvi(item, geom) -> float | None:
     for band in ("B04", "B08"):
         with rasterio.open(item.assets[band].href) as ds:
             arrays[band] = ds.read(1, window=from_bounds(*bounds, ds.transform), out_shape=out).astype("float32")
-    red, nir = arrays["B04"], arrays["B08"]
     inside = ~geometry_mask([mapping(g)], out_shape=out, transform=wt)
-    ok = inside & ~np.isin(scl, SCL_MASK) & ((nir + red) > 0)
-    if ok.sum() < 10:
+    ok = inside & ~np.isin(scl, SCL_MASK) & (arrays["B04"] > 0) & (arrays["B08"] > 0)  # DN 0 = no data
+    offset = boa_offset(item.properties["s2:processing_baseline"])
+    red, nir = (np.clip(arrays[b][ok] - offset, 0, None) for b in ("B04", "B08"))
+    keep = (nir + red) > 0
+    if keep.sum() < 10:
         return None
-    return float(np.mean((nir[ok] - red[ok]) / (nir[ok] + red[ok])))
+    return float(np.mean((nir[keep] - red[keep]) / (nir[keep] + red[keep])))
+
+
+def boa_offset(processing_baseline: str) -> int:
+    """DN offset to subtract before computing reflectance ratios. Since processing baseline
+    04.00 (Jan 2022) L2A DNs carry BOA_ADD_OFFSET = -1000: reflectance = (DN - 1000) / 10000.
+    Ignoring it pushes NDVI down by ~0.3 from 2022 onward and fakes a declining trend."""
+    return 1000 if float(processing_baseline) >= 4.0 else 0
 
 
 def ndvi_trend(geom) -> dict:
@@ -155,7 +165,7 @@ def ndvi_trend(geom) -> dict:
     return {
         "dataset": "Copernicus Sentinel-2 L2A (Microsoft Planetary Computer)",
         "license": "Copernicus Sentinel data terms; contains modified Copernicus Sentinel data",
-        "method": f"per year: {NDVI_SCENES_PER_YEAR} least-cloudy scenes (<20%), SCL-masked mean NDVI inside boundary, median across scenes",
+        "method": f"per year: {NDVI_SCENES_PER_YEAR} least-cloudy scenes (<20%), BOA offset removed for processing baseline >= 04.00, SCL-masked mean NDVI inside boundary, median across scenes",
         "meanNdviByYear": per_year,
         "slopePerYear": slope,
     }
@@ -165,7 +175,7 @@ def ndvi_trend(geom) -> dict:
 
 def get_evidence(boundary: dict, *, live: bool = True) -> dict | None:
     """Cached evidence bundle for a boundary; computes and caches it when `live` is True."""
-    path = CACHE_DIR / f"{boundary_key(boundary)}.json"
+    path = CACHE_DIR / f"{EVIDENCE_VERSION}-{boundary_key(boundary)}.json"
     if path.exists():
         return json.loads(path.read_text(encoding="utf-8"))
     if not live:
@@ -173,6 +183,7 @@ def get_evidence(boundary: dict, *, live: bool = True) -> dict | None:
     geom = shape(boundary)
     t = time.time()
     bundle = {
+        "evidenceVersion": EVIDENCE_VERSION,
         "boundaryKey": boundary_key(boundary),
         "queriedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "forestLoss": forest_loss(geom),
