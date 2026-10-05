@@ -1,0 +1,1546 @@
+{
+ "note": "Detection of injected faults on a seeded dataset of 30 real published projects; not real-world fraud prevalence.",
+ "detectionRule": "blocked by overlap OR score < 60",
+ "thresholdsFrozen": "scoring thresholds were fixed (rules-v2) before this evaluation was run; not tuned to it",
+ "scoringModel": "rules-v2",
+ "evidenceVersion": "ev2",
+ "clearcredit": {
+  "recall": 0.716,
+  "precision": 0.973,
+  "falseAlarmRate": 0.067,
+  "falseAlarms": "2/30",
+  "perFault": {
+   "DUPLICATE": "30/30",
+   "SHIFTED": "29/30",
+   "INFLATED": "3/30",
+   "RELOCATED": "11/12"
+  },
+  "relocatedByLossStratum": {
+   "1%-2%": "2/3",
+   "2%-5%": "3/3",
+   "5%-15%": "3/3",
+   ">15%": "3/3"
+  }
+ },
+ "baselineUniquenessOnly": {
+  "recall": 0.578,
+  "precision": 1.0,
+  "falseAlarmRate": 0.0,
+  "falseAlarms": "0/30",
+  "perFault": {
+   "DUPLICATE": "30/30",
+   "SHIFTED": "29/30",
+   "INFLATED": "0/30",
+   "RELOCATED": "0/12"
+  },
+  "relocatedByLossStratum": {
+   "1%-2%": "0/3",
+   "2%-5%": "0/3",
+   "5%-15%": "0/3",
+   ">15%": "0/3"
+  }
+ },
+ "falseAlarmReasons": {
+  "LITTLE_FOREST": 1,
+  "NDVI_DECLINING": 1,
+  "FOREST_LOSS_HIGH": 1,
+  "CREDITS_HIGH": 1
+ },
+ "rows": [
+  {
+   "case": "GLD3025",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 90,
+   "codes": [
+    "NDVI_NO_GREENING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "GLD3025",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "GLD3025",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "GLD3025",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 80,
+   "codes": [
+    "CREDITS_HIGH",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1085",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1085",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1085",
+   "fault": "SHIFTED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1085",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1112",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1112",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1112",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1112",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 90,
+   "codes": [
+    "CREDITS_HIGH"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1115",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "FOREST_LOSS_MODERATE",
+    "CREDITS_HIGH"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1115",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "FOREST_LOSS_MODERATE",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1115",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "FOREST_LOSS_MODERATE",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1115",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 50,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE",
+    "FOREST_LOSS_MODERATE"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1133",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1133",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1133",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1133",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1202",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "LITTLE_FOREST"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1202",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "LITTLE_FOREST"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1202",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "LITTLE_FOREST"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1202",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 60,
+   "codes": [
+    "LITTLE_FOREST",
+    "CREDITS_HIGH"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1218",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 90,
+   "codes": [
+    "CREDITS_HIGH"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1218",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1218",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1218",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1233",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1233",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1233",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1233",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 90,
+   "codes": [
+    "CREDITS_HIGH"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1326",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1326",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1326",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1326",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1329",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1329",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1329",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1329",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1382",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1382",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1382",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1382",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1391",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1391",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1391",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1391",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 90,
+   "codes": [
+    "CREDITS_HIGH"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1392",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1392",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1392",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1392",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS142",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS142",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS142",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS142",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1663",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 80,
+   "codes": [
+    "NDVI_DECLINING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1663",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 20,
+   "codes": [
+    "OVERLAP",
+    "NDVI_DECLINING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1663",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 20,
+   "codes": [
+    "OVERLAP",
+    "NDVI_DECLINING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1663",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 80,
+   "codes": [
+    "NDVI_DECLINING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1684",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 80,
+   "codes": [
+    "NDVI_DECLINING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1684",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 20,
+   "codes": [
+    "OVERLAP",
+    "NDVI_DECLINING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1684",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 20,
+   "codes": [
+    "OVERLAP",
+    "NDVI_DECLINING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1684",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "NDVI_DECLINING",
+    "CREDITS_HIGH"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1899",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 90,
+   "codes": [
+    "CREDITS_HIGH"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1899",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1899",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1899",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS2079",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 80,
+   "codes": [
+    "CREDITS_HIGH",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS2079",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 20,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_HIGH",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS2079",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 20,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_HIGH",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS2079",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 60,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS2085",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS2085",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS2085",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS2085",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS2293",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS2293",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS2293",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS2293",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS562",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 50,
+   "codes": [
+    "LITTLE_FOREST",
+    "NDVI_DECLINING"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS562",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 0,
+   "codes": [
+    "OVERLAP",
+    "LITTLE_FOREST",
+    "NDVI_DECLINING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS562",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 0,
+   "codes": [
+    "OVERLAP",
+    "LITTLE_FOREST",
+    "NDVI_DECLINING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS562",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 20,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE",
+    "LITTLE_FOREST",
+    "NDVI_DECLINING"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS647",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS647",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS647",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS647",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS658",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 90,
+   "codes": [
+    "NDVI_NO_GREENING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS658",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS658",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS658",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 60,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS665",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS665",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS665",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS665",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS799",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 60,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS799",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 0,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS799",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 0,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS799",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 60,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE",
+    "NDVI_NO_GREENING"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS812",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 30,
+   "codes": [
+    "FOREST_LOSS_HIGH",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS812",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 0,
+   "codes": [
+    "OVERLAP",
+    "FOREST_LOSS_HIGH",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS812",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 0,
+   "codes": [
+    "OVERLAP",
+    "FOREST_LOSS_HIGH",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS812",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 10,
+   "codes": [
+    "FOREST_LOSS_HIGH",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS818",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS818",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS818",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 10,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS818",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS852",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS852",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS852",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS852",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS856",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 90,
+   "codes": [
+    "CREDITS_HIGH"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS856",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS856",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 30,
+   "codes": [
+    "OVERLAP",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS856",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS934",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS934",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS934",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS934",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 70,
+   "codes": [
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-0 (from VCS1112)",
+   "fault": "RELOCATED",
+   "stratum": "1%-2%",
+   "blocked": false,
+   "score": 80,
+   "codes": [
+    "FOREST_LOSS_MODERATE"
+   ],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-1 (from VCS1115)",
+   "fault": "RELOCATED",
+   "stratum": "1%-2%",
+   "blocked": false,
+   "score": 30,
+   "codes": [
+    "FOREST_LOSS_HIGH",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-2 (from VCS1133)",
+   "fault": "RELOCATED",
+   "stratum": "1%-2%",
+   "blocked": false,
+   "score": 40,
+   "codes": [
+    "FOREST_LOSS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-3 (from VCS1202)",
+   "fault": "RELOCATED",
+   "stratum": "2%-5%",
+   "blocked": false,
+   "score": 40,
+   "codes": [
+    "FOREST_LOSS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-4 (from VCS1218)",
+   "fault": "RELOCATED",
+   "stratum": "2%-5%",
+   "blocked": false,
+   "score": 30,
+   "codes": [
+    "FOREST_LOSS_HIGH",
+    "CREDITS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-5 (from VCS1326)",
+   "fault": "RELOCATED",
+   "stratum": "2%-5%",
+   "blocked": false,
+   "score": 10,
+   "codes": [
+    "FOREST_LOSS_HIGH",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-6 (from VCS1329)",
+   "fault": "RELOCATED",
+   "stratum": "5%-15%",
+   "blocked": false,
+   "score": 40,
+   "codes": [
+    "FOREST_LOSS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-7 (from VCS1382)",
+   "fault": "RELOCATED",
+   "stratum": "5%-15%",
+   "blocked": false,
+   "score": 40,
+   "codes": [
+    "FOREST_LOSS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-8 (from VCS1391)",
+   "fault": "RELOCATED",
+   "stratum": "5%-15%",
+   "blocked": false,
+   "score": 40,
+   "codes": [
+    "FOREST_LOSS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-9 (from VCS1392)",
+   "fault": "RELOCATED",
+   "stratum": ">15%",
+   "blocked": false,
+   "score": 40,
+   "codes": [
+    "FOREST_LOSS_HIGH"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-10 (from VCS2293)",
+   "fault": "RELOCATED",
+   "stratum": ">15%",
+   "blocked": false,
+   "score": 10,
+   "codes": [
+    "FOREST_LOSS_HIGH",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "RELOC-11 (from VCS562)",
+   "fault": "RELOCATED",
+   "stratum": ">15%",
+   "blocked": false,
+   "score": 20,
+   "codes": [
+    "FOREST_LOSS_HIGH",
+    "NDVI_DECLINING"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  }
+ ]
+}

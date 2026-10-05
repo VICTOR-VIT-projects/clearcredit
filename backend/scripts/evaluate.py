@@ -64,17 +64,23 @@ def find_frontier_boxes(per_band: int = 3):
                 rate = ((lb == year - 2000) & cb).sum() / forest
                 cands.append((rate, year, FRONTIER[0] + c * 0.00025, FRONTIER[3] - (r + step) * 0.00025))
     # Stratify by severity so the test includes subtle clearing, not only near-total clear-cuts.
-    # Within each band take the most severe candidates at distinct locations (deterministic).
-    cands.sort(reverse=True)
+    # Within each band take the 25th/50th/75th percentile candidates (one box per location), so
+    # picks are not biased toward the band's severe edge. Deterministic.
+    cands.sort()
     chosen, used = [], set()
     for lo, hi in LOSS_BANDS:
-        picked = 0
-        for rate, year, x0, y0 in cands:
-            if lo <= rate < hi and (x0, y0) not in used and picked < per_band:
-                used.add((x0, y0))
-                picked += 1
-                chosen.append({"vintageYear": year, "lossRate": round(float(rate), 4), "band": f"{lo:.0%}-{hi:.0%}",
-                               "boundary": box(round(x0, 5), round(y0, 5))})
+        best_per_loc = {}
+        for rate, year, x0, y0 in cands:  # ascending: keep each location's most severe in-band year
+            if lo <= rate < hi:
+                best_per_loc[(x0, y0)] = (rate, year, x0, y0)
+        inband = sorted(best_per_loc.values())
+        for q in [(k + 1) / (per_band + 1) for k in range(per_band)]:
+            rate, year, x0, y0 = inband[int(q * (len(inband) - 1))]
+            if (x0, y0) in used:
+                continue
+            used.add((x0, y0))
+            chosen.append({"vintageYear": year, "lossRate": round(float(rate), 4), "band": f"{lo:.0%}-{hi:.0%}" if hi <= 1 else f">{lo:.0%}",
+                           "boundary": box(round(x0, 5), round(y0, 5))})
     EVAL.mkdir(parents=True, exist_ok=True)
     BOXES.write_text(json.dumps(chosen, indent=1), encoding="utf-8")
     for b in chosen:
