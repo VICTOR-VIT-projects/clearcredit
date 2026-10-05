@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "abi": "hardhat compile && node -e \"const a=require('./artifacts/contracts/ClearCreditRegistry.sol/ClearCreditRegistry.json');require('fs').writeFileSync('../backend/app/abi.json',JSON.stringify(a.abi,null,1))\"",
+    "deploy:base": "hardhat run scripts/deploy.ts --network baseSepolia"
   },
   "keywords": [],
   "author": "",

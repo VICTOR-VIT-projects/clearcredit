@@ -1,0 +1,1260 @@
+[
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "admin",
+    "type": "address"
+   },
+   {
+    "internalType": "uint8",
+    "name": "cellResolution_",
+    "type": "uint8"
+   },
+   {
+    "internalType": "uint16",
+    "name": "issueThresholdBps_",
+    "type": "uint16"
+   }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "constructor"
+ },
+ {
+  "inputs": [],
+  "name": "AccessControlBadConfirmation",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "account",
+    "type": "address"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "neededRole",
+    "type": "bytes32"
+   }
+  ],
+  "name": "AccessControlUnauthorizedAccount",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "recovered",
+    "type": "address"
+   },
+   {
+    "internalType": "address",
+    "name": "developer",
+    "type": "address"
+   }
+  ],
+  "name": "BadSignature",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint64",
+    "name": "cell",
+    "type": "uint64"
+   },
+   {
+    "internalType": "uint16",
+    "name": "vintageYear",
+    "type": "uint16"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "existingProjectId",
+    "type": "bytes32"
+   }
+  ],
+  "name": "CellAlreadyClaimed",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "claimHash",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "existingProjectId",
+    "type": "bytes32"
+   }
+  ],
+  "name": "ClaimHashExists",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "ECDSAInvalidSignature",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "length",
+    "type": "uint256"
+   }
+  ],
+  "name": "ECDSAInvalidSignatureLength",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "s",
+    "type": "bytes32"
+   }
+  ],
+  "name": "ECDSAInvalidSignatureS",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint64",
+    "name": "requestedTotal",
+    "type": "uint64"
+   },
+   {
+    "internalType": "uint64",
+    "name": "claimed",
+    "type": "uint64"
+   }
+  ],
+  "name": "ExceedsClaimed",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint64",
+    "name": "requestedTotal",
+    "type": "uint64"
+   },
+   {
+    "internalType": "uint64",
+    "name": "issued",
+    "type": "uint64"
+   }
+  ],
+  "name": "ExceedsIssued",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "InvalidShortString",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   }
+  ],
+  "name": "NoAttestation",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "caller",
+    "type": "address"
+   }
+  ],
+  "name": "NotDeveloper",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   }
+  ],
+  "name": "ProjectExists",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint16",
+    "name": "scoreBps",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "thresholdBps",
+    "type": "uint16"
+   }
+  ],
+  "name": "ScoreBelowThreshold",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint16",
+    "name": "scoreBps",
+    "type": "uint16"
+   }
+  ],
+  "name": "ScoreOutOfRange",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "string",
+    "name": "str",
+    "type": "string"
+   }
+  ],
+  "name": "StringTooLong",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "given",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "max",
+    "type": "uint256"
+   }
+  ],
+  "name": "TooManyCells",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   }
+  ],
+  "name": "UnknownProject",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint64",
+    "name": "cell",
+    "type": "uint64"
+   },
+   {
+    "internalType": "uint8",
+    "name": "resolution",
+    "type": "uint8"
+   }
+  ],
+  "name": "WrongCellResolution",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "enum ClearCreditRegistry.Status",
+    "name": "status",
+    "type": "uint8"
+   }
+  ],
+  "name": "WrongStatus",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "ZeroValue",
+  "type": "error"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "index",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint16",
+    "name": "scoreBps",
+    "type": "uint16"
+   },
+   {
+    "indexed": false,
+    "internalType": "bytes32",
+    "name": "evidenceHash",
+    "type": "bytes32"
+   },
+   {
+    "indexed": false,
+    "internalType": "string",
+    "name": "modelVersion",
+    "type": "string"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "verifier",
+    "type": "address"
+   }
+  ],
+  "name": "AttestationPosted",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint32",
+    "name": "added",
+    "type": "uint32"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint32",
+    "name": "total",
+    "type": "uint32"
+   }
+  ],
+  "name": "CellsAdded",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint64",
+    "name": "amount",
+    "type": "uint64"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint64",
+    "name": "totalIssued",
+    "type": "uint64"
+   }
+  ],
+  "name": "CreditsIssued",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [],
+  "name": "EIP712DomainChanged",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": false,
+    "internalType": "uint16",
+    "name": "oldBps",
+    "type": "uint16"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint16",
+    "name": "newBps",
+    "type": "uint16"
+   }
+  ],
+  "name": "IssueThresholdChanged",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint32",
+    "name": "cellCount",
+    "type": "uint32"
+   }
+  ],
+  "name": "ProjectFinalized",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "developer",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "bytes32",
+    "name": "claimHash",
+    "type": "bytes32"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint16",
+    "name": "vintageYear",
+    "type": "uint16"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint64",
+    "name": "claimedCredits",
+    "type": "uint64"
+   }
+  ],
+  "name": "ProjectRegistered",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "from",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint64",
+    "name": "serialStart",
+    "type": "uint64"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint64",
+    "name": "amount",
+    "type": "uint64"
+   },
+   {
+    "indexed": false,
+    "internalType": "string",
+    "name": "beneficiary",
+    "type": "string"
+   }
+  ],
+  "name": "Retired",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "role",
+    "type": "bytes32"
+   },
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "previousAdminRole",
+    "type": "bytes32"
+   },
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "newAdminRole",
+    "type": "bytes32"
+   }
+  ],
+  "name": "RoleAdminChanged",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "role",
+    "type": "bytes32"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "account",
+    "type": "address"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "sender",
+    "type": "address"
+   }
+  ],
+  "name": "RoleGranted",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "role",
+    "type": "bytes32"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "account",
+    "type": "address"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "sender",
+    "type": "address"
+   }
+  ],
+  "name": "RoleRevoked",
+  "type": "event"
+ },
+ {
+  "inputs": [],
+  "name": "CLAIM_TYPEHASH",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "DEFAULT_ADMIN_ROLE",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "MAX_CELLS_PER_TX",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "MAX_SCORE_BPS",
+  "outputs": [
+   {
+    "internalType": "uint16",
+    "name": "",
+    "type": "uint16"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "REGISTRAR_ROLE",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "VERIFIER_ROLE",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint64[]",
+    "name": "cellIds",
+    "type": "uint64[]"
+   }
+  ],
+  "name": "addCells",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint64",
+    "name": "",
+    "type": "uint64"
+   },
+   {
+    "internalType": "uint16",
+    "name": "",
+    "type": "uint16"
+   }
+  ],
+  "name": "cellClaim",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "cellResolution",
+  "outputs": [
+   {
+    "internalType": "uint8",
+    "name": "",
+    "type": "uint8"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint64[]",
+    "name": "cellIds",
+    "type": "uint64[]"
+   },
+   {
+    "internalType": "uint16",
+    "name": "vintageYear",
+    "type": "uint16"
+   }
+  ],
+  "name": "checkCells",
+  "outputs": [
+   {
+    "internalType": "bytes32[]",
+    "name": "owners",
+    "type": "bytes32[]"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "claimHash",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint16",
+    "name": "vintageYear",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint64",
+    "name": "claimedCredits",
+    "type": "uint64"
+   }
+  ],
+  "name": "claimDigest",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "eip712Domain",
+  "outputs": [
+   {
+    "internalType": "bytes1",
+    "name": "fields",
+    "type": "bytes1"
+   },
+   {
+    "internalType": "string",
+    "name": "name",
+    "type": "string"
+   },
+   {
+    "internalType": "string",
+    "name": "version",
+    "type": "string"
+   },
+   {
+    "internalType": "uint256",
+    "name": "chainId",
+    "type": "uint256"
+   },
+   {
+    "internalType": "address",
+    "name": "verifyingContract",
+    "type": "address"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "salt",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint256[]",
+    "name": "extensions",
+    "type": "uint256[]"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   }
+  ],
+  "name": "finalizeRegistration",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   }
+  ],
+  "name": "getAttestations",
+  "outputs": [
+   {
+    "components": [
+     {
+      "internalType": "uint16",
+      "name": "scoreBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "bytes32",
+      "name": "evidenceHash",
+      "type": "bytes32"
+     },
+     {
+      "internalType": "string",
+      "name": "modelVersion",
+      "type": "string"
+     },
+     {
+      "internalType": "address",
+      "name": "verifier",
+      "type": "address"
+     },
+     {
+      "internalType": "uint64",
+      "name": "timestamp",
+      "type": "uint64"
+     }
+    ],
+    "internalType": "struct ClearCreditRegistry.Attestation[]",
+    "name": "",
+    "type": "tuple[]"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   }
+  ],
+  "name": "getProject",
+  "outputs": [
+   {
+    "components": [
+     {
+      "internalType": "address",
+      "name": "developer",
+      "type": "address"
+     },
+     {
+      "internalType": "bytes32",
+      "name": "claimHash",
+      "type": "bytes32"
+     },
+     {
+      "internalType": "uint16",
+      "name": "vintageYear",
+      "type": "uint16"
+     },
+     {
+      "internalType": "enum ClearCreditRegistry.Status",
+      "name": "status",
+      "type": "uint8"
+     },
+     {
+      "internalType": "uint64",
+      "name": "claimedCredits",
+      "type": "uint64"
+     },
+     {
+      "internalType": "uint64",
+      "name": "issued",
+      "type": "uint64"
+     },
+     {
+      "internalType": "uint64",
+      "name": "retired",
+      "type": "uint64"
+     },
+     {
+      "internalType": "uint32",
+      "name": "cellCount",
+      "type": "uint32"
+     },
+     {
+      "internalType": "uint64",
+      "name": "registeredAt",
+      "type": "uint64"
+     }
+    ],
+    "internalType": "struct ClearCreditRegistry.Project",
+    "name": "",
+    "type": "tuple"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   }
+  ],
+  "name": "getRetirements",
+  "outputs": [
+   {
+    "components": [
+     {
+      "internalType": "uint64",
+      "name": "serialStart",
+      "type": "uint64"
+     },
+     {
+      "internalType": "uint64",
+      "name": "amount",
+      "type": "uint64"
+     },
+     {
+      "internalType": "address",
+      "name": "from",
+      "type": "address"
+     },
+     {
+      "internalType": "string",
+      "name": "beneficiary",
+      "type": "string"
+     },
+     {
+      "internalType": "uint64",
+      "name": "timestamp",
+      "type": "uint64"
+     }
+    ],
+    "internalType": "struct ClearCreditRegistry.Retirement[]",
+    "name": "",
+    "type": "tuple[]"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "role",
+    "type": "bytes32"
+   }
+  ],
+  "name": "getRoleAdmin",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "role",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "address",
+    "name": "account",
+    "type": "address"
+   }
+  ],
+  "name": "grantRole",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "role",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "address",
+    "name": "account",
+    "type": "address"
+   }
+  ],
+  "name": "hasRole",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint64",
+    "name": "amount",
+    "type": "uint64"
+   }
+  ],
+  "name": "issueCredits",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "issueThresholdBps",
+  "outputs": [
+   {
+    "internalType": "uint16",
+    "name": "",
+    "type": "uint16"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint16",
+    "name": "scoreBps",
+    "type": "uint16"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "evidenceHash",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "string",
+    "name": "modelVersion",
+    "type": "string"
+   }
+  ],
+  "name": "postAttestation",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "name": "projectOfClaimHash",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "claimHash",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "address",
+    "name": "developer",
+    "type": "address"
+   },
+   {
+    "internalType": "uint16",
+    "name": "vintageYear",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint64",
+    "name": "claimedCredits",
+    "type": "uint64"
+   },
+   {
+    "internalType": "uint64[]",
+    "name": "cellIds",
+    "type": "uint64[]"
+   },
+   {
+    "internalType": "bytes",
+    "name": "signature",
+    "type": "bytes"
+   }
+  ],
+  "name": "registerProject",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "role",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "address",
+    "name": "callerConfirmation",
+    "type": "address"
+   }
+  ],
+  "name": "renounceRole",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint64",
+    "name": "amount",
+    "type": "uint64"
+   },
+   {
+    "internalType": "string",
+    "name": "beneficiary",
+    "type": "string"
+   }
+  ],
+  "name": "retireCredits",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "role",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "address",
+    "name": "account",
+    "type": "address"
+   }
+  ],
+  "name": "revokeRole",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint16",
+    "name": "newBps",
+    "type": "uint16"
+   }
+  ],
+  "name": "setIssueThreshold",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes4",
+    "name": "interfaceId",
+    "type": "bytes4"
+   }
+  ],
+  "name": "supportsInterface",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ }
+]

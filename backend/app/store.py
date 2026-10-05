@@ -1,0 +1,109 @@
+"""SQLite persistence: claims and idempotency records (stdlib sqlite3, no ORM)."""
+from __future__ import annotations
+
+import json
+import os
+import sqlite3
+import threading
+from datetime import datetime, timezone
+from pathlib import Path
+
+DB_PATH = os.environ.get("CLEARCREDIT_DB", str(Path(__file__).resolve().parents[1] / "clearcredit.sqlite3"))
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS claims (
+    project_id   TEXT PRIMARY KEY,
+    project_key  TEXT NOT NULL UNIQUE,
+    claim_hash   TEXT NOT NULL UNIQUE,
+    vintage_year INTEGER NOT NULL,
+    claim_json   TEXT NOT NULL,
+    signature    TEXT,
+    cells_json   TEXT NOT NULL,
+    result_json  TEXT NOT NULL,          -- area, overlaps, score, evidence summary
+    status       TEXT NOT NULL,          -- relaying | registered | relay_failed | offline
+    txs_json     TEXT NOT NULL DEFAULT '[]',
+    created_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS claims_vintage ON claims (vintage_year);
+CREATE TABLE IF NOT EXISTS idempotency (
+    key          TEXT PRIMARY KEY,
+    request_hash TEXT NOT NULL,
+    status_code  INTEGER,                -- NULL while the first request is still in flight
+    response     TEXT,
+    created_at   TEXT NOT NULL
+);
+"""
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+class Store:
+    def __init__(self, path: str = DB_PATH):
+        self.db = sqlite3.connect(path, check_same_thread=False, isolation_level=None)
+        self.db.row_factory = sqlite3.Row
+        self.db.executescript(SCHEMA)
+        self.lock = threading.Lock()
+
+    # ------------------------------------------------------------ idempotency
+
+    def idem_begin(self, key: str, request_hash: str) -> tuple[str, sqlite3.Row | None]:
+        """Returns ('new', None) | ('replay', row) | ('in_flight', row) | ('mismatch', row)."""
+        with self.lock:
+            row = self.db.execute("SELECT * FROM idempotency WHERE key = ?", (key,)).fetchone()
+            if row is None:
+                self.db.execute("INSERT INTO idempotency (key, request_hash, created_at) VALUES (?, ?, ?)", (key, request_hash, _now()))
+                return "new", None
+        if row["request_hash"] != request_hash:
+            return "mismatch", row
+        return ("in_flight", row) if row["status_code"] is None else ("replay", row)
+
+    def idem_finish(self, key: str, status_code: int, response: dict) -> None:
+        self.db.execute("UPDATE idempotency SET status_code = ?, response = ? WHERE key = ?", (status_code, json.dumps(response), key))
+
+    def idem_abort(self, key: str) -> None:
+        """Forget an in-flight key after an unexpected server error so the client can retry."""
+        self.db.execute("DELETE FROM idempotency WHERE key = ? AND status_code IS NULL", (key,))
+
+    # ------------------------------------------------------------ claims
+
+    def insert_claim(self, *, project_id, project_key, claim_hash, vintage_year, claim, signature, cells, result, status) -> None:
+        self.db.execute(
+            "INSERT INTO claims (project_id, project_key, claim_hash, vintage_year, claim_json, signature, cells_json, result_json, status, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (project_id, project_key, claim_hash, vintage_year, json.dumps(claim), signature, json.dumps(cells), json.dumps(result), status, _now()),
+        )
+
+    def update_claim(self, project_id: str, *, status: str | None = None, txs: list | None = None, result: dict | None = None) -> None:
+        if status is not None:
+            self.db.execute("UPDATE claims SET status = ? WHERE project_id = ?", (status, project_id))
+        if txs is not None:
+            self.db.execute("UPDATE claims SET txs_json = ? WHERE project_id = ?", (json.dumps(txs), project_id))
+        if result is not None:
+            self.db.execute("UPDATE claims SET result_json = ? WHERE project_id = ?", (json.dumps(result), project_id))
+
+    def get(self, project_id: str) -> dict | None:
+        row = self.db.execute("SELECT * FROM claims WHERE project_id = ?", (project_id,)).fetchone()
+        return _row(row) if row else None
+
+    def find(self, *, claim_hash: str | None = None, project_key: str | None = None) -> dict | None:
+        col, val = ("claim_hash", claim_hash) if claim_hash else ("project_key", project_key)
+        row = self.db.execute(f"SELECT * FROM claims WHERE {col} = ?", (val,)).fetchone()
+        return _row(row) if row else None
+
+    def same_vintage(self, vintage_year: int, exclude: str | None = None) -> list[dict]:
+        rows = self.db.execute("SELECT * FROM claims WHERE vintage_year = ? AND project_id IS NOT ?", (vintage_year, exclude)).fetchall()
+        return [_row(r) for r in rows]
+
+    def page(self, offset: int, limit: int) -> tuple[int, list[dict]]:
+        total = self.db.execute("SELECT COUNT(*) FROM claims").fetchone()[0]
+        rows = self.db.execute("SELECT * FROM claims ORDER BY created_at DESC, project_id LIMIT ? OFFSET ?", (limit, offset)).fetchall()
+        return total, [_row(r) for r in rows]
+
+
+def _row(r: sqlite3.Row) -> dict:
+    d = dict(r)
+    for k in ("claim_json", "cells_json", "result_json", "txs_json"):
+        d[k.removesuffix("_json")] = json.loads(d.pop(k))
+    return d

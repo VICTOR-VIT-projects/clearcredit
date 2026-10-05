@@ -1,0 +1,15 @@
+[project]
+name = "clearcredit-backend"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi", "uvicorn[standard]", "pydantic", "shapely", "pyproj", "h3>=4.2",
+  "web3", "numpy", "rasterio", "pystac-client", "planetary-computer",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
