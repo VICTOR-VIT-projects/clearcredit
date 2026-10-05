@@ -39,6 +39,7 @@ class Claim(BaseModel):
     boundary: Boundary
     boundaryCrs: Literal["EPSG:4326"] = "EPSG:4326"
     sourceRegistry: str | None = Field(default=None, max_length=200, description="Registry name and external ID")
+    boundarySource: str | None = Field(default=None, max_length=300, description="Where the boundary came from and how it was processed")
     dataLabel: DataLabel = Field(description="real | illustrative | synthetic — shown everywhere the claim is shown")
     submittedAt: str | None = Field(default=None, description="Server metadata; excluded from the hash")
 

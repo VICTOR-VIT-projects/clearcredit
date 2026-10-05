@@ -1,0 +1,272 @@
+{
+  "description": "Cross-language test vectors for ClearCredit claim hashing (schema 1.0). Any implementation must reproduce canonical and claimHash exactly.",
+  "vectors": [
+    {
+      "name": "basic",
+      "claim": {
+        "schemaVersion": "1.0",
+        "projectId": "VEC-1",
+        "developer": "0x6958d2152447CCDbC42466B6b8AE5e379B3C95e8",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 12000,
+        "creditUnit": "tCO2e",
+        "boundaryCrs": "EPSG:4326",
+        "dataLabel": "synthetic",
+        "boundary": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -63.1,
+                -9.9
+              ],
+              [
+                -63.05,
+                -9.9
+              ],
+              [
+                -63.05,
+                -9.85
+              ],
+              [
+                -63.1,
+                -9.85
+              ],
+              [
+                -63.1,
+                -9.9
+              ]
+            ]
+          ]
+        }
+      },
+      "canonical": "{\"boundary\":{\"coordinates\":[[[-63100000,-9900000],[-63050000,-9900000],[-63050000,-9850000],[-63100000,-9850000],[-63100000,-9900000]]],\"type\":\"Polygon\"},\"boundaryCrs\":\"EPSG:4326\",\"claimedCredits\":12000,\"creditUnit\":\"tCO2e\",\"dataLabel\":\"synthetic\",\"developer\":\"0x6958d2152447ccdbc42466b6b8ae5e379b3c95e8\",\"projectId\":\"VEC-1\",\"projectType\":\"avoided_deforestation\",\"schemaVersion\":\"1.0\",\"vintageYear\":2023}",
+      "claimHash": "0xa882084c44c6d29688347c773b35bc5ec4e6fd18ffaa61212e7e814eb5e06f7a",
+      "projectKey": "0xaba11bffc616cf262941211873dfa095423bcee98733119f0ee604ff5137f645"
+    },
+    {
+      "name": "reversed ring, rotated start, submittedAt present (all ignored)",
+      "claim": {
+        "schemaVersion": "1.0",
+        "projectId": "VEC-1",
+        "developer": "0x6958d2152447CCDbC42466B6b8AE5e379B3C95e8",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 12000,
+        "creditUnit": "tCO2e",
+        "boundaryCrs": "EPSG:4326",
+        "dataLabel": "synthetic",
+        "boundary": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -63.05,
+                -9.85
+              ],
+              [
+                -63.05,
+                -9.9
+              ],
+              [
+                -63.1,
+                -9.9
+              ],
+              [
+                -63.1,
+                -9.85
+              ],
+              [
+                -63.05,
+                -9.85
+              ]
+            ]
+          ]
+        },
+        "submittedAt": "2026-10-05T00:00:00Z"
+      },
+      "canonical": "{\"boundary\":{\"coordinates\":[[[-63100000,-9900000],[-63050000,-9900000],[-63050000,-9850000],[-63100000,-9850000],[-63100000,-9900000]]],\"type\":\"Polygon\"},\"boundaryCrs\":\"EPSG:4326\",\"claimedCredits\":12000,\"creditUnit\":\"tCO2e\",\"dataLabel\":\"synthetic\",\"developer\":\"0x6958d2152447ccdbc42466b6b8ae5e379b3c95e8\",\"projectId\":\"VEC-1\",\"projectType\":\"avoided_deforestation\",\"schemaVersion\":\"1.0\",\"vintageYear\":2023}",
+      "claimHash": "0xa882084c44c6d29688347c773b35bc5ec4e6fd18ffaa61212e7e814eb5e06f7a",
+      "projectKey": "0xaba11bffc616cf262941211873dfa095423bcee98733119f0ee604ff5137f645"
+    },
+    {
+      "name": "binary rounding tie 0.0078125 -> 7813 (half-up)",
+      "claim": {
+        "schemaVersion": "1.0",
+        "projectId": "VEC-TIE",
+        "developer": "0x6958d2152447CCDbC42466B6b8AE5e379B3C95e8",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 12000,
+        "creditUnit": "tCO2e",
+        "boundaryCrs": "EPSG:4326",
+        "dataLabel": "synthetic",
+        "boundary": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                0.0078125,
+                0.0078125
+              ],
+              [
+                0.5078125,
+                0.0078125
+              ],
+              [
+                0.5078125,
+                0.5078125
+              ],
+              [
+                0.0078125,
+                0.0078125
+              ]
+            ]
+          ]
+        }
+      },
+      "canonical": "{\"boundary\":{\"coordinates\":[[[7813,7813],[507813,7813],[507813,507813],[7813,7813]]],\"type\":\"Polygon\"},\"boundaryCrs\":\"EPSG:4326\",\"claimedCredits\":12000,\"creditUnit\":\"tCO2e\",\"dataLabel\":\"synthetic\",\"developer\":\"0x6958d2152447ccdbc42466b6b8ae5e379b3c95e8\",\"projectId\":\"VEC-TIE\",\"projectType\":\"avoided_deforestation\",\"schemaVersion\":\"1.0\",\"vintageYear\":2023}",
+      "claimHash": "0x300f0d20a3662823c90d8c7edacb10c62ded5212a6b5af8d97f15790d0ee58dc",
+      "projectKey": "0xa4bae205932061c23b36406187f298e2392ca67e317095b0cffa770ded5476a2"
+    },
+    {
+      "name": "polygon with hole + unicode + null optional",
+      "claim": {
+        "schemaVersion": "1.0",
+        "projectId": "VEC-HOLE",
+        "developer": "0x6958d2152447CCDbC42466B6b8AE5e379B3C95e8",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 12000,
+        "creditUnit": "tCO2e",
+        "boundaryCrs": "EPSG:4326",
+        "dataLabel": "synthetic",
+        "boundary": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            [
+              [
+                0.2,
+                0.2
+              ],
+              [
+                0.2,
+                0.4
+              ],
+              [
+                0.4,
+                0.4
+              ],
+              [
+                0.4,
+                0.2
+              ],
+              [
+                0.2,
+                0.2
+              ]
+            ]
+          ]
+        },
+        "sourceRegistry": "Verra VCS 1115 — São Paulo",
+        "submittedAt": null
+      },
+      "canonical": "{\"boundary\":{\"coordinates\":[[[0,0],[1000000,0],[1000000,1000000],[0,1000000],[0,0]],[[200000,200000],[200000,400000],[400000,400000],[400000,200000],[200000,200000]]],\"type\":\"Polygon\"},\"boundaryCrs\":\"EPSG:4326\",\"claimedCredits\":12000,\"creditUnit\":\"tCO2e\",\"dataLabel\":\"synthetic\",\"developer\":\"0x6958d2152447ccdbc42466b6b8ae5e379b3c95e8\",\"projectId\":\"VEC-HOLE\",\"projectType\":\"avoided_deforestation\",\"schemaVersion\":\"1.0\",\"sourceRegistry\":\"Verra VCS 1115 — São Paulo\",\"vintageYear\":2023}",
+      "claimHash": "0x5aee4881212a2bbc0b29780311ec8e1b7db756f13e4c157ee947e1150283043b",
+      "projectKey": "0xa67f12096dee56ecae3427a75600ef03a8a0d20cbad8649ad1d2bbab01d5b7ae"
+    },
+    {
+      "name": "multipolygon parts in reverse order",
+      "claim": {
+        "schemaVersion": "1.0",
+        "projectId": "VEC-MULTI",
+        "developer": "0x6958D2152447CCDBC42466B6B8AE5E379B3C95E8",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 12000,
+        "creditUnit": "tCO2e",
+        "boundaryCrs": "EPSG:4326",
+        "dataLabel": "synthetic",
+        "boundary": {
+          "type": "MultiPolygon",
+          "coordinates": [
+            [
+              [
+                [
+                  2,
+                  2
+                ],
+                [
+                  3,
+                  2
+                ],
+                [
+                  3,
+                  3
+                ],
+                [
+                  2,
+                  3
+                ],
+                [
+                  2,
+                  2
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      "canonical": "{\"boundary\":{\"coordinates\":[[[[0,0],[1000000,0],[1000000,1000000],[0,1000000],[0,0]]],[[[2000000,2000000],[3000000,2000000],[3000000,3000000],[2000000,3000000],[2000000,2000000]]]],\"type\":\"MultiPolygon\"},\"boundaryCrs\":\"EPSG:4326\",\"claimedCredits\":12000,\"creditUnit\":\"tCO2e\",\"dataLabel\":\"synthetic\",\"developer\":\"0x6958d2152447ccdbc42466b6b8ae5e379b3c95e8\",\"projectId\":\"VEC-MULTI\",\"projectType\":\"avoided_deforestation\",\"schemaVersion\":\"1.0\",\"vintageYear\":2023}",
+      "claimHash": "0xab2843eebbc5ca02a828e0c2213cf5ef8dc16c311023348614abaa139ed29706",
+      "projectKey": "0x9c2f6caa0bbd0a2bf322f39bc88751d4883f91757c9f64e44861badf48e91501"
+    }
+  ]
+}

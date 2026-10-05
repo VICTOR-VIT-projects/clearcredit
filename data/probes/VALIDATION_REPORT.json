@@ -1,0 +1,58 @@
+{
+  "validatedAt": "2026-10-05",
+  "status": "PASS",
+  "filesChecked": 40,
+  "uniqueProjectIds": 40,
+  "totalBytes": 10894207,
+  "totalPositions": 273298,
+  "totalRings": 9643,
+  "counts": {
+    "byProjectType": {
+      "afforestation": 17,
+      "avoided_deforestation": 23
+    },
+    "byRegistry": {
+      "Gold Standard": 1,
+      "Verra VCS": 39
+    },
+    "byCountry": {
+      "Belize": 4,
+      "Bolivia": 2,
+      "Brazil": 7,
+      "Cambodia": 1,
+      "Colombia": 6,
+      "DR Congo": 1,
+      "Indonesia": 2,
+      "Kenya": 2,
+      "Laos": 1,
+      "Madagascar": 1,
+      "Mozambique": 1,
+      "Nicaragua": 1,
+      "Papua New Guinea": 1,
+      "Peru": 6,
+      "Tanzania": 1,
+      "Uganda": 1,
+      "Zambia": 2
+    },
+    "byGeometryType": {
+      "MultiPolygon": 22,
+      "Polygon": 18
+    }
+  },
+  "checks": {
+    "validJson": true,
+    "oneFeaturePerCollection": true,
+    "exactRequiredProperties": true,
+    "epsg4326CoordinateRanges": true,
+    "polygonalGeometryOnly": true,
+    "ringsClosed": true,
+    "uniqueIds": true,
+    "manifestAgreement": true,
+    "illustrativeFalse": true
+  },
+  "errors": [],
+  "warnings": [
+    "Structural validation cannot prove registry authority, currentness, or survey-grade positional accuracy.",
+    "The seed was extracted from a zoom-12 vector-tile derivative and is suitable for prototype analysis, not cadastral or issuance decisions."
+  ]
+}

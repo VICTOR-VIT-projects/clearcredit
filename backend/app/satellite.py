@@ -32,6 +32,7 @@ GFC_VERSION = "GFC-2025-v1.13"
 GFC_LAST_YEAR = 2025
 GFC_URL = "https://storage.googleapis.com/earthenginepartners-hansen/{v}/Hansen_{v}_{layer}_{tile}.tif"
 CANOPY_THRESHOLD = 30  # % canopy cover in 2000 counted as forest (GFW convention)
+ROW_BLOCK = 2048
 STAC_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
 NDVI_YEARS = range(2019, 2026)
 NDVI_SCENES_PER_YEAR = 4
@@ -81,13 +82,17 @@ def forest_loss(geom) -> dict:
             with rasterio.open(urls["lossyear"]) as ly, rasterio.open(urls["treecover2000"]) as tc:
                 win = from_bounds(*part.bounds, ly.transform).round_offsets().round_lengths()
                 win = win.intersection(Window(0, 0, ly.width, ly.height))
-                lossyear, cover = ly.read(1, window=win), tc.read(1, window=win)
-                wt = ly.window_transform(win)
-                inside = ~geometry_mask([mapping(part)], out_shape=lossyear.shape, transform=wt, all_touched=False)
-                area = _pixel_area_ha(wt, lossyear.shape[0], 0)[:, None] * np.ones_like(lossyear, dtype=float)
-                forest = inside & (cover > CANOPY_THRESHOLD)
-                forest_ha += float(area[forest].sum())
-                loss += np.bincount(lossyear[forest].ravel(), weights=area[forest].ravel(), minlength=loss.size)[: loss.size]
+                # Row blocks keep memory bounded for multi-degree projects (~30 m pixels).
+                for r0 in range(0, int(win.height), ROW_BLOCK):
+                    sub = Window(win.col_off, win.row_off + r0, win.width, min(ROW_BLOCK, win.height - r0))
+                    lossyear, cover = ly.read(1, window=sub), tc.read(1, window=sub)
+                    wt = ly.window_transform(sub)
+                    inside = ~geometry_mask([mapping(part)], out_shape=lossyear.shape, transform=wt, all_touched=False)
+                    forest = inside & (cover > CANOPY_THRESHOLD)
+                    row_area = _pixel_area_ha(wt, lossyear.shape[0], 0)
+                    forest_ha += float(forest.sum(axis=1) @ row_area)
+                    rows, _ = np.nonzero(forest)
+                    loss += np.bincount(lossyear[forest], weights=row_area[rows], minlength=loss.size)[: loss.size]
     by_year = {str(2000 + i): round(float(v), 2) for i, v in enumerate(loss) if i > 0}
     return {
         "dataset": f"Hansen/UMD/Google/USGS/NASA Global Forest Change {GFC_VERSION}",

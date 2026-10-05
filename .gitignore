@@ -10,9 +10,14 @@ contracts/cache/
 contracts/typechain-types/
 contracts/coverage/
 frontend/dist/
-data/cache/
+data/cache/*
+!data/cache/evidence/
 # probe scratch (caches, cloned upstream repos, venvs)
 data/probes/.npm-cache/
 data/probes/.venv/
 data/probes/tooling/node_modules/
 data/probes/*-source/
+# raw upstream downloads (re-fetchable; sources and hashes in data/probes/SEED_PROVENANCE.json)
+data/probes/offsets-db-csv/
+data/probes/offsets-db.csv.zip
+data/probes/VROD-*.xlsx

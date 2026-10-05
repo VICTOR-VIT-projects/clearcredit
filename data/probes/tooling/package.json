@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@mapbox/vector-tile": "^3.0.0",
+    "csv-parse": "^7.0.3",
+    "pbf": "^5.1.2",
+    "pmtiles": "^4.5.0",
+    "polygon-clipping": "^0.15.7",
+    "xlsx": "^0.18.5"
+  }
+}

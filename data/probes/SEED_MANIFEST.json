@@ -1,0 +1,1141 @@
+{
+  "generatedAt": "2026-10-05T00:00:00+05:30",
+  "sourceDataset": "https://zenodo.org/records/11459391",
+  "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles",
+  "pmtilesZoom": 12,
+  "projects": [
+    {
+      "projectId": "VCS647",
+      "name": "Boden Creek Ecological Preserve Forest Carbon Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/647",
+      "country": "Belize",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 262,
+      "bbox": [
+        -88.8622498512268,
+        16.22952960801561,
+        -88.75182867050171,
+        16.335521870907684
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 6,
+      "requestedTiles": 20,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS812",
+      "name": "Bull Run Overseas Forest Carbon Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/812",
+      "country": "Belize",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2009,
+        2010
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 535,
+      "bbox": [
+        -88.94900321960449,
+        17.006046983611185,
+        -88.80897045135498,
+        17.078651089126325
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 5,
+      "requestedTiles": 20,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1326",
+      "name": "Laguna Seca Forest Carbon Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1326",
+      "country": "Belize",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 159,
+      "bbox": [
+        -88.98631811141968,
+        17.538253087349688,
+        -88.86308670043945,
+        17.61171087858726
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 4,
+      "requestedTiles": 16,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS852",
+      "name": "Rio Bravo Climate Action Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/852",
+      "country": "Belize",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2010,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 143,
+      "bbox": [
+        -88.8184118270874,
+        17.5210042905926,
+        -88.74097108840942,
+        17.8057562595137
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 6,
+      "requestedTiles": 24,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS818",
+      "name": "Protection of the Bolivian Amazon Forest",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/818",
+      "country": "Bolivia",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2012
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 34,
+      "bbox": [
+        -66.29703998565674,
+        -12.155262452080194,
+        -66.26893043518066,
+        -12.142067841028052
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 2,
+      "requestedTiles": 12,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS999",
+      "name": "Protection of the Amazon Rain Forest II",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/999",
+      "country": "Bolivia",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [],
+      "geometryType": "Polygon",
+      "positionCount": 32,
+      "bbox": [
+        -67.09902048110962,
+        -11.047606268327158,
+        -66.87199831008911,
+        -10.97470848852464
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 7,
+      "requestedTiles": 24,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1133",
+      "name": "Yacumama Forest Carbon Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1133",
+      "country": "Peru",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2012,
+        2013
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 197,
+      "bbox": [
+        -73.45315217971802,
+        -4.652309987620171,
+        -73.3597469329834,
+        -4.555933731325567
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 4,
+      "requestedTiles": 16,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1218",
+      "name": "Evio Kuiñaji Ese´Eja Cuana, To Mitigate Climate Change, Madre de Dios - Perú",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1218",
+      "country": "Peru",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 1361,
+      "bbox": [
+        -69.36323404312134,
+        -12.819605644582623,
+        -69.17633771896362,
+        -12.680681875360563
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 5,
+      "requestedTiles": 25,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1799",
+      "name": "Forest Management to mitigate climate change in the native community of Bélgica, Madre de Dios Region – Peru",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1799",
+      "country": "Peru",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [],
+      "geometryType": "Polygon",
+      "positionCount": 163,
+      "bbox": [
+        -70.01893758773804,
+        -11.111242750217244,
+        -69.66546535491943,
+        -10.920924045151338
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 14,
+      "requestedTiles": 35,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS856",
+      "name": "The Chocó-Darién Conservation Corridor REDD Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/856",
+      "country": "Colombia",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2012,
+        2017
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 799,
+      "bbox": [
+        -77.38516330718994,
+        8.266003696184086,
+        -77.2079873085022,
+        8.4717992478473
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 7,
+      "requestedTiles": 25,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1391",
+      "name": "SIVIRÚ-USARAGÁ-PIZARRO-PILIZÁ (SUPP) REDD+ Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1391",
+      "country": "Colombia",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 2042,
+      "bbox": [
+        -77.37911224365234,
+        4.7662718745986155,
+        -77.13872194290161,
+        5.164313560391591
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 18,
+      "requestedTiles": 42,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1392",
+      "name": "Cajambre REDD+ Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1392",
+      "country": "Colombia",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 3517,
+      "bbox": [
+        -77.3554015159607,
+        3.287527007783538,
+        -77.02192783355713,
+        3.5947177064718545
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 18,
+      "requestedTiles": 42,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1329",
+      "name": "Maísa REDD+ Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1329",
+      "country": "Brazil",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 931,
+      "bbox": [
+        -49.48010444641113,
+        -3.382637706597592,
+        -49.300246238708496,
+        -3.1029137710085166
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 10,
+      "requestedTiles": 30,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1115",
+      "name": "JARI/AMAPÁ REDD+ PROJECT",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1115",
+      "country": "Brazil",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 481,
+      "bbox": [
+        -52.46570348739624,
+        -0.9720502861996323,
+        -52.250354290008545,
+        -0.6160164404473676
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 11,
+      "requestedTiles": 35,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1382",
+      "name": "The Envira Amazonia Project - A Tropical Forest Conservation Project in Acre, Brazil",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1382",
+      "country": "Brazil",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 12777,
+      "bbox": [
+        -70.33803462982178,
+        -8.848393514062622,
+        -70.05777597427368,
+        -8.640595192071402
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 14,
+      "requestedTiles": 36,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1112",
+      "name": "The Russas Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1112",
+      "country": "Brazil",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 578,
+      "bbox": [
+        -72.7570652961731,
+        -8.361399863040617,
+        -72.49129056930542,
+        -8.018711958727778
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 12,
+      "requestedTiles": 42,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS562",
+      "name": "The Kasigau Corridor REDD Project – Phase I Rukinga Sanctuary",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/562",
+      "country": "Kenya",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 44,
+      "bbox": [
+        38.67811918258667,
+        -3.8767573143523606,
+        38.86293411254883,
+        -3.591505382651974
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 9,
+      "requestedTiles": 35,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS2363",
+      "name": "CONSERVATION OF MIOMBOS IN TARU  KENYA REDD+",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/2363",
+      "country": "Kenya",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [],
+      "geometryType": "MultiPolygon",
+      "positionCount": 39326,
+      "bbox": [
+        39.15853500366211,
+        -3.7676094336897847,
+        39.2556095123291,
+        -3.571888546939448
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 6,
+      "requestedTiles": 20,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1498",
+      "name": "Preserving Peat Swamp Forest Ecosystem Through Redd+ Activity In Kampar Peninsula Riau-Indonesia",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1498",
+      "country": "Indonesia",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [],
+      "geometryType": "MultiPolygon",
+      "positionCount": 979,
+      "bbox": [
+        102.34676599502563,
+        0.6268519274914865,
+        102.63859033584595,
+        0.7679900025082844
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 6,
+      "requestedTiles": 24,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1899",
+      "name": "Sumatra Merang Peatland Project (SMPP)",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1899",
+      "country": "Indonesia",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2016,
+        2017,
+        2018,
+        2019,
+        2020
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 306,
+      "bbox": [
+        104.04919624328613,
+        -2.087498260213735,
+        104.23946142196655,
+        -1.9534926636944476
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 8,
+      "requestedTiles": 24,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1202",
+      "name": "LOWER ZAMBEZI REDD+ PROJECT",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1202",
+      "country": "Zambia",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 512,
+      "bbox": [
+        29.026308059692383,
+        -15.597638090269385,
+        29.395358562469482,
+        -15.338677750102391
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 13,
+      "requestedTiles": 42,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS2293",
+      "name": "NIHT Topaiyo REDD +",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/2293",
+      "country": "Papua New Guinea",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2019
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 4357,
+      "bbox": [
+        152.67828941345215,
+        -4.396839863012289,
+        152.8101897239685,
+        -4.301050477243805
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 5,
+      "requestedTiles": 20,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS934",
+      "name": "The Mai Ndombe REDD+ Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/934",
+      "country": "DR Congo",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 7284,
+      "bbox": [
+        17.690927982330322,
+        -2.376463605236964,
+        18.308544158935547,
+        -1.6555079508221695
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 51,
+      "requestedTiles": 120,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1748",
+      "name": "Southern Cardamom REDD+ Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1748",
+      "country": "Cambodia",
+      "projectType": "avoided_deforestation",
+      "vintageYears": [
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 166714,
+      "bbox": [
+        102.84679412841797,
+        11.182464607895028,
+        104.06455993652344,
+        12.003222724260198
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 88,
+      "requestedTiles": 204,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "GLD3025",
+      "name": "Conservation and reforestation of degraded areas in Barbosa Colombia",
+      "registry": "gold-standard",
+      "registryUrl": "https://registry.goldstandard.org/projects?q=gs3025",
+      "country": "Colombia",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024,
+        2025,
+        2027,
+        2028,
+        2029,
+        2037,
+        2038,
+        2039,
+        2040,
+        2041,
+        2043,
+        2044,
+        2045,
+        2046,
+        2047,
+        2048,
+        2049,
+        2050
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 327,
+      "bbox": [
+        -75.40393352508545,
+        6.4181292757218955,
+        -75.37975072860718,
+        6.443652491750981
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 1,
+      "requestedTiles": 9,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1429",
+      "name": "Recovery of degraded areas with agroforestry systems in Colombia",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1429",
+      "country": "Colombia",
+      "projectType": "afforestation",
+      "vintageYears": [],
+      "geometryType": "MultiPolygon",
+      "positionCount": 197,
+      "bbox": [
+        -75.55692672729492,
+        5.996164408964987,
+        -75.51429033279419,
+        6.020171689160236
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 1,
+      "requestedTiles": 9,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1233",
+      "name": "Reforestation with Rubber on degraded lands of Colombia",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1233",
+      "country": "Colombia",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 1284,
+      "bbox": [
+        -70.43219089508057,
+        4.832813997215979,
+        -70.24726867675781,
+        4.948498718512113
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 5,
+      "requestedTiles": 20,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS665",
+      "name": "Multi-Species Reforestation in Mato Grosso, Brazil",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/665",
+      "country": "Brazil",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2009,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 891,
+      "bbox": [
+        -58.28251361846924,
+        -9.880795739579497,
+        -58.218655586242676,
+        -9.841072433875468
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 3,
+      "requestedTiles": 12,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1663",
+      "name": "Fazenda Sao Paulo Afforestation",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1663",
+      "country": "Brazil",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 54,
+      "bbox": [
+        -54.33264970779419,
+        -20.74967286827433,
+        -54.28402662277222,
+        -20.69225353155494
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 4,
+      "requestedTiles": 16,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS2079",
+      "name": "Fazenda Nascente do Luar Agroforestry Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/2079",
+      "country": "Brazil",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2020
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 372,
+      "bbox": [
+        -53.47826957702637,
+        -18.593680416035525,
+        -53.37411403656006,
+        -18.537681646799257
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 3,
+      "requestedTiles": 16,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1351",
+      "name": "Planting for the Future: Financially sustainable agroforestry systems and payments for ecosystem services",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1351",
+      "country": "Peru",
+      "projectType": "afforestation",
+      "vintageYears": [],
+      "geometryType": "MultiPolygon",
+      "positionCount": 205,
+      "bbox": [
+        -73.43021392822266,
+        -4.017528224807663,
+        -73.33043575286865,
+        -3.882494792282799
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 3,
+      "requestedTiles": 16,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1397",
+      "name": "Reforestation of pasture lands on the Peruvian Northern Andes – “Forestry PRODICOM” Grouped Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1397",
+      "country": "Peru",
+      "projectType": "afforestation",
+      "vintageYears": [],
+      "geometryType": "MultiPolygon",
+      "positionCount": 472,
+      "bbox": [
+        -77.84124612808228,
+        -7.8732656846607085,
+        -77.73670434951782,
+        -7.766932587066734
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 3,
+      "requestedTiles": 16,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS658",
+      "name": "Reforestation of pastures in Campo Verde with native species, Pucallpa, Peru",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/658",
+      "country": "Peru",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2011,
+        2013
+      ],
+      "geometryType": "Polygon",
+      "positionCount": 53,
+      "bbox": [
+        -74.80120897293091,
+        -8.598567659209408,
+        -74.70029354095459,
+        -8.565256306942103
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 5,
+      "requestedTiles": 20,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1327",
+      "name": "Reforestation of deforested land in Madagascar",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1327",
+      "country": "Madagascar",
+      "projectType": "afforestation",
+      "vintageYears": [],
+      "geometryType": "MultiPolygon",
+      "positionCount": 6507,
+      "bbox": [
+        47.381908893585205,
+        -16.21943408550291,
+        47.539215087890625,
+        -16.126056927999485
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 5,
+      "requestedTiles": 20,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS2085",
+      "name": "Revegetation with fruit trees in North Manica Province, Mozambique",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/2085",
+      "country": "Mozambique",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2019,
+        2020
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 1169,
+      "bbox": [
+        33.22036027908325,
+        -19.401779190922014,
+        33.35219621658325,
+        -19.32537876053722
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 4,
+      "requestedTiles": 20,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS799",
+      "name": "Bukaleba Forest Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/799",
+      "country": "Uganda",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2011,
+        2016,
+        2020
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 12607,
+      "bbox": [
+        33.346874713897705,
+        0.31905247784369806,
+        33.43609571456909,
+        0.4358011185584303
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 4,
+      "requestedTiles": 16,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1684",
+      "name": "Mitigation of GHG: Rubber based agro-forestry system for sustainable development and poverty reduction in Pakkading, Bolikhamsay Province, Lao PDR",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1684",
+      "country": "Laos",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2015,
+        2019,
+        2020,
+        2021,
+        2022
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 2676,
+      "bbox": [
+        104.28724765777588,
+        18.109756839502893,
+        104.3409776687622,
+        18.152172716594777
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 3,
+      "requestedTiles": 16,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS2619",
+      "name": "Tombwe Smallholder Reforestation Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/2619",
+      "country": "Zambia",
+      "projectType": "afforestation",
+      "vintageYears": [],
+      "geometryType": "MultiPolygon",
+      "positionCount": 326,
+      "bbox": [
+        25.375585556030273,
+        -14.903068319315821,
+        25.383353233337402,
+        -14.887826904126882
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 1,
+      "requestedTiles": 9,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS1085",
+      "name": "EcoPlanet Bamboo Central America - Reforestation Project",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/1085",
+      "country": "Nicaragua",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2014,
+        2020
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 1461,
+      "bbox": [
+        -84.2932677268982,
+        12.085254331084187,
+        -83.98470640182495,
+        12.30040176354845
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 7,
+      "requestedTiles": 42,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    },
+    {
+      "projectId": "VCS142",
+      "name": "Reforestation of degraded grasslands in Uchindile & Mapanda, Tanzania",
+      "registry": "verra",
+      "registryUrl": "https://registry.verra.org/app/projectDetail/VCS/142",
+      "country": "Tanzania",
+      "projectType": "afforestation",
+      "vintageYears": [
+        2008,
+        2012,
+        2013,
+        2020
+      ],
+      "geometryType": "MultiPolygon",
+      "positionCount": 1164,
+      "bbox": [
+        35.39164066314697,
+        -8.75311929320813,
+        35.724942684173584,
+        -8.413621144944472
+      ],
+      "pmtilesZoom": 12,
+      "pmtilesFragments": 7,
+      "requestedTiles": 42,
+      "sourceDataset": "https://zenodo.org/records/11459391",
+      "retrievalUrl": "https://carbonplan-offsets-db.s3.us-west-2.amazonaws.com/miscellaneous/project-boundaries.pmtiles"
+    }
+  ]
+}
