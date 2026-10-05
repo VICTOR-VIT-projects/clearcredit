@@ -1,0 +1,18 @@
+.env
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.sqlite3
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+contracts/coverage/
+frontend/dist/
+data/cache/
+# probe scratch (caches, cloned upstream repos, venvs)
+data/probes/.npm-cache/
+data/probes/.venv/
+data/probes/tooling/node_modules/
+data/probes/*-source/
