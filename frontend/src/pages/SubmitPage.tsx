@@ -20,6 +20,7 @@ const ERROR_EXPLANATIONS: Record<string, string> = {
   REQUEST_IN_PROGRESS: 'The relay is still processing. Wait a moment, then retry; the same request key will be reused.',
   NETWORK_ERROR: 'The API could not be reached. Check that the backend is running, then retry.',
   VALIDATION_ERROR: 'The backend rejected one or more fields. Review the form and boundary data.',
+  REQUEST_TOO_LARGE: 'The request exceeds the 2 MiB limit. Simplify the boundary before submitting.',
 }
 
 type SubmitStage = 'editing' | 'checking' | 'ready' | 'signing' | 'relaying' | 'registered'

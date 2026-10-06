@@ -4,6 +4,7 @@ Format: date — decision — rationale. Deviations from `CLEARCREDIT_HANDOFF.md
 
 | Date | Decision | Rationale |
 |---|---|---|
+| 2026-10-06 | Stream-limit API bodies to 2 MiB; validate coordinate nesting before geometry construction | H4: protect parsing memory and reject malformed positions with structured errors. Count actual received bytes rather than trusting Content-Length and stop vertex traversal at the existing cap. Standard-library/Starlette only. |
 | 2026-10-06 | Serialize submission admission and resumption; explicitly support one API worker | H3: different idempotency keys must not both pass overlap analysis before either insert. A Store admission lock covers analysis through saved relay result. Multi-worker deployments require cross-process coordination and are deferred. |
 | 2026-10-06 | Scoring rules-v3: normalize geodesic area winding, retain all thresholds | H2: polygon winding must not alter physical area or overlap fractions. Orient holes opposite the exterior, sum polygon areas independently. Satellite ev2 numbers and schema 1.0 canonicalization are unchanged; rerun cached evaluation for the changed area inputs. |
 | 2026-10-06 | Journal uncertain relay transactions before broadcast; single relayer worker | H1: a receipt timeout is not a failed transaction. Persist signed public calldata/hash and rebroadcast identical bytes, then reconcile mined state. No second nonce is allocated while unresolved; externally replaced transactions require operator recovery. |

@@ -132,3 +132,14 @@ def test_concurrent_different_keys_cannot_bypass_overlap_admission(client, monke
         result = second.result()
         assert result.status_code == 409 and result.json()["error"]["code"] == "OVERLAP_DETECTED"
         assert client.get("/registry").json()["total"] == 1
+
+
+@pytest.mark.parametrize("coordinates", [[None], [1], [[[0], [1], [2], [0]]], [[]], []])
+def test_malformed_boundary_returns_structured_error(client, coordinates):
+    r = client.post("/claims/preview", json=make_claim(boundary={"type": "Polygon", "coordinates": coordinates}))
+    assert r.status_code == 422 and r.json()["error"]["code"] == "INVALID_GEOMETRY"
+
+
+def test_oversized_body_is_rejected_before_json_parsing(client):
+    r = client.post("/claims/preview", content=" " * (2 * 1024 * 1024 + 1), headers={"Content-Type": "application/json"})
+    assert r.status_code == 413 and r.json()["error"]["code"] == "REQUEST_TOO_LARGE"

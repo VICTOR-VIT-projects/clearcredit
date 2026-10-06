@@ -1,602 +1,629 @@
 {
- "openapi": "3.1.0",
- "info": {
-  "title": "ClearCredit API",
-  "description": "Carbon-credit integrity and double-counting checker. Produces integrity scores and verified integrity attestations; it does not certify emission reductions.",
-  "version": "0.1.0"
- },
- "paths": {
-  "/claims/preview": {
-   "post": {
-    "tags": [
-     "claims"
-    ],
-    "summary": "Preview",
-    "description": "Validate, check overlaps, gather evidence and score \u2014 without registering anything.",
-    "operationId": "preview_claims_preview_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/Claim"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "422": {
-      "description": "Validation Error",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      }
-     }
-    }
-   }
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ClearCredit API",
+    "description": "Carbon-credit integrity and double-counting checker. Produces integrity scores and verified integrity attestations; it does not certify emission reductions.",
+    "version": "0.1.0"
   },
-  "/claims": {
-   "post": {
-    "tags": [
-     "claims"
-    ],
-    "summary": "Submit",
-    "description": "Register a signed claim. Requires `Idempotency-Key`; a retry with the same key and body\nreturns the original result and never creates a second record or transaction.",
-    "operationId": "submit_claims_post",
-    "parameters": [
-     {
-      "name": "Idempotency-Key",
-      "in": "header",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
+  "paths": {
+    "/claims/preview": {
+      "post": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Preview",
+        "description": "Validate, check overlaps, gather evidence and score \u2014 without registering anything.",
+        "operationId": "preview_claims_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Claim"
+              }
+            }
+          },
+          "required": true
         },
-        {
-         "type": "null"
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
         }
-       ],
-       "title": "Idempotency-Key"
       }
-     }
-    ],
-    "requestBody": {
-     "required": true,
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/Submission"
-       }
-      }
-     }
     },
-    "responses": {
-     "201": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "422": {
-      "description": "Validation Error",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      }
-     }
-    }
-   }
-  },
-  "/claims/{ref}": {
-   "get": {
-    "tags": [
-     "claims"
-    ],
-    "summary": "Get Claim",
-    "description": "Claim by project ID or claim hash: canonical hash, overlaps, evidence, score, on-chain state.",
-    "operationId": "get_claim_claims__ref__get",
-    "parameters": [
-     {
-      "name": "ref",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Ref"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "422": {
-      "description": "Validation Error",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      }
-     }
-    }
-   }
-  },
-  "/claims/{ref}/verify": {
-   "get": {
-    "tags": [
-     "claims"
-    ],
-    "summary": "Verify",
-    "description": "Recompute the hash from the stored claim and compare it with the on-chain value.",
-    "operationId": "verify_claims__ref__verify_get",
-    "parameters": [
-     {
-      "name": "ref",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Ref"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "422": {
-      "description": "Validation Error",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      }
-     }
-    }
-   }
-  },
-  "/overlaps/{ref}": {
-   "get": {
-    "tags": [
-     "claims"
-    ],
-    "summary": "Overlaps",
-    "operationId": "overlaps_overlaps__ref__get",
-    "parameters": [
-     {
-      "name": "ref",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Ref"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "422": {
-      "description": "Validation Error",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      }
-     }
-    }
-   }
-  },
-  "/claims/{ref}/attest": {
-   "post": {
-    "tags": [
-     "verifier"
-    ],
-    "summary": "Attest",
-    "description": "Re-score with fresh evidence and post a new attestation (verifier only).",
-    "operationId": "attest_claims__ref__attest_post",
-    "parameters": [
-     {
-      "name": "ref",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Ref"
-      }
-     },
-     {
-      "name": "x-admin-token",
-      "in": "header",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
+    "/claims": {
+      "post": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Submit",
+        "description": "Register a signed claim. Requires `Idempotency-Key`; a retry with the same key and body\nreturns the original result and never creates a second record or transaction.",
+        "operationId": "submit_claims_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Submission"
+              }
+            }
+          }
         },
-        {
-         "type": "null"
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
         }
-       ],
-       "title": "X-Admin-Token"
       }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "422": {
-      "description": "Validation Error",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      }
-     }
-    }
-   }
-  },
-  "/registry": {
-   "get": {
-    "tags": [
-     "registry"
-    ],
-    "summary": "Registry",
-    "operationId": "registry_registry_get",
-    "parameters": [
-     {
-      "name": "offset",
-      "in": "query",
-      "required": false,
-      "schema": {
-       "type": "integer",
-       "default": 0,
-       "title": "Offset"
-      }
-     },
-     {
-      "name": "limit",
-      "in": "query",
-      "required": false,
-      "schema": {
-       "type": "integer",
-       "default": 50,
-       "title": "Limit"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "422": {
-      "description": "Validation Error",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      }
-     }
-    }
-   }
-  },
-  "/schema": {
-   "get": {
-    "tags": [
-     "schema"
-    ],
-    "summary": "Schema",
-    "operationId": "schema_schema_get",
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     }
-    }
-   }
-  },
-  "/health": {
-   "get": {
-    "tags": [
-     "meta"
-    ],
-    "summary": "Health",
-    "operationId": "health_health_get",
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     }
-    }
-   }
-  }
- },
- "components": {
-  "schemas": {
-   "Boundary": {
-    "properties": {
-     "type": {
-      "type": "string",
-      "enum": [
-       "Polygon",
-       "MultiPolygon"
-      ],
-      "title": "Type"
-     },
-     "coordinates": {
-      "items": {},
-      "type": "array",
-      "title": "Coordinates"
-     }
     },
-    "type": "object",
-    "required": [
-     "type",
-     "coordinates"
-    ],
-    "title": "Boundary"
-   },
-   "Claim": {
-    "properties": {
-     "schemaVersion": {
-      "type": "string",
-      "const": "1.0",
-      "title": "Schemaversion",
-      "default": "1.0"
-     },
-     "projectId": {
-      "type": "string",
-      "pattern": "^[A-Za-z0-9._:-]{1,64}$",
-      "title": "Projectid",
-      "description": "Stable unique ID, e.g. VCS1115"
-     },
-     "developer": {
-      "type": "string",
-      "pattern": "^0x[0-9a-fA-F]{40}$",
-      "title": "Developer",
-      "description": "Developer wallet address"
-     },
-     "projectType": {
-      "$ref": "#/components/schemas/ProjectType"
-     },
-     "vintageYear": {
-      "type": "integer",
-      "maximum": 2100.0,
-      "minimum": 2000.0,
-      "title": "Vintageyear"
-     },
-     "claimedCredits": {
-      "type": "integer",
-      "maximum": 9007199254740991.0,
-      "exclusiveMinimum": 0.0,
-      "title": "Claimedcredits",
-      "description": "Capped at 2^53-1 so JavaScript verifiers hash it exactly"
-     },
-     "creditUnit": {
-      "type": "string",
-      "const": "tCO2e",
-      "title": "Creditunit",
-      "default": "tCO2e"
-     },
-     "boundary": {
-      "$ref": "#/components/schemas/Boundary"
-     },
-     "boundaryCrs": {
-      "type": "string",
-      "const": "EPSG:4326",
-      "title": "Boundarycrs",
-      "default": "EPSG:4326"
-     },
-     "sourceRegistry": {
-      "anyOf": [
-       {
-        "type": "string",
-        "maxLength": 200
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Sourceregistry",
-      "description": "Registry name and external ID"
-     },
-     "boundarySource": {
-      "anyOf": [
-       {
-        "type": "string",
-        "maxLength": 300
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Boundarysource",
-      "description": "Where the boundary came from and how it was processed"
-     },
-     "dataLabel": {
-      "$ref": "#/components/schemas/DataLabel",
-      "description": "real | illustrative | synthetic \u2014 shown everywhere the claim is shown"
-     },
-     "submittedAt": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Submittedat",
-      "description": "Server metadata; excluded from the hash"
-     }
+    "/claims/{ref}": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Get Claim",
+        "description": "Claim by project ID or claim hash: canonical hash, overlaps, evidence, score, on-chain state.",
+        "operationId": "get_claim_claims__ref__get",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ref"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     },
-    "additionalProperties": false,
-    "type": "object",
-    "required": [
-     "projectId",
-     "developer",
-     "projectType",
-     "vintageYear",
-     "claimedCredits",
-     "boundary",
-     "dataLabel"
-    ],
-    "title": "Claim",
-    "description": "A carbon-credit claim. Everything except `submittedAt` is covered by the claim hash."
-   },
-   "DataLabel": {
-    "type": "string",
-    "enum": [
-     "real",
-     "illustrative",
-     "synthetic"
-    ],
-    "title": "DataLabel"
-   },
-   "HTTPValidationError": {
-    "properties": {
-     "detail": {
-      "items": {
-       "$ref": "#/components/schemas/ValidationError"
+    "/claims/{ref}/verify": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Verify",
+        "description": "Recompute the hash from the stored claim and compare it with the on-chain value.",
+        "operationId": "verify_claims__ref__verify_get",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ref"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/overlaps/{ref}": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Overlaps",
+        "operationId": "overlaps_overlaps__ref__get",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ref"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/claims/{ref}/attest": {
+      "post": {
+        "tags": [
+          "verifier"
+        ],
+        "summary": "Attest",
+        "description": "Re-score with fresh evidence and post a new attestation (verifier only).",
+        "operationId": "attest_claims__ref__attest_post",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ref"
+            }
+          },
+          {
+            "name": "x-admin-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/registry": {
+      "get": {
+        "tags": [
+          "registry"
+        ],
+        "summary": "Registry",
+        "operationId": "registry_registry_get",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schema": {
+      "get": {
+        "tags": [
+          "schema"
+        ],
+        "summary": "Schema",
+        "operationId": "schema_schema_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Boundary": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "Polygon",
+              "MultiPolygon"
+            ],
+            "title": "Type"
+          },
+          "coordinates": {
+            "items": {},
+            "type": "array",
+            "title": "Coordinates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "Boundary"
       },
-      "type": "array",
-      "title": "Detail"
-     }
-    },
-    "type": "object",
-    "title": "HTTPValidationError"
-   },
-   "ProjectType": {
-    "type": "string",
-    "enum": [
-     "avoided_deforestation",
-     "afforestation",
-     "other"
-    ],
-    "title": "ProjectType"
-   },
-   "Submission": {
-    "properties": {
-     "claim": {
-      "$ref": "#/components/schemas/Claim"
-     },
-     "signature": {
-      "type": "string",
-      "pattern": "^0x[0-9a-fA-F]{130}$",
-      "title": "Signature",
-      "description": "Developer's EIP-712 signature over the Claim typed data"
-     }
-    },
-    "additionalProperties": false,
-    "type": "object",
-    "required": [
-     "claim",
-     "signature"
-    ],
-    "title": "Submission"
-   },
-   "ValidationError": {
-    "properties": {
-     "loc": {
-      "items": {
-       "anyOf": [
-        {
-         "type": "string"
+      "Claim": {
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schemaversion",
+            "default": "1.0"
+          },
+          "projectId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._:-]{1,64}$",
+            "title": "Projectid",
+            "description": "Stable unique ID, e.g. VCS1115"
+          },
+          "developer": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "title": "Developer",
+            "description": "Developer wallet address"
+          },
+          "projectType": {
+            "$ref": "#/components/schemas/ProjectType"
+          },
+          "vintageYear": {
+            "type": "integer",
+            "maximum": 2100.0,
+            "minimum": 2000.0,
+            "title": "Vintageyear"
+          },
+          "claimedCredits": {
+            "type": "integer",
+            "maximum": 9007199254740991.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Claimedcredits",
+            "description": "Capped at 2^53-1 so JavaScript verifiers hash it exactly"
+          },
+          "creditUnit": {
+            "type": "string",
+            "const": "tCO2e",
+            "title": "Creditunit",
+            "default": "tCO2e"
+          },
+          "boundary": {
+            "$ref": "#/components/schemas/Boundary"
+          },
+          "boundaryCrs": {
+            "type": "string",
+            "const": "EPSG:4326",
+            "title": "Boundarycrs",
+            "default": "EPSG:4326"
+          },
+          "sourceRegistry": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceregistry",
+            "description": "Registry name and external ID"
+          },
+          "boundarySource": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boundarysource",
+            "description": "Where the boundary came from and how it was processed"
+          },
+          "dataLabel": {
+            "$ref": "#/components/schemas/DataLabel",
+            "description": "real | illustrative | synthetic \u2014 shown everywhere the claim is shown"
+          },
+          "submittedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submittedat",
+            "description": "Server metadata; excluded from the hash"
+          }
         },
-        {
-         "type": "integer"
-        }
-       ]
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "projectId",
+          "developer",
+          "projectType",
+          "vintageYear",
+          "claimedCredits",
+          "boundary",
+          "dataLabel"
+        ],
+        "title": "Claim",
+        "description": "A carbon-credit claim. Everything except `submittedAt` is covered by the claim hash."
       },
-      "type": "array",
-      "title": "Location"
-     },
-     "msg": {
-      "type": "string",
-      "title": "Message"
-     },
-     "type": {
-      "type": "string",
-      "title": "Error Type"
-     },
-     "input": {
-      "title": "Input"
-     },
-     "ctx": {
-      "type": "object",
-      "title": "Context"
-     }
-    },
-    "type": "object",
-    "required": [
-     "loc",
-     "msg",
-     "type"
-    ],
-    "title": "ValidationError"
-   }
+      "DataLabel": {
+        "type": "string",
+        "enum": [
+          "real",
+          "illustrative",
+          "synthetic"
+        ],
+        "title": "DataLabel"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ProjectType": {
+        "type": "string",
+        "enum": [
+          "avoided_deforestation",
+          "afforestation",
+          "other"
+        ],
+        "title": "ProjectType"
+      },
+      "Submission": {
+        "properties": {
+          "claim": {
+            "$ref": "#/components/schemas/Claim"
+          },
+          "signature": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{130}$",
+            "title": "Signature",
+            "description": "Developer's EIP-712 signature over the Claim typed data"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "claim",
+          "signature"
+        ],
+        "title": "Submission"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
   }
- }
 }

@@ -14,6 +14,7 @@ from shapely.geometry import shape
 from . import canonical, geo, satellite, scoring
 from .chain import CLAIM_TYPES, ZERO32, Chain, recover_signer
 from .models import Claim, Submission
+from .limits import BodyLimit
 from .store import Store
 
 BLOCKING_CODES = ("OVERLAP",)
@@ -44,9 +45,11 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
     app = FastAPI(
         title="ClearCredit API",
         version="0.1.0",
+        responses={413: {"description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."}},
         description="Carbon-credit integrity and double-counting checker. Produces integrity scores and "
         "verified integrity attestations; it does not certify emission reductions.",
     )
+    app.add_middleware(BodyLimit)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(","),

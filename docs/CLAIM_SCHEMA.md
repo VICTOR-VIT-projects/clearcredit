@@ -22,6 +22,11 @@ An open, versioned format for a carbon-credit claim. Any registry, buyer or audi
 
 Unknown fields are rejected.
 
+API request bodies are limited to **2 MiB**, measured before JSON parsing (including
+chunked requests). Oversized input returns HTTP 413 `REQUEST_TOO_LARGE`. Geometry traversal
+stops at 20,000 vertices before constructing shapely/H3 objects; malformed coordinate
+nesting returns HTTP 422 `INVALID_GEOMETRY`.
+
 ## Canonicalization (claimHash)
 
 1. Remove `submittedAt` and every field whose value is `null`.

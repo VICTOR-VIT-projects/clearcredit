@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 
 import h3
 from pyproj import Geod
@@ -23,9 +24,17 @@ class GeometryError(ValueError):
 
 
 def _rings(boundary: dict):
-    polys = boundary["coordinates"] if boundary["type"] == "MultiPolygon" else [boundary["coordinates"]]
+    coords = boundary.get("coordinates")
+    if not isinstance(coords, (list, tuple)) or not coords:
+        raise GeometryError("boundary coordinates must be a non-empty array")
+    polys = coords if boundary["type"] == "MultiPolygon" else [coords]
     for poly in polys:
-        yield from poly
+        if not isinstance(poly, (list, tuple)) or not poly:
+            raise GeometryError("each polygon needs an exterior ring")
+        for ring in poly:
+            if not isinstance(ring, (list, tuple)):
+                raise GeometryError("each ring must be an array of positions")
+            yield ring
 
 
 def validate_boundary(boundary: dict) -> BaseGeometry:
@@ -33,17 +42,25 @@ def validate_boundary(boundary: dict) -> BaseGeometry:
         raise GeometryError("boundary must be a GeoJSON Polygon or MultiPolygon")
     n = 0
     for ring in _rings(boundary):
+        n += len(ring)
+        if n > MAX_VERTICES:
+            raise GeometryError(f"too many vertices ({n} > {MAX_VERTICES}); simplify the boundary")
         if len(ring) < 4:
             raise GeometryError("each ring needs at least 4 positions (3 corners + closing point)")
-        if list(ring[0]) != list(ring[-1]):
-            raise GeometryError("ring is not closed: first and last positions differ")
-        for lon, lat, *_ in ring:
+        for position in ring:
+            if not isinstance(position, (list, tuple)) or len(position) not in (2, 3):
+                raise GeometryError("positions need longitude, latitude and optional altitude")
+            if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) for v in position):
+                raise GeometryError("coordinates must be finite numbers")
+            lon, lat = position[:2]
             if not (-180 <= lon <= 180 and -90 <= lat <= 90):
                 raise GeometryError(f"coordinate out of range: [{lon}, {lat}] (expected [lon, lat] in EPSG:4326)")
-        n += len(ring)
-    if n > MAX_VERTICES:
-        raise GeometryError(f"too many vertices ({n} > {MAX_VERTICES}); simplify the boundary")
-    geom = shape(boundary)
+        if list(ring[0]) != list(ring[-1]):
+            raise GeometryError("ring is not closed: first and last positions differ")
+    try:
+        geom = shape(boundary)
+    except (ValueError, TypeError) as e:
+        raise GeometryError("invalid coordinate structure") from e
     if not geom.is_valid:
         # No silent make_valid: a repaired boundary is a different claim.
         raise GeometryError(f"invalid geometry: {explain_validity(geom)}")
