@@ -7,6 +7,7 @@ import h3
 from pyproj import Geod
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
+from shapely.geometry.polygon import orient
 from shapely.validation import explain_validity
 
 CELL_RESOLUTION = 8  # must match the deployed contract's cellResolution
@@ -56,11 +57,13 @@ def validate_boundary(boundary: dict) -> BaseGeometry:
 
 
 def area_ha(geom: BaseGeometry) -> float:
-    """Geodesic area on the WGS84 ellipsoid (exact; no projection distortion)."""
+    """WGS84 geodesic area; winding cannot cancel parts or add holes."""
     if geom.is_empty:
         return 0.0
-    area, _ = _GEOD.geometry_area_perimeter(geom)
-    return abs(area) / 10_000
+    if geom.geom_type == "Polygon":
+        area, _ = _GEOD.geometry_area_perimeter(orient(geom, sign=1))
+        return abs(area) / 10_000
+    return sum(area_ha(part) for part in getattr(geom, "geoms", ()))
 
 
 @dataclass

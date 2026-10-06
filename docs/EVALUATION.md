@@ -12,6 +12,24 @@ python -m scripts.evaluate run          # writes data/eval/results.json
 
 All evidence is cached in `data/cache/evidence/` (`ev2`), so results reproduce exactly.
 
+## Review correction: rules-v2 → rules-v3
+
+2026-10-06: corrected area inputs to sum independently oriented polygon parts and
+subtract holes regardless of source winding. This follows geometry semantics; no
+threshold or deduction changed. Schema 1.0 hashes and satellite ev2 numbers are unchanged.
+Both versions were run with `backend/.venv/Scripts/python.exe -m scripts.evaluate run`
+from `backend/`, using only committed evidence. Metrics were unchanged:
+
+| Metric | rules-v2 before | rules-v3 after |
+|---|---|---|
+| Recall | .716 (73/102) | .716 (73/102) |
+| Precision | .973 | .973 |
+| False alarms | 2/30 | 2/30 |
+| Inflation detected | 3/30 | 3/30 |
+
+The unchanged evaluation does not negate the bug: injected geometry uses the seed's
+ordinary winding. Mixed orientation and hole regressions independently demonstrate it.
+
 ## Setup
 
 **Negatives (presumed legitimate, n = 30):** the real seed claims as published. Each uses its published boundary (Karnik et al. 2024) and the credits it actually issued for its latest vintage (OffsetsDB). Overlaps are checked against the other 29.

@@ -4,6 +4,7 @@ Format: date — decision — rationale. Deviations from `CLEARCREDIT_HANDOFF.md
 
 | Date | Decision | Rationale |
 |---|---|---|
+| 2026-10-06 | Scoring rules-v3: normalize geodesic area winding, retain all thresholds | H2: polygon winding must not alter physical area or overlap fractions. Orient holes opposite the exterior, sum polygon areas independently. Satellite ev2 numbers and schema 1.0 canonicalization are unchanged; rerun cached evaluation for the changed area inputs. |
 | 2026-10-06 | Journal uncertain relay transactions before broadcast; single relayer worker | H1: a receipt timeout is not a failed transaction. Persist signed public calldata/hash and rebroadcast identical bytes, then reconcile mined state. No second nonce is allocated while unresolved; externally replaced transactions require operator recovery. |
 | 2026-10-05 | Testnet: **Base Sepolia** (chainId 84532) | Reliable public RPC and BaseScan explorer; multiple faucets. |
 | 2026-10-05 | Issuance: **attestation-gated self-issue**, no `ISSUER_ROLE` | Handoff §7.1 option. Developer issues up to `claimedCredits` only when the latest attestation score ≥ `issueThresholdBps` (default 6000 = 60/100, admin-settable). One less role to secure. |

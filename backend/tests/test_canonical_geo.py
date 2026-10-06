@@ -133,3 +133,30 @@ def test_h3_cover_has_contract_resolution_and_adjacent_projects_never_share_cell
 
 def test_tiny_polygon_still_gets_one_cell():
     assert len(geo.h3_cover(box(10.0, 10.0, 10.002, 10.002))) == 1
+
+
+def test_multipart_area_is_independent_of_each_parts_orientation():
+    from shapely.geometry import MultiPolygon, shape
+    a = shape(box(0, 0, 0.1, 0.1))
+    b = shape(box(0.2, 0, 0.3, 0.1))
+    from shapely.geometry.polygon import orient
+    g = MultiPolygon([a, orient(b, sign=-1)])
+    assert geo.area_ha(g) == pytest.approx(geo.area_ha(a) + geo.area_ha(b), rel=1e-9)
+
+
+def test_hole_area_is_subtracted_regardless_of_winding():
+    from shapely.geometry import Polygon, shape
+    outer = shape(box(0, 0, 0.1, 0.1))
+    hole = shape(box(0.02, 0.02, 0.08, 0.08))
+    g = Polygon(outer.exterior.coords, [hole.exterior.coords])
+    assert geo.area_ha(g) == pytest.approx(geo.area_ha(outer) - geo.area_ha(hole), rel=1e-9)
+
+
+def test_mixed_orientation_overlap_is_not_cancelled():
+    from shapely.geometry import MultiPolygon, shape
+    from shapely.geometry.polygon import orient
+    a = shape(box(0, 0, 0.1, 0.1))
+    b = orient(shape(box(0.2, 0, 0.3, 0.1)), sign=-1)
+    g = MultiPolygon([a, b])
+    (o,) = geo.find_overlaps(g, {"same": g})
+    assert o.fraction_of_new == 1 and o.fraction_of_existing == 1

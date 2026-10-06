@@ -5,7 +5,7 @@ independent evidence. Thresholds are deliberately simple and published so they c
 """
 from __future__ import annotations
 
-MODEL_VERSION = "rules-v2"  # v2: FOREST_LOSS_HIGH 40 -> 60 (a contradicted claim must fall below the 60 issuance threshold)
+MODEL_VERSION = "rules-v3"  # v3: orientation-independent area inputs; all rule thresholds unchanged
 BLOCKING_OVERLAP = 0.01  # >= 1% of either boundary overlapping a same-vintage claim
 
 # Plausible issuance ranges, tCO2e per hectare per vintage year (broad literature ranges).

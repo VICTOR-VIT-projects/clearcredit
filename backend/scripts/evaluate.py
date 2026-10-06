@@ -160,7 +160,7 @@ def run():
     result = {
         "note": "Detection of injected faults on a seeded dataset of 30 real published projects; not real-world fraud prevalence.",
         "detectionRule": f"blocked by overlap OR score < {ISSUE_THRESHOLD}",
-        "thresholdsFrozen": "scoring thresholds were fixed (rules-v2) before this evaluation was run; not tuned to it",
+        "thresholdsFrozen": "rules-v2 thresholds retained in rules-v3; orientation-independent area correction, no threshold tuning",
         "scoringModel": scoring.MODEL_VERSION,
         "evidenceVersion": satellite.EVIDENCE_VERSION,
         "clearcredit": metrics("detected"),

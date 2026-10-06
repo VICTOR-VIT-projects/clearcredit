@@ -1,8 +1,8 @@
 {
  "note": "Detection of injected faults on a seeded dataset of 30 real published projects; not real-world fraud prevalence.",
  "detectionRule": "blocked by overlap OR score < 60",
- "thresholdsFrozen": "scoring thresholds were fixed (rules-v2) before this evaluation was run; not tuned to it",
- "scoringModel": "rules-v2",
+ "thresholdsFrozen": "rules-v2 thresholds retained in rules-v3; orientation-independent area correction, no threshold tuning",
+ "scoringModel": "rules-v3",
  "evidenceVersion": "ev2",
  "clearcredit": {
   "recall": 0.716,
