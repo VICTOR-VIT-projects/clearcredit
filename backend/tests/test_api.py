@@ -102,3 +102,33 @@ def test_replay_header_is_visible_to_browsers(client):
     r = client.post("/claims", json={"claim": c, "signature": sign(None)}, headers={"Idempotency-Key": "k1", **origin})
     assert r.headers["Idempotent-Replayed"] == "true"
     assert "idempotent-replayed" in r.headers["access-control-expose-headers"].lower()
+
+
+def test_concurrent_different_keys_cannot_bypass_overlap_admission(client, monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError
+    from app import satellite
+    entered, release = threading.Event(), threading.Event()
+    original = satellite.get_evidence
+
+    def pause_boundary(boundary, **kwargs):
+        if boundary == make_claim("A")["boundary"] and not entered.is_set():
+            entered.set()
+            assert release.wait(5)
+        return original(boundary, **kwargs)
+
+    monkeypatch.setattr(satellite, "get_evidence", pause_boundary)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(submit, client, make_claim("A"), "concurrent-A")
+        assert entered.wait(5)
+        second = pool.submit(submit, client, make_claim("B", boundary=box(-63.08, -9.90, -63.03, -9.85)), "concurrent-B")
+        try:
+            second.result(timeout=0.2)
+        except TimeoutError:
+            pass
+        finally:
+            release.set()
+        assert first.result().status_code == 201
+        result = second.result()
+        assert result.status_code == 409 and result.json()["error"]["code"] == "OVERLAP_DETECTED"
+        assert client.get("/registry").json()["total"] == 1

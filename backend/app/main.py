@@ -166,7 +166,10 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
         if state == "mismatch":
             raise ApiError(422, "IDEMPOTENCY_KEY_REUSED", "This Idempotency-Key was already used for a different request body.")
         try:
-            result = _submit(body["claim"], body["signature"])
+            # Admission + insertion must be indivisible across different retry keys.
+            # Keep same-project relay resumption serialized too. One API worker only.
+            with store.admission_lock:
+                result = _submit(body["claim"], body["signature"])
         except ApiError as e:
             if e.retryable:
                 store.idem_abort(idempotency_key)

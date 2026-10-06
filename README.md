@@ -63,6 +63,11 @@ Details: `docs/ARCHITECTURE.md` · Threat model: `docs/THREAT_MODEL.md` · Claim
 
 Requirements: Node 20+, Python 3.11.
 
+Run the API with **one worker** and one relayer instance per key. Admission checks and
+relay state transitions are serialized in that worker; multi-worker deployment needs
+cross-process admission and nonce coordination. Uncertain transactions are journaled
+before broadcast and reconciled before a new nonce is allocated.
+
 ```bash
 cp .env.example .env
 

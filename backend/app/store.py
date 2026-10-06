@@ -53,6 +53,7 @@ class Store:
         self.db.row_factory = sqlite3.Row
         self.db.executescript(SCHEMA)
         self.lock = threading.Lock()
+        self.admission_lock = threading.Lock()
 
     def relay_pending(self, scope: str) -> dict | None:
         row = self.db.execute("SELECT * FROM relay_pending WHERE scope = ?", (scope,)).fetchone()
