@@ -9,7 +9,45 @@ cd backend
 python -m scripts.evaluate run          # cached-only; writes data/eval/results.json
 ```
 
-All evidence is cached in `data/cache/evidence/` (`ev2`), so results reproduce exactly.
+Satellite measurements are committed in `data/cache/evidence/` (`ev2`). The current
+`ev3` wrapper verifies their original hash and preserves those numbers. Project history
+comes from `data/cache/history/issuance-v1.json`, derived from the already-local OffsetsDB
+CSV with its SHA-256 recorded. No network access is needed for `run`.
+
+## F1: frozen project-history rule (rules-v4 / ev3)
+
+Before running evaluation, the decision log froze a review trigger at **more than 3×
+the median of at least three earlier positive issuance vintages**, with a 50-point
+deduction. Current/future vintages are excluded; issuance transactions for each vintage
+are aggregated and retirements excluded. All quantities use the current boundary-area
+denominator, so the ratio is independent of area units. A tripling relative to the same
+project's baseline is a substantial unexplained discontinuity; this is a conservative
+screening policy, not an emissions law. Median limits sensitivity to one unusual vintage.
+No ecology thresholds were changed, and no thresholds were tuned to these results.
+
+19/30 seed projects have the required prior history. The remaining 11 explicitly report
+`NO_HISTORY` with no deduction. The snapshot covers 30 projects; raw CSV absence on a
+clean clone is handled by the committed snapshot. A missing project/snapshot produces
+no history, and a failed snapshot commitment requires operator review. Client-provided
+registry affiliation and historical boundaries/methodology changes remain unverified.
+
+| Metric | rules-v3 / ev2 before | rules-v4 / ev3 after |
+|---|---|---|
+| Recall | .716 (73/102) | **.843 (86/102)** |
+| Precision | .973 | **.956** |
+| False alarms | 2/30 | **4/30** |
+| Inflation detected | 3/30 | **16/30** |
+| Duplicate / shifted / relocated detected | 30/30 · 29/30 · 11/12 | unchanged |
+
+Two **additional false alarms** must be shown alongside the recall increase:
+
+| Project | Score | Historical comparison | Interpretation |
+|---|---|---|---|
+| VCS1233 | 50 | 55,476 credits vs median 16,595 across 7 earlier vintages; 3.34× | Issuance jump alone triggers review. Historical boundary and methodology context could explain it; this is not a finding about the project. |
+| VCS142 | 20 | 532,089 credits vs median 59,738 across 3 earlier vintages; 8.91× | History deduction plus existing credits-per-ha deduction. Delayed/backfilled issuance or changing methodology/boundary could matter; human context is required. |
+
+The following original rules-v2 results remain as the historical baseline. Current
+reproducible results are in `data/eval/results.json` with model/version/snapshot hash.
 
 ## Review correction: rules-v2 → rules-v3
 
@@ -82,7 +120,10 @@ The 1–2% band does better than the rule's 2% line suggests. Boxes were *select
 
 ## What it misses, and why
 
-- **Moderate credit inflation (27/30 missed).** The per-hectare plausibility ranges are broad (avoided deforestation flags above 15 t/ha/yr and is "implausible" above 30). Real projects here issue roughly 1–17 t/ha/yr, so ×5 often stays inside the range or costs only 10 points. Catching it needs project-specific baselines (methodology, reference region, past issuance), which we do not have. *This is the weakest part of the scorer.*
+- **Moderate credit inflation:** rules-v2/v3 missed 27/30; rules-v4 still misses 14/30.
+  Broad type ranges alone were weak. Past issuance improves screening where at least
+  three prior vintages exist, but it cannot establish a project's appropriate baseline,
+  additionality or actual mitigation, and legitimate issuance changes cause false alarms.
 - **One shifted copy (VCS1085), which is really a flaw in the fault recipe.** VCS1085 is a fragmented multi-part boundary. Shifting it by 30% of its width moves every part into the gaps between the original's parts. The shifted copy shares **no land** with the original (< 0.01 ha) and **0** H3 cells, so nothing is counted twice. It is scored as a miss to keep the recipe fixed, but no checker should block it.
 
 ## False alarms on real projects (2/30)

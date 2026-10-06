@@ -24,7 +24,7 @@ def test_clean_project_scores_high_with_reasons():
     assert r["score"] == 100 and r["band"] == "high" and r["scoreBps"] == 10000
     assert {"NO_OVERLAP", "CREDITS_PLAUSIBLE", "FOREST_LOSS_LOW", "NDVI_STABLE"} <= codes(r)
     assert all(r["text"] for r in r["reasons"])
-    assert r["evidenceHash"] == "0xabc" and r["modelVersion"] == MODEL_VERSION
+    assert r["attestationEvidence"]["satelliteEvidenceHash"] == "0xabc" and r["modelVersion"] == MODEL_VERSION
 
 
 def test_forest_loss_contradicts_avoided_deforestation():

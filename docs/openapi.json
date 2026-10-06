@@ -36,6 +36,9 @@
           "413": {
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
+          "503": {
+            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -97,6 +100,9 @@
           "413": {
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
+          "503": {
+            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -140,6 +146,9 @@
           },
           "413": {
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "503": {
+            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
           },
           "422": {
             "description": "Validation Error",
@@ -185,6 +194,9 @@
           "413": {
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
+          "503": {
+            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -227,6 +239,9 @@
           },
           "413": {
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "503": {
+            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
           },
           "422": {
             "description": "Validation Error",
@@ -288,6 +303,9 @@
           "413": {
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
+          "503": {
+            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -342,6 +360,9 @@
           "413": {
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
+          "503": {
+            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -373,6 +394,9 @@
           },
           "413": {
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "503": {
+            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
           }
         }
       }
@@ -395,6 +419,9 @@
           },
           "413": {
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "503": {
+            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
           }
         }
       }

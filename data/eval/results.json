@@ -1,18 +1,19 @@
 {
  "note": "Detection of injected faults on a seeded dataset of 30 real published projects; not real-world fraud prevalence.",
  "detectionRule": "blocked by overlap OR score < 60",
- "thresholdsFrozen": "rules-v2 thresholds retained in rules-v3; orientation-independent area correction, no threshold tuning",
- "scoringModel": "rules-v3",
- "evidenceVersion": "ev2",
+ "thresholdsFrozen": "rules-v4 history rule frozen before evaluation: >3 times prior median, >=3 prior vintages, -50; rules-v2 ecology thresholds retained",
+ "historySnapshotHash": "0xcb6eaa0edff542d79c14073f80ca81e2b96671b9d6b65b5d212ca85023b79941",
+ "scoringModel": "rules-v4",
+ "evidenceVersion": "ev3",
  "clearcredit": {
-  "recall": 0.716,
-  "precision": 0.973,
-  "falseAlarmRate": 0.067,
-  "falseAlarms": "2/30",
+  "recall": 0.843,
+  "precision": 0.956,
+  "falseAlarmRate": 0.133,
+  "falseAlarms": "4/30",
   "perFault": {
    "DUPLICATE": "30/30",
    "SHIFTED": "29/30",
-   "INFLATED": "3/30",
+   "INFLATED": "16/30",
    "RELOCATED": "11/12"
   },
   "relocatedByLossStratum": {
@@ -41,6 +42,8 @@
   }
  },
  "falseAlarmReasons": {
+  "HISTORY_CREDITS_JUMP": 2,
+  "CREDITS_IMPLAUSIBLE": 1,
   "LITTLE_FOREST": 1,
   "NDVI_DECLINING": 1,
   "FOREST_LOSS_HIGH": 1,
@@ -174,11 +177,12 @@
    "case": "VCS1112",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 90,
+   "score": 40,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_HIGH"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {
@@ -223,8 +227,9 @@
    "case": "VCS1115",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 50,
+   "score": 0,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE",
     "FOREST_LOSS_MODERATE"
    ],
@@ -312,12 +317,13 @@
    "case": "VCS1202",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 60,
+   "score": 10,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "LITTLE_FOREST",
     "CREDITS_HIGH"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {
@@ -359,29 +365,33 @@
    "case": "VCS1218",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 70,
+   "score": 20,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {
    "case": "VCS1233",
    "fault": "NONE",
    "blocked": false,
-   "score": 100,
-   "codes": [],
-   "detected": false,
+   "score": 50,
+   "codes": [
+    "HISTORY_CREDITS_JUMP"
+   ],
+   "detected": true,
    "baselineDetected": false
   },
   {
    "case": "VCS1233",
    "fault": "DUPLICATE",
    "blocked": true,
-   "score": 40,
+   "score": 0,
    "codes": [
-    "OVERLAP"
+    "OVERLAP",
+    "HISTORY_CREDITS_JUMP"
    ],
    "detected": true,
    "baselineDetected": true
@@ -390,9 +400,10 @@
    "case": "VCS1233",
    "fault": "SHIFTED",
    "blocked": true,
-   "score": 40,
+   "score": 0,
    "codes": [
-    "OVERLAP"
+    "OVERLAP",
+    "HISTORY_CREDITS_JUMP"
    ],
    "detected": true,
    "baselineDetected": true
@@ -401,11 +412,12 @@
    "case": "VCS1233",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 90,
+   "score": 40,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_HIGH"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {
@@ -447,6 +459,91 @@
    "case": "VCS1326",
    "fault": "INFLATED",
    "blocked": false,
+   "score": 20,
+   "codes": [
+    "HISTORY_CREDITS_JUMP",
+    "CREDITS_IMPLAUSIBLE"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1329",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1329",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1329",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1329",
+   "fault": "INFLATED",
+   "blocked": false,
+   "score": 50,
+   "codes": [
+    "HISTORY_CREDITS_JUMP"
+   ],
+   "detected": true,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1382",
+   "fault": "NONE",
+   "blocked": false,
+   "score": 100,
+   "codes": [],
+   "detected": false,
+   "baselineDetected": false
+  },
+  {
+   "case": "VCS1382",
+   "fault": "DUPLICATE",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1382",
+   "fault": "SHIFTED",
+   "blocked": true,
+   "score": 40,
+   "codes": [
+    "OVERLAP"
+   ],
+   "detected": true,
+   "baselineDetected": true
+  },
+  {
+   "case": "VCS1382",
+   "fault": "INFLATED",
+   "blocked": false,
    "score": 70,
    "codes": [
     "CREDITS_IMPLAUSIBLE"
@@ -455,88 +552,6 @@
    "baselineDetected": false
   },
   {
-   "case": "VCS1329",
-   "fault": "NONE",
-   "blocked": false,
-   "score": 100,
-   "codes": [],
-   "detected": false,
-   "baselineDetected": false
-  },
-  {
-   "case": "VCS1329",
-   "fault": "DUPLICATE",
-   "blocked": true,
-   "score": 40,
-   "codes": [
-    "OVERLAP"
-   ],
-   "detected": true,
-   "baselineDetected": true
-  },
-  {
-   "case": "VCS1329",
-   "fault": "SHIFTED",
-   "blocked": true,
-   "score": 40,
-   "codes": [
-    "OVERLAP"
-   ],
-   "detected": true,
-   "baselineDetected": true
-  },
-  {
-   "case": "VCS1329",
-   "fault": "INFLATED",
-   "blocked": false,
-   "score": 100,
-   "codes": [],
-   "detected": false,
-   "baselineDetected": false
-  },
-  {
-   "case": "VCS1382",
-   "fault": "NONE",
-   "blocked": false,
-   "score": 100,
-   "codes": [],
-   "detected": false,
-   "baselineDetected": false
-  },
-  {
-   "case": "VCS1382",
-   "fault": "DUPLICATE",
-   "blocked": true,
-   "score": 40,
-   "codes": [
-    "OVERLAP"
-   ],
-   "detected": true,
-   "baselineDetected": true
-  },
-  {
-   "case": "VCS1382",
-   "fault": "SHIFTED",
-   "blocked": true,
-   "score": 40,
-   "codes": [
-    "OVERLAP"
-   ],
-   "detected": true,
-   "baselineDetected": true
-  },
-  {
-   "case": "VCS1382",
-   "fault": "INFLATED",
-   "blocked": false,
-   "score": 70,
-   "codes": [
-    "CREDITS_IMPLAUSIBLE"
-   ],
-   "detected": false,
-   "baselineDetected": false
-  },
-  {
    "case": "VCS1391",
    "fault": "NONE",
    "blocked": false,
@@ -571,11 +586,12 @@
    "case": "VCS1391",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 90,
+   "score": 40,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_HIGH"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {
@@ -613,29 +629,33 @@
    "case": "VCS1392",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 100,
-   "codes": [],
-   "detected": false,
+   "score": 50,
+   "codes": [
+    "HISTORY_CREDITS_JUMP"
+   ],
+   "detected": true,
    "baselineDetected": false
   },
   {
    "case": "VCS142",
    "fault": "NONE",
    "blocked": false,
-   "score": 70,
+   "score": 20,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {
    "case": "VCS142",
    "fault": "DUPLICATE",
    "blocked": true,
-   "score": 10,
+   "score": 0,
    "codes": [
     "OVERLAP",
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE"
    ],
    "detected": true,
@@ -645,9 +665,10 @@
    "case": "VCS142",
    "fault": "SHIFTED",
    "blocked": true,
-   "score": 10,
+   "score": 0,
    "codes": [
     "OVERLAP",
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE"
    ],
    "detected": true,
@@ -657,11 +678,12 @@
    "case": "VCS142",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 70,
+   "score": 20,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {
@@ -796,11 +818,12 @@
    "case": "VCS1899",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 70,
+   "score": 20,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {
@@ -981,8 +1004,9 @@
    "case": "VCS562",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 20,
+   "score": 0,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE",
     "LITTLE_FOREST",
     "NDVI_DECLINING"
@@ -1112,11 +1136,12 @@
    "case": "VCS665",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 70,
+   "score": 20,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {
@@ -1300,9 +1325,11 @@
    "case": "VCS852",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 100,
-   "codes": [],
-   "detected": false,
+   "score": 50,
+   "codes": [
+    "HISTORY_CREDITS_JUMP"
+   ],
+   "detected": true,
    "baselineDetected": false
   },
   {
@@ -1386,11 +1413,12 @@
    "case": "VCS934",
    "fault": "INFLATED",
    "blocked": false,
-   "score": 70,
+   "score": 20,
    "codes": [
+    "HISTORY_CREDITS_JUMP",
     "CREDITS_IMPLAUSIBLE"
    ],
-   "detected": false,
+   "detected": true,
    "baselineDetected": false
   },
   {

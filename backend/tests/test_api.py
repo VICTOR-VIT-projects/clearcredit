@@ -152,3 +152,20 @@ def test_attestation_token_is_unset_denied_and_accepts_only_exact_bytes(client, 
     monkeypatch.setenv("ADMIN_TOKEN", "test-token")
     assert client.post("/claims/TEST-A/attest", headers={"X-Admin-Token": "wrong-token"}).status_code == 403
     assert client.post("/claims/TEST-A/attest", headers={"X-Admin-Token": "test-token"}).status_code == 200
+
+
+def test_api_commits_history_and_shows_it_in_preview_and_saved_claim(client, monkeypatch):
+    from app import history, satellite
+    snapshot = {"source": "test", "snapshotHash": "0x" + "12" * 32,
+                "records": {"VCS1": {"2018": 100, "2019": 100, "2020": 100}}}
+    monkeypatch.setattr(history, "load_snapshot", lambda: snapshot)
+    c = {**make_claim(credits=301), "sourceRegistry": "Verra VCS VCS1"}
+    preview = client.post("/claims/preview", json=c).json()
+    s = preview["score"]
+    assert s["score"] < 60 and s["attestationEvidence"]["issuanceHistory"]["status"] == "available"
+    assert s["evidenceHash"] == satellite.evidence_hash(s["attestationEvidence"])
+    created = submit(client, c, "history-key")
+    assert created.status_code == 201
+    saved = client.get("/claims/TEST-A").json()["score"]
+    assert saved["attestationEvidence"] == s["attestationEvidence"]
+    assert saved["evidenceHash"] == s["evidenceHash"]

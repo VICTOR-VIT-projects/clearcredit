@@ -91,4 +91,13 @@ h3.h3shape_to_cells(h3.geo_to_h3shape(boundary), 8)
 
 ## Versioning
 
+Claim schema 1.0 hashing and EIP-712 v1 are unchanged by project-history scoring.
+Scoring model `rules-v4` uses evidence version `ev3`; this is separate from the claim
+schema. The score's `attestationEvidence` contains the satellite evidence hash and
+the issuance history (source snapshot hash, reference project, earlier vintages, median
+and limitations). `score.evidenceHash = keccak256(UTF8(canonical._dumps(attestationEvidence)))`.
+The satellite-only hash displayed in the evidence panel is one component, not the whole
+attestation commitment. Scores with no satellite evidence still commit the explicit
+no-evidence/no-history context. A cache/hash mismatch returns HTTP 503 `EVIDENCE_INVALID`.
+
 Any change to fields or canonicalization rules creates a new `schemaVersion`. Hashes are only comparable within one version.

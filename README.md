@@ -40,11 +40,18 @@ Faults are injected into the 30 real claims: duplicates, shifted overlaps, ×5 c
 
 | | ClearCredit | Uniqueness-only baseline |
 |---|---|---|
-| Recall (102 injected faults) | **0.72** | 0.58 |
+| Recall (102 injected faults) | **0.843** | 0.578 |
 | Relocated onto cleared land | **11/12** | 0/12 |
-| False alarms on the 30 real projects | 2/30 | 0/30 |
+| False alarms on the 30 real projects | **4/30** | 0/30 |
 
-What it misses is documented too: moderate credit inflation (3/30 caught) and light clearing below ~2% of remaining forest per year. Both false alarms are explained: a dryland project the canopy rule misjudges, and a disturbance whose cause the data cannot attribute. Details: `docs/EVALUATION.md`. These metrics measure detection of injected faults on a seeded dataset, **not real-world fraud prevalence**.
+`rules-v4` adds a project-history jump check using the frozen local issuance snapshot:
+more than 3× a median of at least three earlier vintages deducts 50 points; absent or
+insufficient history is visible with no deduction. Inflation detection rises from 3/30
+to **16/30**, but false alarms rise from 2/30 to **4/30** and precision falls from .973
+to **.956**. The new alarms require historical boundary/methodology context. The existing
+dryland canopy alarm and unattributed disturbance alarm remain. Light clearing below
+~2% of remaining forest per year still passes. Details: `docs/EVALUATION.md`. Metrics
+measure injected faults on this dataset, **not real-world fraud prevalence**.
 
 ## Architecture
 
@@ -102,6 +109,9 @@ Base Sepolia: *(address and BaseScan link added at deployment)*.
 - Pending registrations have no cancellation yet. Idempotency records interrupted by a worker crash require operator recovery; timeout reconciliation alone does not recover those records.
 - EIP-712 v1 consent covers claim fields, while the registrar computes the cell list. A compromised registrar can substitute cells; a signed cell commitment remains future work.
 - A compromised verifier key could post inflated scores until it is rotated. Attestations are append-only and carry a reproducible `evidenceHash`.
+- History is context, with no authenticated registry affiliation or historical-boundary
+  comparison. The attestation commits its snapshot, prior vintages and satellite hash;
+  the verifier displays these separately from the satellite-only evidence hash.
 - Satellite evidence has limits: clouds, 30 m resolution, loss data lagging about a year, and sensor processing changes. One such change, the Sentinel-2 2022 baseline offset, is corrected and documented.
 - Sybil developers and legal identity are out of scope; production needs registry-verified identities.
 - Evaluation measures injected faults, not real-world fraud prevalence.

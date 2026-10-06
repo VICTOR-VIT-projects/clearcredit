@@ -21,6 +21,7 @@ const ERROR_EXPLANATIONS: Record<string, string> = {
   NETWORK_ERROR: 'The API could not be reached. Check that the backend is running, then retry.',
   VALIDATION_ERROR: 'The backend rejected one or more fields. Review the form and boundary data.',
   REQUEST_TOO_LARGE: 'The request exceeds the 2 MiB limit. Simplify the boundary before submitting.',
+  EVIDENCE_INVALID: 'Cached evidence failed its commitment check. Ask the operator to review the cache before resubmitting.',
 }
 
 type SubmitStage = 'editing' | 'checking' | 'ready' | 'signing' | 'relaying' | 'registered'

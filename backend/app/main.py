@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from shapely.geometry import shape
 
-from . import canonical, geo, satellite, scoring
+from . import canonical, geo, history, satellite, scoring
 from .chain import CLAIM_TYPES, ZERO32, Chain, recover_signer
 from .models import Claim, Submission
 from .limits import BodyLimit
@@ -46,7 +46,8 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
     app = FastAPI(
         title="ClearCredit API",
         version="0.1.0",
-        responses={413: {"description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."}},
+        responses={413: {"description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."},
+                   503: {"description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."}},
         description="Carbon-credit integrity and double-counting checker. Produces integrity scores and "
         "verified integrity attestations; it does not certify emission reductions.",
     )
@@ -63,6 +64,11 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, e: ApiError):
         return JSONResponse(e.body(), status_code=e.status)
+
+    @app.exception_handler(satellite.EvidenceError)
+    @app.exception_handler(history.HistoryError)
+    async def _evidence_error(_: Request, e: satellite.EvidenceError):
+        return JSONResponse({"error": {"code": "EVIDENCE_INVALID", "message": "Cached evidence failed its commitment check; operator review is required.", "details": {}}}, status_code=503)
 
     # ------------------------------------------------------------ analysis
 
@@ -83,7 +89,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
                     known = store.find(project_key=owner)
                     conflicts.setdefault(known["project_id"] if known else owner, []).append(hex(cell))
         evidence = satellite.get_evidence(claim["boundary"], live=live_evidence)
-        score = scoring.score_claim(claim, area, overlaps, evidence)
+        score = scoring.score_claim(claim, area, overlaps, evidence, history.for_claim(claim))
         blocked = any(r["code"] in BLOCKING_CODES for r in score["reasons"]) or bool(conflicts)
         return {
             "areaHa": round(area, 2),

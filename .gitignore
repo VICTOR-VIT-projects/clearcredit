@@ -12,6 +12,7 @@ contracts/coverage/
 frontend/dist/
 data/cache/*
 !data/cache/evidence/
+!data/cache/history/
 # probe scratch (caches, cloned upstream repos, venvs)
 data/probes/.npm-cache/
 data/probes/.venv/

@@ -40,7 +40,7 @@ NDVI_MAX_PX = 256
 SCL_MASK = [0, 1, 3, 8, 9, 10]  # no-data, saturated, cloud shadow, cloud med/high, cirrus
 EARTH_R = 6_371_007.2  # authalic radius (m)
 
-EVIDENCE_VERSION = "ev2"  # bump whenever evidence numbers change; part of the cache key and the hashed bundle
+EVIDENCE_VERSION = "ev3"  # v3: versioned history commitments; reuse frozen ev2 satellite numbers offline
 CACHE_DIR = Path(os.environ.get("EVIDENCE_CACHE", Path(__file__).resolve().parents[2] / "data" / "cache" / "evidence"))
 _GDAL_ENV = dict(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", GDAL_HTTP_MAX_RETRY="3", GDAL_HTTP_RETRY_DELAY="2")
 
@@ -51,6 +51,18 @@ def boundary_key(boundary: dict) -> str:
 
 def evidence_hash(bundle: dict) -> str:
     return "0x" + keccak(_dumps(bundle).encode()).hex()
+
+
+class EvidenceError(ValueError):
+    pass
+
+
+def _read_cache(path: Path, key: str, version: str) -> dict:
+    bundle = json.loads(path.read_text(encoding="utf-8"))
+    content = {k: v for k, v in bundle.items() if k not in ("computeSeconds", "evidenceHash")}
+    if bundle.get("evidenceVersion") != version or bundle.get("boundaryKey") != key or evidence_hash(content) != bundle.get("evidenceHash"):
+        raise EvidenceError("cached satellite evidence commitment mismatch")
+    return bundle
 
 
 # ---------------------------------------------------------------- Hansen tree-cover loss
@@ -175,9 +187,18 @@ def ndvi_trend(geom) -> dict:
 
 def get_evidence(boundary: dict, *, live: bool = True) -> dict | None:
     """Cached evidence bundle for a boundary; computes and caches it when `live` is True."""
-    path = CACHE_DIR / f"{EVIDENCE_VERSION}-{boundary_key(boundary)}.json"
+    key = boundary_key(boundary)
+    path = CACHE_DIR / f"{EVIDENCE_VERSION}-{key}.json"
     if path.exists():
-        return json.loads(path.read_text(encoding="utf-8"))
+        return _read_cache(path, key, EVIDENCE_VERSION)
+    previous = CACHE_DIR / f"ev2-{key}.json"
+    if previous.exists():
+        # A versioned wrapper, not a new satellite query. Preserve the source hash
+        # and all ev2 measurements; claim-specific history is committed by scoring.
+        bundle = {**_read_cache(previous, key, "ev2"), "evidenceVersion": EVIDENCE_VERSION}
+        bundle["sourceEvidenceHash"] = bundle["evidenceHash"]
+        bundle["evidenceHash"] = evidence_hash({k: v for k, v in bundle.items() if k not in ("computeSeconds", "evidenceHash")})
+        return bundle
     if not live:
         return None
     geom = shape(boundary)

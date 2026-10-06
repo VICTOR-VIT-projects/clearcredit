@@ -5,7 +5,9 @@ independent evidence. Thresholds are deliberately simple and published so they c
 """
 from __future__ import annotations
 
-MODEL_VERSION = "rules-v3"  # v3: orientation-independent area inputs; all rule thresholds unchanged
+from . import history, satellite
+
+MODEL_VERSION = "rules-v4"  # v4: frozen project-history jump rule; v2 ecology thresholds unchanged
 BLOCKING_OVERLAP = 0.01  # >= 1% of either boundary overlapping a same-vintage claim
 
 # Plausible issuance ranges, tCO2e per hectare per vintage year (broad literature ranges).
@@ -21,7 +23,7 @@ def band(score: int) -> str:
     return "high" if score >= 75 else "medium" if score >= 50 else "low"
 
 
-def score_claim(claim: dict, area_ha: float, overlaps: list[dict], evidence: dict | None) -> dict:
+def score_claim(claim: dict, area_ha: float, overlaps: list[dict], evidence: dict | None, issuance_history: dict | None = None) -> dict:
     vintage, ptype = claim["vintageYear"], claim["projectType"]
     reasons, features = [], {"areaHa": round(area_ha, 2)}
 
@@ -46,6 +48,23 @@ def score_claim(claim: dict, area_ha: float, overlaps: list[dict], evidence: dic
         reasons.append(_reason("CREDITS_HIGH", 10, f"{cph:.1f} tCO2e/ha claimed for one year is unusually high for this project type (typical ≤{warn})."))
     else:
         reasons.append(_reason("CREDITS_PLAUSIBLE", 0, f"{cph:.1f} tCO2e/ha is within the plausible range for this project type."))
+
+    # Compare only earlier vintages on one fixed current-area denominator. Historical
+    # boundary/methodology changes are unavailable, so this is a review trigger.
+    issuance_history = issuance_history or history.for_claim(claim, snapshot={})
+    features["historyVintageCount"] = issuance_history["vintageCount"]
+    historical_median = issuance_history["medianCredits"]
+    if issuance_history["status"] != "available":
+        reasons.append(_reason("NO_HISTORY", 0, f"No history baseline: {issuance_history['vintageCount']} earlier positive issuance vintages are available; at least {history.MIN_VINTAGES} are required."))
+    else:
+        median_cph = historical_median / area_ha
+        ratio = claim["claimedCredits"] / historical_median
+        features["historicalMedianCreditsPerHa"] = round(median_cph, 4)
+        features["historyJumpRatio"] = round(ratio, 4)
+        if ratio > history.JUMP_MULTIPLIER:
+            reasons.append(_reason("HISTORY_CREDITS_JUMP", 50, f"{cph:.2f} tCO2e/ha is {ratio:.2f} times project {issuance_history['projectId']}'s prior-vintage median ({median_cph:.2f} tCO2e/ha), above the {history.JUMP_MULTIPLIER:g} times review threshold. Check boundary and methodology changes; this is not a conclusion about the project."))
+        else:
+            reasons.append(_reason("HISTORY_WITHIN_RANGE", 0, f"Claim is {ratio:.2f} times the prior-vintage issuance median, below or equal to the {history.JUMP_MULTIPLIER:g} times review threshold. This comparison does not establish the correct credit quantity."))
 
     # 3. Satellite evidence
     if evidence is None:
@@ -83,6 +102,9 @@ def score_claim(claim: dict, area_ha: float, overlaps: list[dict], evidence: dic
             reasons.append(_reason("NDVI_STABLE", 0, f"Vegetation greenness trend ({slope:+.3f}/yr) is consistent with the claim."))
 
     score = max(0, 100 - sum(r["deduction"] for r in reasons))
+    attestation_evidence = {"evidenceVersion": satellite.EVIDENCE_VERSION,
+        "satelliteEvidenceHash": evidence["evidenceHash"] if evidence else None,
+        "issuanceHistory": issuance_history}
     return {
         "score": score,
         "scoreBps": score * 100,
@@ -90,5 +112,6 @@ def score_claim(claim: dict, area_ha: float, overlaps: list[dict], evidence: dic
         "reasons": sorted(reasons, key=lambda r: -r["deduction"]),
         "features": features,
         "modelVersion": MODEL_VERSION,
-        "evidenceHash": evidence["evidenceHash"] if evidence else None,
+        "evidenceHash": satellite.evidence_hash(attestation_evidence),
+        "attestationEvidence": attestation_evidence,
     }

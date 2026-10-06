@@ -49,6 +49,20 @@ export interface IntegrityScore {
   features: Record<string, number | string | null>
   modelVersion: string
   evidenceHash: Hash | null
+  attestationEvidence?: {
+    evidenceVersion: string
+    satelliteEvidenceHash: Hash | null
+    issuanceHistory: {
+      status: 'available' | 'no_history'
+      projectId: string
+      priorVintages: Record<string, number>
+      vintageCount: number
+      medianCredits: number | null
+      snapshotHash: Hash | null
+      source: string | null
+      limitation: string
+    }
+  }
 }
 
 export interface TypedDataPayload {

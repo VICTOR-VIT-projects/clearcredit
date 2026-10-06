@@ -56,6 +56,14 @@ sequenceDiagram
 
 ## Data model
 
+Scoring `rules-v4` uses a frozen offline issuance-history snapshot (`app/history.py`).
+Preview and saved score responses expose `attestationEvidence`: `{evidenceVersion: ev3,
+satelliteEvidenceHash, issuanceHistory}`. The on-chain `evidenceHash` is the keccak of
+this full canonical bundle. Satellite-only cache hashes remain independently inspectable;
+ev3 verifies/wraps the original ev2 data without modifying its measurements. Missing
+history has an explicit status and zero deduction. See `docs/EVALUATION.md` for the rule,
+coverage and increased false alarms.
+
 **Off-chain (authoritative for geometry):**
 - the full claim JSON
 - exact overlaps

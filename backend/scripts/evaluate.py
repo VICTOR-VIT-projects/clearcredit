@@ -29,7 +29,7 @@ import rasterio
 from shapely.affinity import translate
 from shapely.geometry import mapping, shape
 
-from app import geo, satellite, scoring
+from app import geo, history, satellite, scoring
 
 ROOT = Path(__file__).resolve().parents[2]
 CLAIMS = ROOT / "data" / "claims" / "real"
@@ -91,7 +91,7 @@ def find_frontier_boxes(per_band: int = 3):
 def evaluate(claim: dict, boundary: dict, others: dict, evidence: dict | None) -> dict:
     g = shape(boundary)
     overlaps = [o.__dict__ for o in geo.find_overlaps(g, others)]
-    s = scoring.score_claim({**claim, "boundary": boundary}, geo.area_ha(g), overlaps, evidence)
+    s = scoring.score_claim({**claim, "boundary": boundary}, geo.area_ha(g), overlaps, evidence, history.for_claim(claim))
     blocked = any(r["code"] == "OVERLAP" for r in s["reasons"])
     return {"blocked": blocked, "score": s["score"], "codes": [r["code"] for r in s["reasons"] if r["deduction"] > 0]}
 
@@ -160,7 +160,8 @@ def run():
     result = {
         "note": "Detection of injected faults on a seeded dataset of 30 real published projects; not real-world fraud prevalence.",
         "detectionRule": f"blocked by overlap OR score < {ISSUE_THRESHOLD}",
-        "thresholdsFrozen": "rules-v2 thresholds retained in rules-v3; orientation-independent area correction, no threshold tuning",
+        "thresholdsFrozen": "rules-v4 history rule frozen before evaluation: >3 times prior median, >=3 prior vintages, -50; rules-v2 ecology thresholds retained",
+        "historySnapshotHash": (history.load_snapshot() or {}).get("snapshotHash"),
         "scoringModel": scoring.MODEL_VERSION,
         "evidenceVersion": satellite.EVIDENCE_VERSION,
         "clearcredit": metrics("detected"),
@@ -169,7 +170,7 @@ def run():
         "rows": rows,
     }
     EVAL.mkdir(parents=True, exist_ok=True)
-    (EVAL / "results.json").write_text(json.dumps(result, indent=1), encoding="utf-8")
+    (EVAL / "results.json").write_bytes(json.dumps(result, indent=1).encode("utf-8"))
     print(json.dumps({k: v for k, v in result.items() if k != "rows"}, indent=1))
 
 
