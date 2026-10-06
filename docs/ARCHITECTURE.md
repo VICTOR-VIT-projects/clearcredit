@@ -75,7 +75,11 @@ See `DECISIONS.md`. In short:
 - **Signed relay.** The backend pays gas, but it can't register anything a developer didn't sign.
 - **Center-containment cells.** Neighbouring projects never conflict on-chain; real overlaps do.
 - **Integer micro-degree canonicalization.** Hashes match byte-for-byte across Python and JavaScript.
-- **Resumable relay plus idempotency keys.** Retries never double count.
+- **Resumable relay plus idempotency keys.** Signed transactions are journaled in SQLite
+  before broadcast. Receipt timeouts keep the same bytes/hash/nonce; the relay reconciles
+  the uncertain send before checking state or allocating another nonce. Run one API worker
+  and one Chain instance per relayer key. A stuck/replaced transaction requires operator
+  reconciliation; the journal deliberately blocks further sends rather than guessing.
 - **SQLite, not PostGIS.** Fewer moving parts. Shapely handles exact geometry, and the claim volume is small.
 
 ## Why a blockchain rather than a database

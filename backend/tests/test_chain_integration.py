@@ -50,7 +50,7 @@ def node():
 
 
 @pytest.fixture
-def chain(node):
+def chain(node, tmp_path):
     """Fresh contract per test (cheap on a local node)."""
     abi = json.loads((Path(__file__).resolve().parents[1] / "app" / "abi.json").read_text())
     bytecode = json.loads((CONTRACTS / "artifacts/contracts/ClearCreditRegistry.sol/ClearCreditRegistry.json").read_text())["bytecode"]
@@ -70,7 +70,7 @@ def chain(node):
     c = w3.eth.contract(address=addr, abi=abi)
     for role in (c.functions.REGISTRAR_ROLE().call(), c.functions.VERIFIER_ROLE().call()):
         send(c.functions.grantRole(role, acct.address))
-    return Chain(node, HH_KEY, addr, batch=40)  # small batches so one claim needs several txs
+    return Chain(node, HH_KEY, addr, batch=40, journal=Store(str(tmp_path / "relay.sqlite3")))
 
 
 def client_for(chain, db_path):
@@ -158,3 +158,29 @@ def test_relay_resumes_after_mid_flight_failure(chain, db_path):
     p = second.json()["onChain"]["project"]
     assert p["status"] == "registered" and p["cellCount"] == second.json()["cellCount"]
     assert [t["step"] for t in second.json()["transactions"]].count("registerProject") == 1
+
+
+def test_pending_attestation_timeout_then_late_mine_does_not_append_twice(chain, db_path, monkeypatch):
+    from web3.exceptions import TimeExhausted
+    client = client_for(chain, db_path)
+    assert submit(client, make_claim(), "k1").status_code == 201
+    pk = canonical.project_key("TEST-A")
+    nonce = chain.w3.eth.get_transaction_count(chain.account.address)
+    real_wait = chain.w3.eth.wait_for_transaction_receipt
+    monkeypatch.setattr(chain.w3.eth, "wait_for_transaction_receipt",
+                        lambda h, **_: real_wait(h, timeout=0.05, poll_latency=0.01))
+    chain.w3.provider.make_request("evm_setAutomine", [False])
+    try:
+        with pytest.raises(TimeExhausted):
+            chain.post_attestation(pk, 7000, "0x" + "33" * 32, "timeout-test")
+        with pytest.raises(TimeExhausted):
+            chain.post_attestation(pk, 7000, "0x" + "33" * 32, "timeout-test")
+        assert chain.w3.eth.get_transaction_count(chain.account.address, "pending") == nonce + 1
+        chain.w3.provider.make_request("evm_mine", [])
+        recovered = chain.post_attestation(pk, 7000, "0x" + "33" * 32, "timeout-test")
+        assert recovered["step"] == "postAttestation"
+        assert len(chain.attestations(pk)) == 2  # initial score + precisely one new attestation
+        assert chain.w3.eth.get_transaction_count(chain.account.address) == nonce + 1
+        assert chain.post_attestation(pk, 7000, "0x" + "33" * 32, "timeout-test") is None
+    finally:
+        chain.w3.provider.make_request("evm_setAutomine", [True])

@@ -32,6 +32,14 @@ CREATE TABLE IF NOT EXISTS idempotency (
     response     TEXT,
     created_at   TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS relay_pending (
+    scope TEXT PRIMARY KEY,
+    operation TEXT NOT NULL,
+    project_key TEXT,
+    step TEXT NOT NULL,
+    tx_hash TEXT NOT NULL,
+    raw_tx TEXT NOT NULL
+);
 """
 
 
@@ -45,6 +53,18 @@ class Store:
         self.db.row_factory = sqlite3.Row
         self.db.executescript(SCHEMA)
         self.lock = threading.Lock()
+
+    def relay_pending(self, scope: str) -> dict | None:
+        row = self.db.execute("SELECT * FROM relay_pending WHERE scope = ?", (scope,)).fetchone()
+        return dict(row) if row else None
+
+    def relay_save(self, scope: str, operation: str, project_key: str | None, step: str, tx_hash: str, raw_tx: str) -> None:
+        # Durable before broadcast: raw_tx is public signed calldata, never a private key.
+        self.db.execute("INSERT INTO relay_pending VALUES (?, ?, ?, ?, ?, ?)",
+                        (scope, operation, project_key, step, tx_hash, raw_tx))
+
+    def relay_clear(self, scope: str) -> None:
+        self.db.execute("DELETE FROM relay_pending WHERE scope = ?", (scope,))
 
     # ------------------------------------------------------------ idempotency
 

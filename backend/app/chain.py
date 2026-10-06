@@ -8,11 +8,15 @@ from __future__ import annotations
 import json
 import os
 import threading
+from functools import wraps
 from pathlib import Path
 
 from eth_account import Account
 from eth_account.messages import encode_typed_data
 from web3 import Web3
+from web3.exceptions import TimeExhausted, TransactionNotFound
+
+from .store import Store
 
 ABI = json.loads((Path(__file__).parent / "abi.json").read_text())
 STATUS = {0: "none", 1: "pending", 2: "registered"}
@@ -52,8 +56,16 @@ def _hex(b: bytes) -> str:
     return "0x" + bytes(b).hex()
 
 
+def _serialized(method):
+    @wraps(method)
+    def run(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+    return run
+
+
 class Chain:
-    def __init__(self, rpc_url: str, private_key: str, address: str, batch: int = 200):
+    def __init__(self, rpc_url: str, private_key: str, address: str, batch: int = 200, journal: Store | None = None):
         self.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 60}))
         self.account = Account.from_key(private_key)
         self.address = Web3.to_checksum_address(address)
@@ -61,9 +73,9 @@ class Chain:
         self.chain_id = self.w3.eth.chain_id
         self.batch = batch
         self.explorer = EXPLORERS.get(self.chain_id)
-        # ponytail: one process-wide lock serializes nonces for the single relayer key;
-        # use a nonce manager or a key per worker if relay throughput ever matters.
-        self._lock = threading.Lock()
+        # One worker/Chain per relayer key. State checks and sends share this lock.
+        self._lock = threading.RLock()
+        self.journal = journal or Store()
 
     @classmethod
     def from_env(cls) -> "Chain | None":
@@ -110,20 +122,58 @@ class Chain:
 
     # ------------------------------------------------------------ writes
 
-    def _send(self, fn) -> str:
-        with self._lock:
-            tx = fn.build_transaction({"from": self.account.address, "nonce": self.w3.eth.get_transaction_count(self.account.address, "pending"), "chainId": self.chain_id})
-            signed = self.account.sign_transaction(tx)
-            h = self.w3.eth.send_raw_transaction(signed.raw_transaction)
-            receipt = self.w3.eth.wait_for_transaction_receipt(h, timeout=180)
-        if receipt["status"] != 1:
-            raise RuntimeError(f"transaction reverted: {_hex(h)}")
-        return _hex(h)
+    @property
+    def _scope(self) -> str:
+        return f"{self.chain_id}:{self.address.lower()}:{self.account.address.lower()}"
 
+    def _complete(self, row: dict) -> str:
+        h = _b32(row["tx_hash"])
+        try:
+            receipt = self.w3.eth.get_transaction_receipt(h)
+        except (TransactionNotFound, TimeExhausted):
+            try:
+                self.w3.eth.send_raw_transaction(bytes.fromhex(row["raw_tx"]))
+            except Exception as e:
+                # A known mempool transaction needs waiting, not a new nonce. All other
+                # RPC errors retain the journal and fail closed for operator recovery.
+                if "already known" not in str(e).lower() and "known transaction" not in str(e).lower():
+                    raise
+            receipt = self.w3.eth.wait_for_transaction_receipt(h, timeout=180)
+        self.journal.relay_clear(self._scope)
+        if receipt["status"] != 1:
+            raise RuntimeError(f"transaction reverted: {row['tx_hash']}")
+        return row["tx_hash"]
+
+    def _reconcile(self, project_key: str) -> list[dict]:
+        row = self.journal.relay_pending(self._scope)
+        if not row:
+            return []
+        tx = self._complete(row)
+        return [{"step": row["step"], "tx": tx}] if row["project_key"] == project_key else []
+
+    @_serialized
+    def _send(self, fn) -> str:
+        operation = fn._encode_transaction_data()
+        row = self.journal.relay_pending(self._scope)
+        if row:
+            tx_hash = self._complete(row)
+            if row["operation"] == operation:
+                return tx_hash
+        tx = fn.build_transaction({"from": self.account.address, "nonce": self.w3.eth.get_transaction_count(self.account.address, "pending"), "chainId": self.chain_id})
+        signed = self.account.sign_transaction(tx)
+        raw = bytes(signed.raw_transaction)
+        tx_hash = _hex(Web3.keccak(raw))
+        args = getattr(fn, "arguments", ())
+        project_key = _hex(args[0]) if args else None
+        self.journal.relay_save(self._scope, operation, project_key, fn.fn_name, tx_hash, raw.hex())
+        return self._complete(self.journal.relay_pending(self._scope))
+
+    @_serialized
     def relay_registration(self, project_key, claim_hash, developer, vintage, credits, cells, signature, txs: list) -> None:
         """Register → add remaining cell batches → finalize. Safe to call again after any failure.
         Appends each confirmed tx to `txs` as it lands, so partial progress survives an exception."""
         pk = _b32(project_key)
+        txs.extend(t for t in self._reconcile(project_key) if t not in txs)
         state = self.project(project_key)
         if state["status"] == "none":
             first = cells[: self.batch]
@@ -137,10 +187,12 @@ class Chain:
                 txs.append({"step": "addCells", "tx": self._send(self.c.functions.addCells(pk, todo[i : i + self.batch]))})
             txs.append({"step": "finalizeRegistration", "tx": self._send(self.c.functions.finalizeRegistration(pk))})
 
+    @_serialized
     def post_attestation(self, project_key, score_bps, evidence_hash, model_version) -> dict | None:
         """Append an attestation unless the latest one already says exactly this (retry-safe)."""
+        recovered = self._reconcile(project_key)
         latest = (self.attestations(project_key) or [None])[-1]
         if latest and (latest["scoreBps"], latest["evidenceHash"], latest["modelVersion"]) == (score_bps, evidence_hash, model_version):
-            return None
+            return next((t for t in recovered if t["step"] == "postAttestation"), None)
         return {"step": "postAttestation", "tx": self._send(self.c.functions.postAttestation(
             _b32(project_key), score_bps, _b32(evidence_hash), model_version))}

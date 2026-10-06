@@ -4,6 +4,7 @@ Format: date — decision — rationale. Deviations from `CLEARCREDIT_HANDOFF.md
 
 | Date | Decision | Rationale |
 |---|---|---|
+| 2026-10-06 | Journal uncertain relay transactions before broadcast; single relayer worker | H1: a receipt timeout is not a failed transaction. Persist signed public calldata/hash and rebroadcast identical bytes, then reconcile mined state. No second nonce is allocated while unresolved; externally replaced transactions require operator recovery. |
 | 2026-10-05 | Testnet: **Base Sepolia** (chainId 84532) | Reliable public RPC and BaseScan explorer; multiple faucets. |
 | 2026-10-05 | Issuance: **attestation-gated self-issue**, no `ISSUER_ROLE` | Handoff §7.1 option. Developer issues up to `claimedCredits` only when the latest attestation score ≥ `issueThresholdBps` (default 6000 = 60/100, admin-settable). One less role to secure. |
 | 2026-10-05 | DB: **SQLite + in-memory shapely** instead of PostGIS **[deviation, allowed fallback]** | Docker is not installed on the dev machine; handoff §4 permits this fallback. Exact overlap is computed with shapely in an equal-area projection. |
