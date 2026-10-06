@@ -19,9 +19,13 @@ from web3.exceptions import TimeExhausted, TransactionNotFound
 from .store import Store
 
 ABI = json.loads((Path(__file__).parent / "abi.json").read_text())
-STATUS = {0: "none", 1: "pending", 2: "registered"}
+STATUS = {0: "none", 1: "pending", 2: "registered", 3: "cancelled"}
 ZERO32 = "0x" + "00" * 32
 EXPLORERS = {84532: "https://sepolia.basescan.org", 31337: None}
+
+
+class RegistrationCancelled(RuntimeError):
+    pass
 
 CLAIM_TYPES = {
     "Claim": [
@@ -29,17 +33,28 @@ CLAIM_TYPES = {
         {"name": "claimHash", "type": "bytes32"},
         {"name": "vintageYear", "type": "uint16"},
         {"name": "claimedCredits", "type": "uint64"},
+        {"name": "cellsRoot", "type": "bytes32"},
     ]
 }
 
 
-def typed_data(chain_id: int, contract: str, project_key: str, claim_hash: str, vintage: int, credits: int) -> dict:
+def cells_root(cells: list[int]) -> str:
+    """Sorted unique uint64 cells: h0=0; hi=keccak(hi-1 || uint64(cell))."""
+    if cells != sorted(set(cells)):
+        raise ValueError("cell commitment requires a sorted unique list")
+    h = bytes(32)
+    for cell in cells:
+        h = Web3.keccak(h + cell.to_bytes(8, "big"))
+    return _hex(h)
+
+
+def typed_data(chain_id: int, contract: str, project_key: str, claim_hash: str, vintage: int, credits: int, cell_commitment: str) -> dict:
     """EIP-712 payload the developer's wallet signs (eth_signTypedData_v4 shape)."""
     return {
-        "domain": {"name": "ClearCredit", "version": "1", "chainId": chain_id, "verifyingContract": contract},
+        "domain": {"name": "ClearCredit", "version": "2", "chainId": chain_id, "verifyingContract": contract},
         "types": CLAIM_TYPES,
         "primaryType": "Claim",
-        "message": {"projectId": project_key, "claimHash": claim_hash, "vintageYear": vintage, "claimedCredits": credits},
+        "message": {"projectId": project_key, "claimHash": claim_hash, "vintageYear": vintage, "claimedCredits": credits, "cellsRoot": cell_commitment},
     }
 
 
@@ -71,6 +86,8 @@ class Chain:
         self.address = Web3.to_checksum_address(address)
         self.c = self.w3.eth.contract(address=self.address, abi=ABI)
         self.chain_id = self.w3.eth.chain_id
+        if self.c.functions.eip712Domain().call()[2] != "2":
+            raise RuntimeError("This backend requires ClearCredit EIP-712 v2; use a fresh local contract, not a v1 deployment.")
         self.batch = batch
         self.explorer = EXPLORERS.get(self.chain_id)
         # One worker/Chain per relayer key. State checks and sends share this lock.
@@ -84,8 +101,8 @@ class Chain:
             return None
         return cls(os.environ.get("CHAIN_RPC_URL") or os.environ.get("BASE_SEPOLIA_RPC_URL", "https://sepolia.base.org"), key, addr)
 
-    def typed_data(self, project_key: str, claim_hash: str, vintage: int, credits: int) -> dict:
-        return typed_data(self.chain_id, self.address, project_key, claim_hash, vintage, credits)
+    def typed_data(self, project_key: str, claim_hash: str, vintage: int, credits: int, cell_commitment: str) -> dict:
+        return typed_data(self.chain_id, self.address, project_key, claim_hash, vintage, credits, cell_commitment)
 
     # ------------------------------------------------------------ reads
 
@@ -94,6 +111,8 @@ class Chain:
         return {
             "developer": p[0], "claimHash": _hex(p[1]), "vintageYear": p[2], "status": STATUS[p[3]],
             "claimedCredits": p[4], "issued": p[5], "retired": p[6], "cellCount": p[7], "registeredAt": p[8],
+            "cellsRoot": _hex(p[9]), "cellsHash": _hex(p[10]), "lastCell": p[11],
+            "registeredBlock": p[12],
         }
 
     def check_cells(self, cells: list[int], vintage: int) -> dict[int, str]:
@@ -175,10 +194,12 @@ class Chain:
         pk = _b32(project_key)
         txs.extend(t for t in self._reconcile(project_key) if t not in txs)
         state = self.project(project_key)
+        if state["status"] == "cancelled":
+            raise RegistrationCancelled("registration was cancelled; its identity cannot be reused")
         if state["status"] == "none":
             first = cells[: self.batch]
             txs.append({"step": "registerProject", "tx": self._send(self.c.functions.registerProject(
-                pk, _b32(claim_hash), Web3.to_checksum_address(developer), vintage, credits, first, signature))})
+                pk, _b32(claim_hash), Web3.to_checksum_address(developer), vintage, credits, _b32(cells_root(cells)), first, signature))})
             state = self.project(project_key)
         if state["status"] == "pending":
             owners = self.c.functions.checkCells(cells, vintage).call() if len(cells) <= 2000 else None

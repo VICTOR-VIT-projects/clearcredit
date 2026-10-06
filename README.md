@@ -75,6 +75,10 @@ relay state transitions are serialized in that worker; multi-worker deployment n
 cross-process admission and nonce coordination. Uncertain transactions are journaled
 before broadcast and reconciled before a new nonce is allocated.
 
+The current contract uses **EIP-712 v2** with a signed cell-list commitment. A fresh
+local deployment is required; this backend rejects v1 deployments. Schema 1.0 claim
+hashes and existing hash vectors remain unchanged. No public deployment is included.
+
 ```bash
 cp .env.example .env
 
@@ -106,8 +110,12 @@ Base Sepolia: *(address and BaseScan link added at deployment)*.
 - The chain enforces uniqueness and tamper evidence; it **cannot prove a project is real or effective**. A fabricated project on land nobody else claims can only be flagged through satellite inconsistencies.
 - Exact geometry is checked off-chain. The on-chain H3 cell index (resolution 8, ~74 ha) is a conservative backstop, so slivers smaller than a cell can pass it.
 - Tiny disjoint boundaries can share the representative-point fallback cell and require manual boundary review. No on-chain exception exists.
-- Pending registrations have no cancellation yet. Idempotency records interrupted by a worker crash require operator recovery; timeout reconciliation alone does not recover those records.
-- EIP-712 v1 consent covers claim fields, while the registrar computes the cell list. A compromised registrar can substitute cells; a signed cell commitment remains future work.
+- Pending registrations can be cancelled by the developer/admin after 7,200 blocks,
+  releasing cells in bounded batches while preserving claim identity. Worker crashes
+  can still leave stale idempotency records needing operator recovery.
+- EIP-712 v2 commits the declared cell list and blocks mismatched finalization. A compromised
+  registrar can still hold arbitrary cells while Pending until the recovery path is used;
+  signing the list does not independently prove its geometry-to-cell derivation.
 - A compromised verifier key could post inflated scores until it is rotated. Attestations are append-only and carry a reproducible `evidenceHash`.
 - History is context, with no authenticated registry affiliation or historical-boundary
   comparison. The attestation commits its snapshot, prior vintages and satellite hash;

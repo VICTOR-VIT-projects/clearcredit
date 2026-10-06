@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useAccount, useSignTypedData } from 'wagmi'
 import { ApiError, previewClaim, submitClaim } from '../lib/api'
 import type { Boundary } from '../lib/canonical'
+import { cellsRoot } from '../lib/cells'
+import { validateSigningPayload } from '../lib/signing'
 import type { Claim, ClaimView, DataLabel, PreviewResponse, ProjectType } from '../lib/types'
 import { BoundaryMap } from '../components/BoundaryMap'
 import { ErrorNotice, CopyValue } from '../components/Inline'
@@ -22,6 +24,7 @@ const ERROR_EXPLANATIONS: Record<string, string> = {
   VALIDATION_ERROR: 'The backend rejected one or more fields. Review the form and boundary data.',
   REQUEST_TOO_LARGE: 'The request exceeds the 2 MiB limit. Simplify the boundary before submitting.',
   EVIDENCE_INVALID: 'Cached evidence failed its commitment check. Ask the operator to review the cache before resubmitting.',
+  REGISTRATION_CANCELLED: 'The expired Pending registration was cancelled. Review the released cells and prepare a new claim with a new project ID.',
 }
 
 type SubmitStage = 'editing' | 'checking' | 'ready' | 'signing' | 'relaying' | 'registered'
@@ -90,8 +93,12 @@ export function SubmitPage() {
   const [replays, setReplays] = useState(0)
   const [error, setError] = useState<ReturnType<typeof errorInfo> | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const walletRef = useRef({ address, chainId })
+  walletRef.current = { address, chainId }
+  const revision = useRef(0)
 
   const invalidate = () => {
+    revision.current += 1
     setPreview(null)
     setPreparedClaim(null)
     setIdempotencyKey('')
@@ -147,8 +154,15 @@ export function SubmitPage() {
     if (!claim) return
     setError(null)
     setStage('checking')
+    const preparedRevision = revision.current
+    const preparedChain = chainId
     try {
       const nextPreview = await previewClaim(claim)
+      if (preparedRevision !== revision.current) return
+      if (walletRef.current.address !== claim.developer || walletRef.current.chainId !== preparedChain) throw new Error('The wallet changed during preview. Check the claim again.')
+      if (cellsRoot(nextPreview.cellIds) !== nextPreview.cellsRoot || nextPreview.cellIds.length !== nextPreview.cellCount) {
+        throw new Error('The preview cell list does not match its commitment. Prepare the claim again.')
+      }
       setPreparedClaim(claim)
       setPreview(nextPreview)
       setIdempotencyKey(crypto.randomUUID())
@@ -179,6 +193,14 @@ export function SubmitPage() {
     setError(null)
     setStage('signing')
     const typed = preview.typedData
+    try {
+      validateSigningPayload(preparedClaim, preview, walletRef.current.address, walletRef.current.chainId)
+    } catch (validationError) {
+      setError(errorInfo(validationError))
+      setStage('ready')
+      return
+    }
+    const preparedRevision = revision.current
     const message = { ...typed.message }
     for (const field of typed.types[typed.primaryType] || []) {
       if (field.type.startsWith('uint') || field.type.startsWith('int')) message[field.name] = BigInt(message[field.name] as string | number) as unknown as number
@@ -190,6 +212,8 @@ export function SubmitPage() {
         primaryType: typed.primaryType,
         message,
       })
+      if (preparedRevision !== revision.current) return
+      validateSigningPayload(preparedClaim, preview, walletRef.current.address, walletRef.current.chainId)
       setSignature(signed)
       await relay(signed)
     } catch (signError) {
@@ -199,6 +223,7 @@ export function SubmitPage() {
   }
 
   const chainMismatch = preview?.typedData && chainId !== preview.typedData.domain.chainId
+  const accountMismatch = preparedClaim && address?.toLowerCase() !== preparedClaim.developer.toLowerCase()
 
   return (
     <div className="page page-submit">
@@ -261,6 +286,11 @@ export function SubmitPage() {
             <div className="metric metric-wide"><span>Claim hash</span><CopyValue value={preview.claimHash} /></div>
           </div>
           <ScoreCard score={preview.score} />
+          <details className="card"><summary>Land cells committed by your signature ({preview.cellCount})</summary>
+            <p>Your signature commits this sorted cell list. The contract can finalize only after its accumulated list matches. This checks the list commitment; independent geometry-to-cell derivation still uses the backend.</p>
+            <CopyValue value={preview.cellsRoot} />
+            <textarea aria-label="Sorted committed land cells" readOnly rows={6} value={preview.cellIds.join('\n')} />
+          </details>
 
           {!preview.blocked && (
             <section className="card register-card">
@@ -268,6 +298,7 @@ export function SubmitPage() {
               <p>Your wallet signs the exact claim hash. The API relays registration and posts the verified integrity attestation.</p>
               {!preview.typedData && <div className="notice notice-warning"><strong>Signing unavailable</strong><p>The API did not return EIP-712 typed data. It may be running without a configured chain.</p></div>}
               {chainMismatch && <div className="notice notice-warning"><strong>Wrong network</strong><p>The prepared signature targets chain {preview.typedData?.domain.chainId}, but your wallet is on chain {chainId}. Switch networks before signing.</p></div>}
+              {accountMismatch && <div className="notice notice-warning"><strong>Wallet account changed</strong><p>Reconnect the prepared developer wallet to sign, or check a new claim. An already signed retry keeps its original consent.</p></div>}
               {stage === 'signing' && <div className="progress-row"><span className="spinner" /><div><strong>Waiting for signature</strong><span>Confirm the EIP-712 message in your wallet.</span></div></div>}
               {stage === 'relaying' && <div className="progress-row"><span className="spinner" /><div><strong>Relaying on-chain</strong><span>This normally takes 10–60 seconds. Keep this page open.</span></div></div>}
               {stage !== 'registered' && (

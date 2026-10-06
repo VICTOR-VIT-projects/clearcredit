@@ -32,6 +32,11 @@ flowchart LR
 
 ## Submission sequence
 
+Current registration uses EIP-712 v2: preview supplies `cellIds` and `cellsRoot`; the
+frontend recomputes the claim hash/list commitment before wallet consent. The contract
+accumulates the same sorted running hash across batches and checks it on finalization.
+The sequence below's Claim message includes `cellsRoot` alongside the original fields.
+
 ```mermaid
 sequenceDiagram
     participant W as Developer wallet
@@ -102,6 +107,11 @@ The parties checking for double counting don't trust each other: project develop
 What it does **not** give is physical truth. That is why every attestation carries satellite evidence and an `evidenceHash`.
 
 ## Scaling path
+
+Expired Pending registrations have a developer/admin cancellation path after 7,200
+blocks. Cell releases are bounded at 300 per call and skip cells no longer owned. Status
+becomes Cancelled and project/claim-hash identity is preserved. See CLAIM_SCHEMA for
+operator recovery; cancellation does not resolve stale off-chain worker leases.
 
 - **Multiple registries:** each registry runs a registrar against the same contract (or an L2 deployment), and the shared cell index gives cross-registry uniqueness.
 - **Large projects:** relay batches use 200 cells (contract cap 300). A 100,000 ha

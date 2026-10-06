@@ -16,11 +16,12 @@ contract ClearCreditRegistry is AccessControl, EIP712 {
     bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
     bytes32 public constant REGISTRAR_ROLE = keccak256("REGISTRAR_ROLE");
     bytes32 public constant CLAIM_TYPEHASH =
-        keccak256("Claim(bytes32 projectId,bytes32 claimHash,uint16 vintageYear,uint64 claimedCredits)");
+        keccak256("Claim(bytes32 projectId,bytes32 claimHash,uint16 vintageYear,uint64 claimedCredits,bytes32 cellsRoot)");
     uint256 public constant MAX_CELLS_PER_TX = 300;
+    uint256 public constant PENDING_EXPIRY_BLOCKS = 7200;
     uint16 public constant MAX_SCORE_BPS = 10_000;
 
-    enum Status { None, Pending, Registered }
+    enum Status { None, Pending, Registered, Cancelled }
 
     struct Project {
         address developer;
@@ -32,6 +33,10 @@ contract ClearCreditRegistry is AccessControl, EIP712 {
         uint64 retired;
         uint32 cellCount;
         uint64 registeredAt;
+        bytes32 cellsRoot;
+        bytes32 cellsHash;
+        uint64 lastCell;
+        uint64 registeredBlock;
     }
 
     struct Attestation {
@@ -64,6 +69,8 @@ contract ClearCreditRegistry is AccessControl, EIP712 {
     event ProjectRegistered(bytes32 indexed projectId, address indexed developer, bytes32 claimHash, uint16 vintageYear, uint64 claimedCredits);
     event CellsAdded(bytes32 indexed projectId, uint32 added, uint32 total);
     event ProjectFinalized(bytes32 indexed projectId, uint32 cellCount);
+    event CellListCommitted(bytes32 indexed projectId, bytes32 cellsRoot);
+    event PendingCancelled(bytes32 indexed projectId, address indexed caller, uint32 released, uint32 remaining);
     event AttestationPosted(bytes32 indexed projectId, uint256 index, uint16 scoreBps, bytes32 evidenceHash, string modelVersion, address indexed verifier);
     event CreditsIssued(bytes32 indexed projectId, uint64 amount, uint64 totalIssued);
     event Retired(bytes32 indexed projectId, address indexed from, uint64 serialStart, uint64 amount, string beneficiary);
@@ -77,6 +84,9 @@ contract ClearCreditRegistry is AccessControl, EIP712 {
     error ZeroValue();
     error TooManyCells(uint256 given, uint256 max);
     error WrongCellResolution(uint64 cell, uint8 resolution);
+    error CellsNotSorted(uint64 cell, uint64 previous);
+    error CellCommitmentMismatch(bytes32 expected, bytes32 actual);
+    error PendingNotExpired(uint256 eligibleBlock);
     error CellAlreadyClaimed(uint64 cell, uint16 vintageYear, bytes32 existingProjectId);
     error ScoreOutOfRange(uint16 scoreBps);
     error NotDeveloper(address caller);
@@ -85,7 +95,7 @@ contract ClearCreditRegistry is AccessControl, EIP712 {
     error ExceedsClaimed(uint64 requestedTotal, uint64 claimed);
     error ExceedsIssued(uint64 requestedTotal, uint64 issued);
 
-    constructor(address admin, uint8 cellResolution_, uint16 issueThresholdBps_) EIP712("ClearCredit", "1") {
+    constructor(address admin, uint8 cellResolution_, uint16 issueThresholdBps_) EIP712("ClearCredit", "2") {
         if (issueThresholdBps_ > MAX_SCORE_BPS) revert ScoreOutOfRange(issueThresholdBps_);
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         cellResolution = cellResolution_;
@@ -95,42 +105,42 @@ contract ClearCreditRegistry is AccessControl, EIP712 {
     // ---------------------------------------------------------------- registration
 
     /// @notice Relayed by the backend. `signature` is the developer's EIP-712 signature over
-    ///         Claim(projectId, claimHash, vintageYear, claimedCredits), proving consent.
+    ///         Claim(projectId, claimHash, vintageYear, claimedCredits, cellsRoot), proving consent.
     function registerProject(
         bytes32 projectId,
         bytes32 claimHash,
         address developer,
         uint16 vintageYear,
         uint64 claimedCredits,
+        bytes32 cellsRoot,
         uint64[] calldata cellIds,
         bytes calldata signature
     ) external onlyRole(REGISTRAR_ROLE) {
         if (_projects[projectId].status != Status.None) revert ProjectExists(projectId);
-        bytes32 existing = projectOfClaimHash[claimHash];
-        if (existing != bytes32(0)) revert ClaimHashExists(claimHash, existing);
+        if (projectOfClaimHash[claimHash] != bytes32(0)) revert ClaimHashExists(claimHash, projectOfClaimHash[claimHash]);
         if (projectId == bytes32(0) || claimHash == bytes32(0) || claimedCredits == 0 || developer == address(0)) {
             revert ZeroValue();
         }
 
-        bytes32 digest = _hashTypedDataV4(
-            keccak256(abi.encode(CLAIM_TYPEHASH, projectId, claimHash, vintageYear, claimedCredits))
-        );
-        address signer = ECDSA.recover(digest, signature);
-        if (signer != developer) revert BadSignature(signer, developer);
-
-        _projects[projectId] = Project({
-            developer: developer,
-            claimHash: claimHash,
-            vintageYear: vintageYear,
-            status: Status.Pending,
-            claimedCredits: claimedCredits,
-            issued: 0,
-            retired: 0,
-            cellCount: 0,
-            registeredAt: uint64(block.timestamp)
-        });
+        {
+            bytes32 digest = _hashTypedDataV4(
+                keccak256(abi.encode(CLAIM_TYPEHASH, projectId, claimHash, vintageYear, claimedCredits, cellsRoot))
+            );
+            address signer = ECDSA.recover(digest, signature);
+            if (signer != developer) revert BadSignature(signer, developer);
+        }
+        Project storage p = _projects[projectId];
+        p.developer = developer;
+        p.claimHash = claimHash;
+        p.vintageYear = vintageYear;
+        p.status = Status.Pending;
+        p.claimedCredits = claimedCredits;
+        p.registeredAt = uint64(block.timestamp);
+        p.cellsRoot = cellsRoot;
+        p.registeredBlock = uint64(block.number);
         projectOfClaimHash[claimHash] = projectId;
         emit ProjectRegistered(projectId, developer, claimHash, vintageYear, claimedCredits);
+        emit CellListCommitted(projectId, cellsRoot);
 
         _addCells(projectId, cellIds);
     }
@@ -144,8 +154,32 @@ contract ClearCreditRegistry is AccessControl, EIP712 {
     function finalizeRegistration(bytes32 projectId) external onlyRole(REGISTRAR_ROLE) {
         Project storage p = _requireStatus(projectId, Status.Pending);
         if (p.cellCount == 0) revert ZeroValue();
+        if (p.cellsHash != p.cellsRoot) revert CellCommitmentMismatch(p.cellsRoot, p.cellsHash);
         p.status = Status.Registered;
         emit ProjectFinalized(projectId, p.cellCount);
+    }
+
+    /// @notice After the grace period, the developer or admin can cancel a Pending
+    ///         project and release its cells in bounded batches. Claim identity remains
+    ///         reserved for audit; Registered projects can never be cancelled here.
+    function cancelPendingRegistration(bytes32 projectId, uint64[] calldata cellIds) external {
+        Project storage p = _projects[projectId];
+        if (p.status == Status.None) revert UnknownProject(projectId);
+        if (msg.sender != p.developer) _checkRole(DEFAULT_ADMIN_ROLE);
+        if (p.status != Status.Pending && p.status != Status.Cancelled) revert WrongStatus(projectId, p.status);
+        uint256 eligible = uint256(p.registeredBlock) + PENDING_EXPIRY_BLOCKS;
+        if (block.number < eligible) revert PendingNotExpired(eligible);
+        if (cellIds.length > MAX_CELLS_PER_TX) revert TooManyCells(cellIds.length, MAX_CELLS_PER_TX);
+        p.status = Status.Cancelled;
+        uint32 released;
+        for (uint256 i; i < cellIds.length; ++i) {
+            uint64 cell = cellIds[i];
+            if (cellClaim[cell][p.vintageYear] != projectId) continue;
+            delete cellClaim[cell][p.vintageYear];
+            ++released;
+        }
+        p.cellCount -= released;
+        emit PendingCancelled(projectId, msg.sender, released, p.cellCount);
     }
 
     /// @dev Re-adding a cell the project already owns is a no-op, so a retried batch is safe.
@@ -161,7 +195,10 @@ contract ClearCreditRegistry is AccessControl, EIP712 {
             bytes32 owner = cellClaim[cell][vintage];
             if (owner == projectId) continue;
             if (owner != bytes32(0)) revert CellAlreadyClaimed(cell, vintage, owner);
+            if (cell <= p.lastCell) revert CellsNotSorted(cell, p.lastCell);
             cellClaim[cell][vintage] = projectId;
+            p.cellsHash = keccak256(abi.encodePacked(p.cellsHash, cell));
+            p.lastCell = cell;
             ++added;
         }
         p.cellCount += added;
@@ -241,12 +278,12 @@ contract ClearCreditRegistry is AccessControl, EIP712 {
     }
 
     /// @notice EIP-712 digest a developer signs; exposed so clients can verify what they sign.
-    function claimDigest(bytes32 projectId, bytes32 claimHash, uint16 vintageYear, uint64 claimedCredits)
+    function claimDigest(bytes32 projectId, bytes32 claimHash, uint16 vintageYear, uint64 claimedCredits, bytes32 cellsRoot)
         external
         view
         returns (bytes32)
     {
-        return _hashTypedDataV4(keccak256(abi.encode(CLAIM_TYPEHASH, projectId, claimHash, vintageYear, claimedCredits)));
+        return _hashTypedDataV4(keccak256(abi.encode(CLAIM_TYPEHASH, projectId, claimHash, vintageYear, claimedCredits, cellsRoot)));
     }
 
     function _requireStatus(bytes32 projectId, Status want) private view returns (Project storage p) {

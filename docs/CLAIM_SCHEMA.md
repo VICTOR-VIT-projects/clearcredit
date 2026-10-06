@@ -68,11 +68,24 @@ python backend/app/canonical.py claim.json      # prints 0x… claimHash
 The developer's wallet signs this typed data (gas-free) before the backend relays the claim:
 
 ```
-domain:  { name: "ClearCredit", version: "1", chainId, verifyingContract }
-types:   Claim(bytes32 projectId, bytes32 claimHash, uint16 vintageYear, uint64 claimedCredits)
+domain:  { name: "ClearCredit", version: "2", chainId, verifyingContract }
+types:   Claim(bytes32 projectId, bytes32 claimHash, uint16 vintageYear, uint64 claimedCredits, bytes32 cellsRoot)
 ```
 
 The contract recovers the signer and requires it to equal `developer`. The domain binds the signature to one chain and one contract, so it cannot be replayed elsewhere. Because `claimHash` and `projectId` are unique, it cannot be replayed on the same contract either. `POST /claims/preview` returns the exact `typedData` to sign, and the contract's `claimDigest(...)` view exposes the digest for independent checking.
+
+**Cell commitment (F2):** sort unique cell IDs numerically. Start `h0 = bytes32(0)`;
+for each cell, `hi = keccak256(hi-1 || uint64(cell))`, with the cell encoded as **8 bytes
+big-endian**, equivalent to Solidity `abi.encodePacked(bytes32,uint64)`. `cellsRoot = hN`.
+The contract adds only new owned cells to its running hash, requires new cells in ascending
+order across batches, and refuses finalization unless that hash equals the signed root.
+Re-adding an owned cell is still a no-op. Preview includes `cellIds` (hex strings) and
+`cellsRoot`; the frontend recomputes both claim hash and root and shows the list before
+signing. It validates exact typed-data fields and current wallet account/network. Geometry
+to H3 derivation still uses the backend; a list commitment does not prove boundary truth.
+
+**Migration:** domain v2 and the new ABI require a fresh local contract. Existing v1
+signatures/registrations are not migrated or replayed. Claim schema 1.0 vectors are unchanged.
 
 ## On-chain cell cover
 
@@ -91,7 +104,8 @@ h3.h3shape_to_cells(h3.geo_to_h3shape(boundary), 8)
 
 ## Versioning
 
-Claim schema 1.0 hashing and EIP-712 v1 are unchanged by project-history scoring.
+Claim schema 1.0 hashing is unchanged. Project-history scoring itself does not change
+the signing domain; the separate cell-commitment feature moves EIP-712 to v2.
 Scoring model `rules-v4` uses evidence version `ev3`; this is separate from the claim
 schema. The score's `attestationEvidence` contains the satellite evidence hash and
 the issuance history (source snapshot hash, reference project, earlier vintages, median
@@ -101,3 +115,15 @@ attestation commitment. Scores with no satellite evidence still commit the expli
 no-evidence/no-history context. A cache/hash mismatch returns HTTP 503 `EVIDENCE_INVALID`.
 
 Any change to fields or canonicalization rules creates a new `schemaVersion`. Hashes are only comparable within one version.
+
+## Pending-registration recovery (F3)
+
+At block `registeredBlock + 7200` or later, the developer (sending a wallet transaction)
+or an account with DEFAULT_ADMIN_ROLE can call `cancelPendingRegistration(projectKey,
+cellIds)`, with at most 300 IDs per batch. This sets status `cancelled` permanently and
+clears only cells still owned by this project. Repeat batches until `cellCount == 0`;
+duplicates/already released/other-owned cells are skipped. Project ID and claim hash stay
+reserved for audit. Registered projects cannot be cancelled by this path. The clock is
+blocks, not hours. The API reports terminal HTTP 409 `REGISTRATION_CANCELLED` on relay retry.
+Operators obtain the full cell list from stored claim data/preview; events still expose
+counts rather than every cell ID. UI cancellation controls are not provided yet.

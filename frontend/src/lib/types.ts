@@ -86,6 +86,8 @@ export interface PreviewResponse {
   onChainCellConflicts: CellConflict[]
   cellResolution: number
   cellCount: number
+  cellsRoot: Hash
+  cellIds: string[]
   score: IntegrityScore
   blocked: boolean
   canonicalClaim: Record<string, unknown>

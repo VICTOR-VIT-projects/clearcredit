@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 from shapely.geometry import shape
 
 from . import canonical, geo, history, satellite, scoring
-from .chain import CLAIM_TYPES, ZERO32, Chain, recover_signer
+from .chain import CLAIM_TYPES, ZERO32, Chain, RegistrationCancelled, cells_root, recover_signer
 from .models import Claim, Submission
 from .limits import BodyLimit
 from .store import Store
@@ -154,10 +154,11 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
         c = claim.model_dump()
         a = analyze(c)
         h = hashes(c)
-        a.pop("cells")
-        out = {**h, **a, "canonicalClaim": canonical.canonical_claim(c)}
+        cells = a.pop("cells")
+        root = cells_root(cells)
+        out = {**h, **a, "canonicalClaim": canonical.canonical_claim(c), "cellsRoot": root, "cellIds": [hex(cell) for cell in cells]}
         if chain:
-            out["typedData"] = chain.typed_data(h["projectKey"], h["claimHash"], c["vintageYear"], c["claimedCredits"])
+            out["typedData"] = chain.typed_data(h["projectKey"], h["claimHash"], c["vintageYear"], c["claimedCredits"], root)
         return out
 
     @app.post("/claims", status_code=201, tags=["claims"])
@@ -206,7 +207,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
                 raise ApiError(409, "OVERLAP_DETECTED", "The boundary overlaps land already claimed for the same vintage.",
                                {"overlaps": a["overlaps"], "onChainCellConflicts": a["onChainCellConflicts"], "score": a["score"]})
             if chain:
-                td = chain.typed_data(h["projectKey"], h["claimHash"], claim["vintageYear"], claim["claimedCredits"])
+                td = chain.typed_data(h["projectKey"], h["claimHash"], claim["vintageYear"], claim["claimedCredits"], cells_root(a["cells"]))
                 signer = recover_signer(td, signature)
                 if signer.lower() != claim["developer"].lower():
                     raise ApiError(400, "BAD_SIGNATURE", f"Signature was made by {signer}, not the developer {claim['developer']}.")
@@ -223,6 +224,9 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
                 s = row["result"]["score"]
                 att = chain.post_attestation(h["projectKey"], s["scoreBps"], s["evidenceHash"] or ZERO32, s["modelVersion"])
                 txs += [att] if att else []
+            except RegistrationCancelled:
+                store.update_claim(claim["projectId"], status="cancelled", txs=txs)
+                raise ApiError(409, "REGISTRATION_CANCELLED", "This Pending registration was cancelled. Its project ID and claim hash remain reserved for audit; prepare a new claim after reviewing released cells.")
             except Exception as e:
                 store.update_claim(claim["projectId"], status="relay_failed", txs=txs)
                 raise ApiError(502, "RELAY_FAILED", "Claim saved but on-chain relay failed; retry the same request to resume.", retryable=True)
@@ -301,7 +305,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
             "schemaVersion": "1.0",
             "jsonSchema": Claim.model_json_schema(),
             "canonicalization": canonical.__doc__,
-            "eip712": {"primaryType": "Claim", "types": CLAIM_TYPES},
+            "eip712": {"domainVersion": "2", "primaryType": "Claim", "types": CLAIM_TYPES},
         }
 
     @app.get("/health", tags=["meta"])

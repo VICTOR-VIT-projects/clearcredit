@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { loadFixture, mine } from "@nomicfoundation/hardhat-network-helpers";
 import type { Signer } from "ethers";
 
 const RES = 8;
@@ -10,6 +10,10 @@ const id = (s: string) => ethers.id(s); // keccak256(utf8) — same mapping the 
 const cell = (i: number, res = RES) => (1n << 59n) | (BigInt(res) << 52n) | BigInt(i);
 const cells = (from: number, n: number) => Array.from({ length: n }, (_, k) => cell(from + k));
 
+const root = (ids: bigint[]) => [...new Set(ids)].sort((a,b) => a < b ? -1 : a > b ? 1 : 0)
+  .reduce((hash, c) => ethers.solidityPackedKeccak256(["bytes32", "uint64"], [hash, c]), ethers.ZeroHash);
+const rootOf = (c: { projectId: string; cellsRoot?: string }) => c.cellsRoot ?? ethers.ZeroHash;
+
 async function deploy() {
   const [admin, backend, dev, dev2, outsider] = await ethers.getSigners();
   const reg = await ethers.deployContract("ClearCreditRegistry", [admin.address, RES, THRESHOLD]);
@@ -18,24 +22,25 @@ async function deploy() {
   return { reg, admin, backend, dev, dev2, outsider };
 }
 
-async function sign(reg: any, signer: Signer, c: { projectId: string; claimHash: string; vintageYear: number; claimedCredits: bigint }) {
+async function sign(reg: any, signer: Signer, c: { projectId: string; claimHash: string; vintageYear: number; claimedCredits: bigint; cellsRoot?: string }) {
   const net = await ethers.provider.getNetwork();
   return signer.signTypedData(
-    { name: "ClearCredit", version: "1", chainId: net.chainId, verifyingContract: await reg.getAddress() },
+    { name: "ClearCredit", version: "2", chainId: net.chainId, verifyingContract: await reg.getAddress() },
     { Claim: [
       { name: "projectId", type: "bytes32" },
       { name: "claimHash", type: "bytes32" },
       { name: "vintageYear", type: "uint16" },
       { name: "claimedCredits", type: "uint64" },
+      { name: "cellsRoot", type: "bytes32" },
     ] },
-    c,
+    { ...c, cellsRoot: rootOf(c) },
   );
 }
 
-async function register(reg: any, backend: Signer, dev: Signer, name: string, vintage: number, cellIds: bigint[], credits = 1000n, finalize = true) {
-  const c = { projectId: id(name), claimHash: id(`hash:${name}`), vintageYear: vintage, claimedCredits: credits };
+async function register(reg: any, backend: Signer, dev: Signer, name: string, vintage: number, cellIds: bigint[], credits = 1000n, finalize = true, committedCells = cellIds) {
+  const c = { projectId: id(name), claimHash: id(`hash:${name}`), vintageYear: vintage, claimedCredits: credits, cellsRoot: root(committedCells) };
   const sig = await sign(reg, dev, c);
-  await reg.connect(backend).registerProject(c.projectId, c.claimHash, await dev.getAddress(), vintage, credits, cellIds, sig);
+  await reg.connect(backend).registerProject(c.projectId, c.claimHash, await dev.getAddress(), vintage, credits, c.cellsRoot, cellIds, sig);
   if (finalize) await reg.connect(backend).finalizeRegistration(c.projectId);
   return c;
 }
@@ -44,9 +49,9 @@ describe("ClearCreditRegistry", () => {
   describe("registration", () => {
     it("registers, emits events, and stores the claim", async () => {
       const { reg, backend, dev } = await loadFixture(deploy);
-      const c = { projectId: id("P1"), claimHash: id("hash:P1"), vintageYear: 2023, claimedCredits: 1000n };
+      const c = { projectId: id("P1"), claimHash: id("hash:P1"), vintageYear: 2023, claimedCredits: 1000n, cellsRoot: root(cells(0, 3)) };
       const sig = await sign(reg, dev, c);
-      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, cells(0, 3), sig))
+      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, rootOf(c), cells(0, 3), sig))
         .to.emit(reg, "ProjectRegistered").withArgs(c.projectId, dev.address, c.claimHash, 2023, 1000n)
         .and.to.emit(reg, "CellsAdded").withArgs(c.projectId, 3, 3);
       await expect(reg.connect(backend).finalizeRegistration(c.projectId)).to.emit(reg, "ProjectFinalized").withArgs(c.projectId, 3);
@@ -61,7 +66,7 @@ describe("ClearCreditRegistry", () => {
       const c = await register(reg, backend, dev, "P1", 2023, cells(0, 2));
       const c2 = { ...c, projectId: id("P1-copy") };
       const sig = await sign(reg, dev, c2);
-      await expect(reg.connect(backend).registerProject(c2.projectId, c.claimHash, dev.address, 2023, 1000n, cells(100, 2), sig))
+      await expect(reg.connect(backend).registerProject(c2.projectId, c.claimHash, dev.address, 2023, 1000n, rootOf(c), cells(100, 2), sig))
         .to.be.revertedWithCustomError(reg, "ClaimHashExists").withArgs(c.claimHash, c.projectId);
     });
 
@@ -69,7 +74,7 @@ describe("ClearCreditRegistry", () => {
       const { reg, backend, dev } = await loadFixture(deploy);
       const c = await register(reg, backend, dev, "P1", 2023, cells(0, 2));
       const sig = await sign(reg, dev, c);
-      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, cells(0, 2), sig))
+      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, rootOf(c), cells(0, 2), sig))
         .to.be.revertedWithCustomError(reg, "ProjectExists");
     });
 
@@ -78,7 +83,7 @@ describe("ClearCreditRegistry", () => {
       const a = await register(reg, backend, dev, "A", 2023, cells(0, 5));
       const c = { projectId: id("B"), claimHash: id("hash:B"), vintageYear: 2023, claimedCredits: 500n };
       const sig = await sign(reg, dev2, c);
-      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev2.address, 2023, 500n, [cell(10), cell(4)], sig))
+      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev2.address, 2023, 500n, rootOf(c), [cell(10), cell(4)], sig))
         .to.be.revertedWithCustomError(reg, "CellAlreadyClaimed").withArgs(cell(4), 2023, a.projectId);
       // whole tx reverted: B does not exist, cell 10 still free
       expect((await reg.getProject(c.projectId)).status).to.equal(0n);
@@ -103,7 +108,7 @@ describe("ClearCreditRegistry", () => {
       const { reg, backend, dev, outsider } = await loadFixture(deploy);
       const c = { projectId: id("P"), claimHash: id("hash:P"), vintageYear: 2023, claimedCredits: 1000n };
       const sig = await sign(reg, outsider, c);
-      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, cells(0, 1), sig))
+      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, rootOf(c), cells(0, 1), sig))
         .to.be.revertedWithCustomError(reg, "BadSignature").withArgs(outsider.address, dev.address);
     });
 
@@ -111,7 +116,7 @@ describe("ClearCreditRegistry", () => {
       const { reg, backend, dev } = await loadFixture(deploy);
       const c = { projectId: id("P"), claimHash: id("hash:P"), vintageYear: 2023, claimedCredits: 1000n };
       const sig = await sign(reg, dev, c);
-      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 9999n, cells(0, 1), sig))
+      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 9999n, rootOf(c), cells(0, 1), sig))
         .to.be.revertedWithCustomError(reg, "BadSignature");
     });
 
@@ -119,7 +124,7 @@ describe("ClearCreditRegistry", () => {
       const { reg, dev } = await loadFixture(deploy);
       const c = { projectId: id("P"), claimHash: id("hash:P"), vintageYear: 2023, claimedCredits: 1000n };
       const sig = await sign(reg, dev, c);
-      const digest = await reg.claimDigest(c.projectId, c.claimHash, 2023, 1000n);
+      const digest = await reg.claimDigest(c.projectId, c.claimHash, 2023, 1000n, rootOf(c));
       expect(ethers.recoverAddress(digest, sig)).to.equal(dev.address);
     });
 
@@ -127,7 +132,7 @@ describe("ClearCreditRegistry", () => {
       const { reg, dev } = await loadFixture(deploy);
       const c = { projectId: id("P"), claimHash: id("hash:P"), vintageYear: 2023, claimedCredits: 1000n };
       const sig = await sign(reg, dev, c);
-      await expect(reg.connect(dev).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, cells(0, 1), sig))
+      await expect(reg.connect(dev).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, rootOf(c), cells(0, 1), sig))
         .to.be.revertedWithCustomError(reg, "AccessControlUnauthorizedAccount");
     });
 
@@ -135,24 +140,71 @@ describe("ClearCreditRegistry", () => {
       const { reg, backend, dev } = await loadFixture(deploy);
       const c = { projectId: id("P"), claimHash: id("hash:P"), vintageYear: 2023, claimedCredits: 0n };
       const sig = await sign(reg, dev, c);
-      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 0n, cells(0, 1), sig))
+      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 0n, rootOf(c), cells(0, 1), sig))
         .to.be.revertedWithCustomError(reg, "ZeroValue");
     });
   });
 
   describe("cell batching", () => {
+    it("cannot finalize missing, substituted or appended cells against signed consent", async () => {
+      const { reg, backend, dev } = await loadFixture(deploy);
+      const c = await register(reg, backend, dev, "committed", 2023, cells(0, 1), 1000n, false, cells(0, 3));
+      await expect(reg.connect(backend).finalizeRegistration(c.projectId)).to.be.revertedWithCustomError(reg, "CellCommitmentMismatch");
+      await reg.connect(backend).addCells(c.projectId, [cell(2)]); // omits signed cell 1
+      await expect(reg.connect(backend).finalizeRegistration(c.projectId)).to.be.revertedWithCustomError(reg, "CellCommitmentMismatch");
+      await reg.connect(backend).addCells(c.projectId, [cell(3)]); // arbitrary extra cell
+      await expect(reg.connect(backend).finalizeRegistration(c.projectId)).to.be.revertedWithCustomError(reg, "CellCommitmentMismatch");
+      expect((await reg.getProject(c.projectId)).status).to.equal(1n);
+    });
+
+    it("rejects new cells out of order and preserves the running root on replay", async () => {
+      const { reg, backend, dev } = await loadFixture(deploy);
+      const c = await register(reg, backend, dev, "ordered", 2023, [cell(2)], 1000n, false);
+      await expect(reg.connect(backend).addCells(c.projectId, [cell(1)])).to.be.revertedWithCustomError(reg, "CellsNotSorted");
+      const before = (await reg.getProject(c.projectId)).cellsHash;
+      await reg.connect(backend).addCells(c.projectId, [cell(2)]);
+      expect((await reg.getProject(c.projectId)).cellsHash).to.equal(before);
+      await reg.connect(backend).finalizeRegistration(c.projectId);
+    });
+
+    it("binds the root, chain and verifying contract in EIP-712 v2", async () => {
+      const { reg, backend, dev } = await loadFixture(deploy);
+      const c = { projectId: id("root-signature"), claimHash: id("root-hash"), vintageYear: 2023, claimedCredits: 1000n, cellsRoot: root(cells(0, 1)) };
+      const sig = await sign(reg, dev, c);
+      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, root(cells(1, 1)), cells(1, 1), sig))
+        .to.be.revertedWithCustomError(reg, "BadSignature");
+      const other = await ethers.deployContract("ClearCreditRegistry", [dev.address, RES, THRESHOLD]);
+      await other.connect(dev).grantRole(await other.REGISTRAR_ROLE(), backend.address);
+      await expect(other.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, c.cellsRoot, cells(0, 1), sig))
+        .to.be.revertedWithCustomError(other, "BadSignature");
+      const types = { Claim: [{ name: "projectId", type: "bytes32" }, { name: "claimHash", type: "bytes32" }, { name: "vintageYear", type: "uint16" }, { name: "claimedCredits", type: "uint64" }, { name: "cellsRoot", type: "bytes32" }] };
+      for (const domain of [
+        { name: "ClearCredit", version: "1", chainId: 31337, verifyingContract: await reg.getAddress() },
+        { name: "ClearCredit", version: "2", chainId: 84532, verifyingContract: await reg.getAddress() },
+      ]) {
+        const wrong = await dev.signTypedData(domain, types, c);
+        await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, c.cellsRoot, cells(0, 1), wrong)).to.be.revertedWithCustomError(reg, "BadSignature");
+      }
+    });
+
+    it("keeps a maximum 300-cell registration under the per-transaction gas cap", async () => {
+      const { reg, backend, dev } = await loadFixture(deploy);
+      const c = { projectId: id("gas"), claimHash: id("gas-hash"), vintageYear: 2023, claimedCredits: 1000n, cellsRoot: root(cells(0, 300)) };
+      const tx = await reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, c.cellsRoot, cells(0, 300), await sign(reg, dev, c));
+      expect((await tx.wait())!.gasUsed).to.be.lessThan(1n << 24n);
+    });
     it("caps cells per transaction", async () => {
       const { reg, backend, dev } = await loadFixture(deploy);
       const max = Number(await reg.MAX_CELLS_PER_TX());
       const c = { projectId: id("Big"), claimHash: id("hash:Big"), vintageYear: 2023, claimedCredits: 1000n };
       const sig = await sign(reg, dev, c);
-      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, cells(0, max + 1), sig))
+      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, rootOf(c), cells(0, max + 1), sig))
         .to.be.revertedWithCustomError(reg, "TooManyCells").withArgs(max + 1, max);
     });
 
     it("registers a large project across batches, then locks after finalize", async () => {
       const { reg, backend, dev } = await loadFixture(deploy);
-      const c = await register(reg, backend, dev, "Big", 2023, cells(0, 300), 1000n, false);
+      const c = await register(reg, backend, dev, "Big", 2023, cells(0, 300), 1000n, false, cells(0, 650));
       await reg.connect(backend).addCells(c.projectId, cells(300, 300));
       await expect(reg.connect(backend).addCells(c.projectId, cells(600, 50)))
         .to.emit(reg, "CellsAdded").withArgs(c.projectId, 50, 650);
@@ -173,7 +225,7 @@ describe("ClearCreditRegistry", () => {
       const { reg, backend, dev } = await loadFixture(deploy);
       const c = { projectId: id("P"), claimHash: id("hash:P"), vintageYear: 2023, claimedCredits: 1000n };
       const sig = await sign(reg, dev, c);
-      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, [cell(0, 7)], sig))
+      await expect(reg.connect(backend).registerProject(c.projectId, c.claimHash, dev.address, 2023, 1000n, rootOf(c), [cell(0, 7)], sig))
         .to.be.revertedWithCustomError(reg, "WrongCellResolution");
     });
 
@@ -181,6 +233,49 @@ describe("ClearCreditRegistry", () => {
       const { reg, backend, dev } = await loadFixture(deploy);
       const c = await register(reg, backend, dev, "P", 2023, [], 1000n, false);
       await expect(reg.connect(backend).finalizeRegistration(c.projectId)).to.be.revertedWithCustomError(reg, "ZeroValue");
+    });
+  });
+
+  describe("pending cancellation", () => {
+    it("requires expiry and developer/admin authority, including role revocation", async () => {
+      const { reg, admin, backend, dev, outsider } = await loadFixture(deploy);
+      const c = await register(reg, backend, dev, "expiry", 2023, cells(0, 2), 1000n, false);
+      await expect(reg.connect(dev).cancelPendingRegistration(c.projectId, cells(0, 2))).to.be.revertedWithCustomError(reg, "PendingNotExpired");
+      await mine(Number(await reg.PENDING_EXPIRY_BLOCKS()));
+      await expect(reg.connect(outsider).cancelPendingRegistration(c.projectId, cells(0, 2))).to.be.revertedWithCustomError(reg, "AccessControlUnauthorizedAccount");
+      await expect(reg.connect(backend).cancelPendingRegistration(c.projectId, cells(0, 2))).to.be.revertedWithCustomError(reg, "AccessControlUnauthorizedAccount");
+      await reg.connect(admin).grantRole(await reg.DEFAULT_ADMIN_ROLE(), outsider.address);
+      await reg.connect(admin).revokeRole(await reg.DEFAULT_ADMIN_ROLE(), outsider.address);
+      await expect(reg.connect(outsider).cancelPendingRegistration(c.projectId, cells(0, 2))).to.be.revertedWithCustomError(reg, "AccessControlUnauthorizedAccount");
+      await expect(reg.connect(dev).cancelPendingRegistration(c.projectId, cells(0, 2))).to.emit(reg, "PendingCancelled").withArgs(c.projectId, dev.address, 2, 0);
+    });
+
+    it("releases in bounded retryable batches without releasing another project's cells", async () => {
+      const { reg, admin, backend, dev, dev2 } = await loadFixture(deploy);
+      const c = await register(reg, backend, dev, "batch-cancel", 2023, cells(0, 300), 1000n, false, cells(0, 350));
+      await reg.connect(backend).addCells(c.projectId, cells(300, 50));
+      await mine(Number(await reg.PENDING_EXPIRY_BLOCKS()));
+      await expect(reg.connect(admin).cancelPendingRegistration(c.projectId, cells(0, 301))).to.be.revertedWithCustomError(reg, "TooManyCells");
+      await reg.connect(admin).cancelPendingRegistration(c.projectId, cells(0, 300));
+      const replacement = await register(reg, backend, dev2, "replacement", 2023, cells(0, 1));
+      await reg.connect(admin).cancelPendingRegistration(c.projectId, [...cells(0, 2), ...cells(300, 50), cell(300)]);
+      expect((await reg.getProject(c.projectId)).cellCount).to.equal(0n);
+      expect(await reg.cellClaim(cell(0), 2023)).to.equal(replacement.projectId);
+      expect(await reg.cellClaim(cell(349), 2023)).to.equal(ethers.ZeroHash);
+      await expect(reg.connect(dev).cancelPendingRegistration(c.projectId, cells(300, 50))).to.emit(reg, "PendingCancelled").withArgs(c.projectId, dev.address, 0, 0);
+      await expect(reg.connect(backend).finalizeRegistration(c.projectId)).to.be.revertedWithCustomError(reg, "WrongStatus");
+      await expect(reg.connect(backend).addCells(c.projectId, cells(350, 1))).to.be.revertedWithCustomError(reg, "WrongStatus");
+      await expect(reg.connect(dev).issueCredits(c.projectId, 1)).to.be.revertedWithCustomError(reg, "WrongStatus");
+      expect(await reg.projectOfClaimHash(c.claimHash)).to.equal(c.projectId);
+    });
+
+    it("cannot cancel unknown or Registered projects even as admin after expiry", async () => {
+      const { reg, admin, backend, dev } = await loadFixture(deploy);
+      await expect(reg.connect(admin).cancelPendingRegistration(id("unknown"), [])).to.be.revertedWithCustomError(reg, "UnknownProject");
+      const c = await register(reg, backend, dev, "finalized", 2023, cells(0, 1));
+      await mine(Number(await reg.PENDING_EXPIRY_BLOCKS()));
+      await expect(reg.connect(admin).cancelPendingRegistration(c.projectId, cells(0, 1))).to.be.revertedWithCustomError(reg, "WrongStatus");
+      expect(await reg.cellClaim(cell(0), 2023)).to.equal(c.projectId);
     });
   });
 

@@ -15,7 +15,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import canonical, geo, scoring
-from app.chain import Chain
+from app.chain import Chain, cells_root
 from app.main import create_app
 from app.store import Store
 from conftest import DEV, DEV2, box, make_claim, sign
@@ -91,6 +91,7 @@ def test_register_attest_and_verify(chain, db_path):
     oc = body["onChain"]
     assert oc["project"]["status"] == "registered" and oc["project"]["developer"] == DEV.address
     assert oc["project"]["cellCount"] == body["cellCount"]
+    assert oc["project"]["cellsRoot"] == oc["project"]["cellsHash"] == cells_root(geo.h3_cover(body["claim"]["boundary"]))
     assert len(oc["attestations"]) == 1 and oc["attestations"][0]["modelVersion"] == scoring.MODEL_VERSION
     assert [t["step"] for t in body["transactions"]][0] == "registerProject"
     assert client.get("/claims/TEST-A/verify").json()["match"] is True
@@ -121,6 +122,18 @@ def test_tampered_offchain_record_is_detected(chain, db_path):
 def test_bad_signature_rejected(chain, db_path):
     client = client_for(chain, db_path)
     r = submit(client, make_claim(), "k1", account=DEV2)  # DEV2 signs a claim naming DEV
+    assert r.status_code == 400 and r.json()["error"]["code"] == "BAD_SIGNATURE"
+
+
+def test_preview_signs_v2_cell_commitment_and_tampered_root_is_rejected(chain, db_path):
+    client = client_for(chain, db_path)
+    c = make_claim()
+    preview = client.post("/claims/preview", json=c).json()
+    td = preview["typedData"]
+    assert td["domain"]["version"] == "2"
+    assert td["message"]["cellsRoot"] == preview["cellsRoot"] == cells_root([int(x, 16) for x in preview["cellIds"]])
+    td["message"]["cellsRoot"] = "0x" + "33" * 32
+    r = client.post("/claims", json={"claim": c, "signature": sign(td)}, headers={"Idempotency-Key": "tampered-root"})
     assert r.status_code == 400 and r.json()["error"]["code"] == "BAD_SIGNATURE"
 
 
@@ -184,3 +197,26 @@ def test_pending_attestation_timeout_then_late_mine_does_not_append_twice(chain,
         assert chain.post_attestation(pk, 7000, "0x" + "33" * 32, "timeout-test") is None
     finally:
         chain.w3.provider.make_request("evm_setAutomine", [True])
+
+
+def test_expired_pending_cancellation_is_terminal_to_the_api(chain, db_path, monkeypatch):
+    client = client_for(chain, db_path)
+    real_send, calls = chain._send, {"n": 0}
+    def fail_after_register(fn):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            raise ConnectionError("pause after registration")
+        return real_send(fn)
+    monkeypatch.setattr(chain, "_send", fail_after_register)
+    assert submit(client, make_claim(), "cancel-key").status_code == 502
+    monkeypatch.setattr(chain, "_send", real_send)
+    pk = canonical.project_key("TEST-A")
+    cells = geo.h3_cover(make_claim()["boundary"])
+    chain.w3.provider.make_request("hardhat_mine", [hex(chain.c.functions.PENDING_EXPIRY_BLOCKS().call())])
+    chain._send(chain.c.functions.cancelPendingRegistration(bytes.fromhex(pk[2:]), cells))
+    assert chain.project(pk)["status"] == "cancelled"
+    retry = submit(client, make_claim(), "cancel-key")
+    assert retry.status_code == 409 and retry.json()["error"]["code"] == "REGISTRATION_CANCELLED"
+    assert client.get("/claims/TEST-A").json()["status"] == "cancelled"
+    assert chain.check_cells(cells, 2023) == {}
+

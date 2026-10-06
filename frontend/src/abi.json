@@ -82,6 +82,38 @@
   "inputs": [
    {
     "internalType": "bytes32",
+    "name": "expected",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "actual",
+    "type": "bytes32"
+   }
+  ],
+  "name": "CellCommitmentMismatch",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint64",
+    "name": "cell",
+    "type": "uint64"
+   },
+   {
+    "internalType": "uint64",
+    "name": "previous",
+    "type": "uint64"
+   }
+  ],
+  "name": "CellsNotSorted",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
     "name": "claimHash",
     "type": "bytes32"
    },
@@ -178,6 +210,17 @@
    }
   ],
   "name": "NotDeveloper",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "eligibleBlock",
+    "type": "uint256"
+   }
+  ],
+  "name": "PendingNotExpired",
   "type": "error"
  },
  {
@@ -347,6 +390,25 @@
    },
    {
     "indexed": false,
+    "internalType": "bytes32",
+    "name": "cellsRoot",
+    "type": "bytes32"
+   }
+  ],
+  "name": "CellListCommitted",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "indexed": false,
     "internalType": "uint32",
     "name": "added",
     "type": "uint32"
@@ -409,6 +471,37 @@
    }
   ],
   "name": "IssueThresholdChanged",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "caller",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint32",
+    "name": "released",
+    "type": "uint32"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint32",
+    "name": "remaining",
+    "type": "uint32"
+   }
+  ],
+  "name": "PendingCancelled",
   "type": "event"
  },
  {
@@ -633,6 +726,19 @@
  },
  {
   "inputs": [],
+  "name": "PENDING_EXPIRY_BLOCKS",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
   "name": "REGISTRAR_ROLE",
   "outputs": [
    {
@@ -671,6 +777,24 @@
    }
   ],
   "name": "addCells",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "projectId",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint64[]",
+    "name": "cellIds",
+    "type": "uint64[]"
+   }
+  ],
+  "name": "cancelPendingRegistration",
   "outputs": [],
   "stateMutability": "nonpayable",
   "type": "function"
@@ -757,6 +881,11 @@
     "internalType": "uint64",
     "name": "claimedCredits",
     "type": "uint64"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "cellsRoot",
+    "type": "bytes32"
    }
   ],
   "name": "claimDigest",
@@ -927,6 +1056,26 @@
      {
       "internalType": "uint64",
       "name": "registeredAt",
+      "type": "uint64"
+     },
+     {
+      "internalType": "bytes32",
+      "name": "cellsRoot",
+      "type": "bytes32"
+     },
+     {
+      "internalType": "bytes32",
+      "name": "cellsHash",
+      "type": "bytes32"
+     },
+     {
+      "internalType": "uint64",
+      "name": "lastCell",
+      "type": "uint64"
+     },
+     {
+      "internalType": "uint64",
+      "name": "registeredBlock",
       "type": "uint64"
      }
     ],
@@ -1149,6 +1298,11 @@
     "internalType": "uint64",
     "name": "claimedCredits",
     "type": "uint64"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "cellsRoot",
+    "type": "bytes32"
    },
    {
     "internalType": "uint64[]",
