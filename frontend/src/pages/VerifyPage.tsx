@@ -8,7 +8,7 @@ import { LabelBadge } from '../components/LabelBadge'
 import { MetricChart } from '../components/MetricChart'
 import { ScoreCard } from '../components/ScoreCard'
 import { getClaim, getOverlaps, verifyClaim } from '../lib/api'
-import { claimHash as recomputeClaimHash } from '../lib/canonical'
+import { currentVerification, verifyInBrowser, type BrowserVerification } from '../lib/verification'
 import { formatDate, formatNumber, humanize, percent } from '../lib/format'
 import type { ClaimView } from '../lib/types'
 
@@ -81,7 +81,7 @@ export function VerifyPage() {
   const decodedRef = decodeURIComponent(ref)
   const query = useQuery({ queryKey: ['claim', decodedRef], queryFn: () => getClaim(decodedRef), enabled: Boolean(decodedRef) })
   const serverVerification = useQuery({ queryKey: ['verify', decodedRef], queryFn: () => verifyClaim(decodedRef), enabled: Boolean(decodedRef) })
-  const [localResult, setLocalResult] = useState<{ hash: string; match: boolean | null } | null>(null)
+  const [browserResult, setLocalResult] = useState<BrowserVerification | null>(null)
   const refresh = useCallback(() => { void query.refetch(); void serverVerification.refetch() }, [query, serverVerification])
 
   if (!decodedRef) {
@@ -95,14 +95,15 @@ export function VerifyPage() {
       {query.error && <ErrorNotice title="Claim not found">{query.error.message}</ErrorNotice>}
       {query.data && (() => {
         const view = query.data
-        const onChainHash = view.onChain?.project.claimHash ?? null
+        const localResult = currentVerification(browserResult, view)
         return <>
           <header className="claim-header"><div><LabelBadge label={view.dataLabel} detailed /><h1>{view.projectId}</h1><p>{humanize(view.claim.projectType)} · vintage {view.claim.vintageYear} · {formatNumber(view.claim.claimedCredits, 0)} tCO2e</p></div><span className={`status-pill status-${view.status}`}>{view.status}</span></header>
           <section className="card hash-card">
             <div><p className="eyebrow">Canonical claim hash</p><CopyValue value={view.claimHash} /></div>
-            <div className="hash-actions"><button className="button button-primary" type="button" onClick={() => { const hash = recomputeClaimHash(view.claim as unknown as Record<string, unknown>); setLocalResult({ hash, match: onChainHash === null ? null : hash.toLowerCase() === onChainHash.toLowerCase() }) }}>Recompute hash in your browser</button><button className="button button-secondary" type="button" onClick={() => downloadClaim(view)}>Download claim JSON</button></div>
+            <div className="hash-actions"><button className="button button-primary" type="button" onClick={() => setLocalResult(verifyInBrowser(view))}>Recompute hash in your browser</button><button className="button button-secondary" type="button" onClick={() => downloadClaim(view)}>Download claim JSON</button></div>
             <p className="fine-print">Recompute independently: <code>python canonical.py claim.json</code></p>
-            {localResult && <div className={`hash-result ${localResult.match === false ? 'hash-mismatch' : localResult.match === true ? 'hash-match' : ''}`}><strong>{localResult.match === true ? '✓ Match' : localResult.match === false ? '✗ Mismatch' : 'Chain comparison unavailable'}</strong><span>Browser result: <code>{localResult.hash}</code></span>{localResult.match === false && <p>The stored claim differs from the on-chain claim hash. Treat this record as altered.</p>}</div>}
+            {localResult?.error && <ErrorNotice title="Recomputation unavailable">{localResult.error}</ErrorNotice>}
+            {localResult?.hash && <div className={`hash-result ${localResult.match === false ? 'hash-mismatch' : localResult.match === true ? 'hash-match' : ''}`}><strong>{localResult.match === true ? '✓ Match' : localResult.match === false ? '✗ Mismatch' : 'Chain comparison unavailable'}</strong><span>Browser result: <code>{localResult.hash}</code></span>{localResult.match === false && <p>The stored claim differs from the on-chain claim hash. Treat this record as altered.</p>}</div>}
             <div className="server-check"><span>API recomputation</span>{serverVerification.isLoading ? <em>Checking…</em> : serverVerification.data ? <strong className={serverVerification.data.match === false ? 'text-danger' : 'text-success'}>{serverVerification.data.match === true ? '✓ Match' : serverVerification.data.match === false ? '✗ Mismatch' : 'No on-chain comparison'}</strong> : <em>Unavailable</em>}</div>
             {serverVerification.data && <div className="server-result"><div><span>Recomputed</span><code>{serverVerification.data.recomputedHash}</code></div><div><span>On-chain</span><code>{serverVerification.data.onChainHash || 'Not available'}</code></div>{serverVerification.data.note && <p>{serverVerification.data.note}</p>}</div>}
           </section>

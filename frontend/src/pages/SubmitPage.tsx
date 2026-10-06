@@ -221,12 +221,12 @@ export function SubmitPage() {
           </div>
 
           <div className="boundary-input">
-            <div className="field-label-row"><span>Boundary GeoJSON</span><button className="text-button" type="button" onClick={() => fileRef.current?.click()}>Upload file</button></div>
+            <div className="field-label-row"><label htmlFor="boundary-geojson">Boundary GeoJSON</label><button className="text-button" type="button" onClick={() => fileRef.current?.click()}>Upload file</button></div>
             <input ref={fileRef} hidden type="file" accept=".json,.geojson,application/json,application/geo+json" onChange={(event) => {
               const file = event.target.files?.[0]
               if (file) void file.text().then(updateBoundaryText).catch(() => setBoundaryError('Could not read that file.'))
             }} />
-            <textarea required rows={9} spellCheck={false} placeholder={'Paste a Polygon, MultiPolygon, Feature, or FeatureCollection…'} value={boundaryText} onChange={(event) => updateBoundaryText(event.target.value)} />
+            <textarea id="boundary-geojson" required rows={9} spellCheck={false} placeholder={'Paste a Polygon, MultiPolygon, Feature, or FeatureCollection…'} value={boundaryText} onChange={(event) => updateBoundaryText(event.target.value)} />
             {boundaryError && <p className="field-error">{boundaryError}</p>}
             {boundary && <p className="field-success">Boundary parsed: {boundary.type}</p>}
           </div>

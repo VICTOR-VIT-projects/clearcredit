@@ -46,7 +46,7 @@ sequenceDiagram
     W-->>UI: signature
     UI->>API: POST /claims {claim, signature} + Idempotency-Key
     API->>API: idempotency check → duplicate check → overlap block → signer == developer
-    API->>C: registerProject(…, first ≤300 cells, signature)
+    API->>C: registerProject(…, first ≤200 cells, signature)
     API->>C: addCells(…) × n   (skips cells already owned)
     API->>C: finalizeRegistration
     API->>C: postAttestation(scoreBps, evidenceHash, modelVersion)

@@ -8,13 +8,13 @@ A project developer submits a carbon-credit claim: a boundary polygon, a vintage
 2. **Blocks double counting.** The same land in the same vintage cannot be claimed twice: exact polygon overlap is checked off-chain, and an H3 cell index is enforced on-chain. Credits cannot be retired twice.
 3. **Cross-checks the claim against independent satellite data:** Hansen Global Forest Change tree-cover loss (to 2025) and the Sentinel-2 NDVI trend.
 4. **Publishes a transparent integrity score** (0–100) with plain-language reasons, as an append-only on-chain attestation. The contract refuses to issue credits while the score is below the threshold.
-5. **Offers a public verifier page.** Anyone, with no wallet, can inspect a claim, recompute its hash in the browser, and see its evidence and on-chain history.
+5. **Offers a public verifier page.** Anyone, with no wallet, can inspect a claim, recompute its hash in the browser, and see its evidence, on-chain attestation/retirement records and saved relay transaction links. Wallet transaction links and a full event timeline remain future work.
 
 > **What this proves, and what it doesn't.** The chain proves a record was **not altered** and **enforces uniqueness**. It does **not** prove physical truth. Satellite data is evidence, not certification. Outputs are an *integrity score* and a *verified integrity attestation*, never a "certified emission reduction". A low score means *flagged as suspicious*, not proven fraud.
 
 ## Why it matters
 
-The same forest can back credits in two registries, or two projects can claim overlapping land for the same year. Retired credits can be counted again. Weak verification lets claims stand even when satellite imagery shows the forest was cleared. No shared, cross-registry uniqueness check exists. ClearCredit is that check, published as an open schema and API that any registry, buyer or auditor can run or verify independently.
+The same forest can back credits in two registries, or two projects can claim overlapping land for the same year. Retired credits can be counted again. Weak verification lets claims stand even when satellite imagery shows the forest was cleared. ClearCredit offers a shared uniqueness check for participating registries, published as an open schema and API that buyers and auditors can inspect.
 
 ## Demo flow
 
@@ -98,6 +98,9 @@ Base Sepolia: *(address and BaseScan link added at deployment)*.
 
 - The chain enforces uniqueness and tamper evidence; it **cannot prove a project is real or effective**. A fabricated project on land nobody else claims can only be flagged through satellite inconsistencies.
 - Exact geometry is checked off-chain. The on-chain H3 cell index (resolution 8, ~74 ha) is a conservative backstop, so slivers smaller than a cell can pass it.
+- Tiny disjoint boundaries can share the representative-point fallback cell and require manual boundary review. No on-chain exception exists.
+- Pending registrations have no cancellation yet. Idempotency records interrupted by a worker crash require operator recovery; timeout reconciliation alone does not recover those records.
+- EIP-712 v1 consent covers claim fields, while the registrar computes the cell list. A compromised registrar can substitute cells; a signed cell commitment remains future work.
 - A compromised verifier key could post inflated scores until it is rotated. Attestations are append-only and carry a reproducible `evidenceHash`.
 - Satellite evidence has limits: clouds, 30 m resolution, loss data lagging about a year, and sensor processing changes. One such change, the Sentinel-2 2022 baseline offset, is corrected and documented.
 - Sybil developers and legal identity are out of scope; production needs registry-verified identities.

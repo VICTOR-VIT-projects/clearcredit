@@ -6,8 +6,7 @@ Reproduce:
 
 ```bash
 cd backend
-python -m scripts.evaluate find-boxes   # once
-python -m scripts.evaluate run          # writes data/eval/results.json
+python -m scripts.evaluate run          # cached-only; writes data/eval/results.json
 ```
 
 All evidence is cached in `data/cache/evidence/` (`ev2`), so results reproduce exactly.
