@@ -30,6 +30,12 @@ The same forest can back credits in two registries, or two projects can claim ov
 
 ## Data
 
+Multi-registry local demo: `cd contracts` then
+`npx hardhat run scripts/multi-registry-demo.ts`. Two distinct registrars share an
+ephemeral local contract: A registers, B's same-cell/same-vintage attempt is blocked.
+The script labels its synthetic indices; a backend integration test also covers real
+H3-derived cells with separate registrar accounts and no API prechecks.
+
 - **30 real projects** (Verra and Gold Standard) in 15 countries. Boundaries are from the open Karnik et al. 2024 dataset (CC BY 4.0, via CarbonPlan); credits are each project's **real issued quantity** for its latest vintage covered by forest-loss data (OffsetsDB issuance records). Repairs and simplifications are recorded in each claim's `boundarySource`. See `data/probes/POLYGON_SOURCES.md`.
 - **Synthetic test cases** are labelled `synthetic` everywhere, including on-chain-hashed claims and the UI.
 - Seed claims use **demo developer wallets**, not the real proponents. Scores on real projects reflect our processed boundary and public data; they are **not findings about those projects**.

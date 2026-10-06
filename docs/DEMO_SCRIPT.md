@@ -81,6 +81,15 @@ On SYN-01's success card, press **Send the same request again**. This resends th
 
 ## 7. Limits and adoption (30 s)
 
+Optional multi-registry insert (F4): from `contracts/`, run
+`npx hardhat run scripts/multi-registry-demo.ts`. It creates a fresh **ephemeral local**
+contract, grants separate registrar accounts to Registry A and Registry B, registers A,
+and confirms B is blocked by `CellAlreadyClaimed` for the same cells/vintage. Output is
+labelled synthetic; the indices demonstrate the contract rule, not project boundaries
+or satellite evidence. `test_two_distinct_registrar_accounts_share_contract_uniqueness`
+also exercises actual H3 covers with separate accounts and no API prechecks. The script
+refuses public networks. This does not modify the running demo's registry.
+
 "The chain proves a record wasn't altered and enforces uniqueness. It does **not** prove the forest exists. Satellite data is evidence, not certification. Scores flag claims as suspicious; they don't prove fraud. Our evaluation measures injected faults, not real-world fraud prevalence, and it shows where we miss subtle clearing."
 
 Adoption: registries run a registrar against the shared contract; buyers and auditors use the open schema, the API, and the verifier page. Show `/docs` (OpenAPI) and `docs/CLAIM_SCHEMA.md`.

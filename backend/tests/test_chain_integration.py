@@ -220,3 +220,27 @@ def test_expired_pending_cancellation_is_terminal_to_the_api(chain, db_path, mon
     assert client.get("/claims/TEST-A").json()["status"] == "cancelled"
     assert chain.check_cells(cells, 2023) == {}
 
+
+def test_two_distinct_registrar_accounts_share_contract_uniqueness(chain, db_path, tmp_path):
+    from web3.exceptions import ContractLogicError
+    # Registry A's operator is the fixture's registrar. Registry B receives its own
+    # registrar role/account and database, then bypasses ALL API overlap prechecks.
+    assert submit(client_for(chain, db_path), make_claim("REGISTRY-A"), "registry-a").status_code == 201
+    role = chain.c.functions.REGISTRAR_ROLE().call()
+    chain._send(chain.c.functions.grantRole(role, DEV2.address))
+    chain.w3.provider.make_request("hardhat_setBalance", [DEV2.address, hex(10**18)])
+    other = Chain(chain.w3.provider.endpoint_uri, DEV2.key, chain.address,
+                  journal=Store(str(tmp_path / "registry-b.sqlite3")))
+    b = make_claim("REGISTRY-B", developer=DEV2)
+    from app.models import Claim
+    b = Claim(**b).model_dump()
+    cells = geo.h3_cover(b["boundary"])
+    pk, ch = canonical.project_key(b["projectId"]), canonical.claim_hash(b)
+    td = other.typed_data(pk, ch, b["vintageYear"], b["claimedCredits"], cells_root(cells))
+    with pytest.raises(ContractLogicError) as error:
+        other.relay_registration(pk, ch, b["developer"], b["vintageYear"], b["claimedCredits"], cells, sign(td, DEV2), [])
+    selector = chain.w3.keccak(text="CellAlreadyClaimed(uint64,uint16,bytes32)")[:4].hex().removeprefix("0x")
+    assert selector in str(error.value)
+    assert other.account.address != chain.account.address
+    assert other.project(pk)["status"] == "none"
+    assert set(other.check_cells(cells, 2023).values()) == {canonical.project_key("REGISTRY-A")}
