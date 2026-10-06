@@ -15,7 +15,7 @@ from pathlib import Path
 
 from eth_account import Account
 from eth_utils import keccak
-from shapely import make_valid
+from shapely import make_valid, set_precision
 from shapely.geometry import MultiPolygon, Polygon, mapping, shape
 
 from app import geo, satellite
@@ -73,7 +73,17 @@ def prepare_boundary(geom) -> tuple[dict, list[str]]:
         notes.append(f"kept largest {len(kept)} of {len(parts)} parts; dropped parts are {dropped_share:.1%} of area")
         geom = MultiPolygon(kept)
     boundary = json.loads(json.dumps(mapping(geom)))  # tuples -> lists
-    geo.validate_boundary(boundary)
+    try:
+        geo.validate_boundary(boundary)
+    except geo.GeometryError as e:
+        if "hash precision" not in str(e):
+            raise
+        # The claim hash commits to micro-degree coordinates; snap to that grid so the
+        # hashed shape itself is valid (GEOS keeps the output valid while snapping).
+        geom = polygonal(make_valid(set_precision(geom, 1e-6)))
+        boundary = json.loads(json.dumps(mapping(geom)))
+        geo.validate_boundary(boundary)
+        notes.append("snapped to the 1e-6 deg hash grid (invalid at hash precision otherwise)")
     return boundary, notes
 
 

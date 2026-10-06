@@ -44,8 +44,8 @@
  {
   "projectId": "VCS1233",
   "result": "registered",
-  "score": 100,
-  "band": "high"
+  "score": 50,
+  "band": "medium"
  },
  {
   "projectId": "VCS1326",
@@ -80,8 +80,8 @@
  {
   "projectId": "VCS142",
   "result": "registered",
-  "score": 70,
-  "band": "medium"
+  "score": 20,
+  "band": "low"
  },
  {
   "projectId": "VCS1663",
@@ -178,23 +178,5 @@
   "result": "registered",
   "score": 100,
   "band": "high"
- },
- {
-  "projectId": "SYN-01-CLEAN",
-  "result": "registered",
-  "score": 100,
-  "band": "high"
- },
- {
-  "projectId": "SYN-04-NEXT-VINTAGE",
-  "result": "registered",
-  "score": 100,
-  "band": "high"
- },
- {
-  "projectId": "SYN-05-CONTRADICTED",
-  "result": "registered",
-  "score": 40,
-  "band": "low"
  }
 ]
