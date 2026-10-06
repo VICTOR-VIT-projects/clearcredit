@@ -73,7 +73,9 @@ sequenceDiagram
 
 See `DECISIONS.md`. In short:
 - **Signed relay.** The backend pays gas, but it can't register anything a developer didn't sign.
-- **Center-containment cells.** Neighbouring projects never conflict on-chain; real overlaps do.
+- **Center-containment cells.** Neighbours with non-empty center covers do not share cells;
+  representative-point fallback for small shapes can conservatively conflict. Sliver
+  overlaps without a shared cell center still depend on the off-chain geometry check.
 - **Integer micro-degree canonicalization.** Hashes match byte-for-byte across Python and JavaScript.
 - **Resumable relay plus idempotency keys.** Signed transactions are journaled in SQLite
   before broadcast. Receipt timeouts keep the same bytes/hash/nonce; the relay reconciles
@@ -94,6 +96,8 @@ What it does **not** give is physical truth. That is why every attestation carri
 ## Scaling path
 
 - **Multiple registries:** each registry runs a registrar against the same contract (or an L2 deployment), and the shared cell index gives cross-registry uniqueness.
-- **Large projects:** cells are batched (300 per transaction, ~7M gas). At resolution 8 a 100,000 ha project is about 1,360 cells, or five transactions.
+- **Large projects:** relay batches use 200 cells (contract cap 300). A 100,000 ha
+  project is about 1,360 cells at resolution 8, or seven cell batches plus finalization
+  and attestation; actual center covers depend on location and boundary shape.
 - **Verification:** attestations are versioned, so new models append rather than overwrite. Multiple independent verifiers could be required (quorum) in production.
 - **Evidence:** the cache is keyed by canonical boundary, so recomputation is incremental and parallel.

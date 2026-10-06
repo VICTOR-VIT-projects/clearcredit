@@ -160,3 +160,18 @@ def test_mixed_orientation_overlap_is_not_cancelled():
     g = MultiPolygon([a, b])
     (o,) = geo.find_overlaps(g, {"same": g})
     assert o.fraction_of_new == 1 and o.fraction_of_existing == 1
+
+
+def test_raw_valid_area_can_collapse_at_frozen_hash_precision():
+    with pytest.raises(geo.GeometryError, match="micro-degree"):
+        geo.validate_boundary(box(0, 0, 0.0000004, 3))
+
+
+def test_disjoint_tiny_neighbours_can_share_the_fallback_cell():
+    import h3
+    from shapely.geometry import shape
+    lat, lon = h3.cell_to_latlng(h3.latlng_to_cell(10, 10, geo.CELL_RESOLUTION))
+    a = box(lon + 0.0001, lat + 0.0001, lon + 0.0011, lat + 0.0011)
+    b = box(lon + 0.0012, lat + 0.0001, lon + 0.0022, lat + 0.0011)
+    assert shape(a).disjoint(shape(b))
+    assert geo.h3_cover(a) == geo.h3_cover(b)

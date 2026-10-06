@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -218,7 +219,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
                 txs += [att] if att else []
             except Exception as e:
                 store.update_claim(claim["projectId"], status="relay_failed", txs=txs)
-                raise ApiError(502, "RELAY_FAILED", f"Claim saved but on-chain relay failed; retry the same request to resume. ({e})", retryable=True)
+                raise ApiError(502, "RELAY_FAILED", "Claim saved but on-chain relay failed; retry the same request to resume.", retryable=True)
             store.update_claim(claim["projectId"], status="registered", txs=txs)
         view = claim_view(store.get(claim["projectId"]))
         view["submissionKey"] = h["submissionKey"]
@@ -256,7 +257,8 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
     @app.post("/claims/{ref}/attest", tags=["verifier"])
     def attest(ref: str, x_admin_token: str | None = Header(default=None)):
         """Re-score with fresh evidence and post a new attestation (verifier only)."""
-        if not os.environ.get("ADMIN_TOKEN") or x_admin_token != os.environ["ADMIN_TOKEN"]:
+        token = os.environ.get("ADMIN_TOKEN")
+        if not token or not x_admin_token or not secrets.compare_digest(x_admin_token.encode(), token.encode()):
             raise ApiError(403, "FORBIDDEN", "Verifier token required.")
         row = lookup(ref)
         a = analyze(row["claim"])

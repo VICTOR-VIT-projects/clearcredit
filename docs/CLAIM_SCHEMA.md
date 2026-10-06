@@ -78,7 +78,12 @@ The contract recovers the signer and requires it to equal `developer`. The domai
 
 The backend registers the H3 cells at **resolution 8** (~74 ha each) whose **centers** lie inside the boundary. The contract rejects any other resolution.
 
-Center containment means two non-overlapping boundaries can never claim the same cell, so neighbouring projects never conflict. A boundary too small to contain any cell center registers the single cell that holds its representative point. Anyone can recompute the cover from the boundary:
+With non-empty center covers, disjoint boundaries do not share cells. A boundary too
+small to contain any cell center registers its representative-point cell; two disjoint
+small neighbours can therefore conflict. This conservative false positive requires
+manual boundary review and resubmission after agreement; there is no on-chain exception
+mechanism. Geometry must also remain valid after micro-degree quantization. The normal
+center cover (before the fallback) is:
 
 ```python
 h3.h3shape_to_cells(h3.geo_to_h3shape(boundary), 8)

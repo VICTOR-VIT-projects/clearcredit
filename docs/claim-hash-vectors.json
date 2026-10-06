@@ -267,6 +267,143 @@
       "canonical": "{\"boundary\":{\"coordinates\":[[[[0,0],[1000000,0],[1000000,1000000],[0,1000000],[0,0]]],[[[2000000,2000000],[3000000,2000000],[3000000,3000000],[2000000,3000000],[2000000,2000000]]]],\"type\":\"MultiPolygon\"},\"boundaryCrs\":\"EPSG:4326\",\"claimedCredits\":12000,\"creditUnit\":\"tCO2e\",\"dataLabel\":\"synthetic\",\"developer\":\"0x6958d2152447ccdbc42466b6b8ae5e379b3c95e8\",\"projectId\":\"VEC-MULTI\",\"projectType\":\"avoided_deforestation\",\"schemaVersion\":\"1.0\",\"vintageYear\":2023}",
       "claimHash": "0xab2843eebbc5ca02a828e0c2213cf5ef8dc16c311023348614abaa139ed29706",
       "projectKey": "0x9c2f6caa0bbd0a2bf322f39bc88751d4883f91757c9f64e44861badf48e91501"
+    },
+    {
+      "name": "unicode-line-separators-and-non-bmp",
+      "claim": {
+        "schemaVersion": "1.0",
+        "projectId": "VEC-1",
+        "developer": "0x6958d2152447CCDbC42466B6b8AE5e379B3C95e8",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 12000,
+        "creditUnit": "tCO2e",
+        "boundaryCrs": "EPSG:4326",
+        "dataLabel": "synthetic",
+        "boundary": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -63.1,
+                -9.9
+              ],
+              [
+                -63.05,
+                -9.9
+              ],
+              [
+                -63.05,
+                -9.85
+              ],
+              [
+                -63.1,
+                -9.85
+              ],
+              [
+                -63.1,
+                -9.9
+              ]
+            ]
+          ]
+        },
+        "sourceRegistry": "Registry line 🌳"
+      },
+      "canonical": "{\"boundary\":{\"coordinates\":[[[-63100000,-9900000],[-63050000,-9900000],[-63050000,-9850000],[-63100000,-9850000],[-63100000,-9900000]]],\"type\":\"Polygon\"},\"boundaryCrs\":\"EPSG:4326\",\"claimedCredits\":12000,\"creditUnit\":\"tCO2e\",\"dataLabel\":\"synthetic\",\"developer\":\"0x6958d2152447ccdbc42466b6b8ae5e379b3c95e8\",\"projectId\":\"VEC-1\",\"projectType\":\"avoided_deforestation\",\"schemaVersion\":\"1.0\",\"sourceRegistry\":\"Registry line 🌳\",\"vintageYear\":2023}",
+      "claimHash": "0x531a31ae0d66ff7314a6417f0b77494cf3544d982ca7548ad0a8a441866a3751",
+      "projectKey": "0xaba11bffc616cf262941211873dfa095423bcee98733119f0ee604ff5137f645"
+    },
+    {
+      "name": "safe-integer-limit",
+      "claim": {
+        "schemaVersion": "1.0",
+        "projectId": "VEC-1",
+        "developer": "0x6958d2152447CCDbC42466B6b8AE5e379B3C95e8",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 9007199254740991,
+        "creditUnit": "tCO2e",
+        "boundaryCrs": "EPSG:4326",
+        "dataLabel": "synthetic",
+        "boundary": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -63.1,
+                -9.9
+              ],
+              [
+                -63.05,
+                -9.9
+              ],
+              [
+                -63.05,
+                -9.85
+              ],
+              [
+                -63.1,
+                -9.85
+              ],
+              [
+                -63.1,
+                -9.9
+              ]
+            ]
+          ]
+        }
+      },
+      "canonical": "{\"boundary\":{\"coordinates\":[[[-63100000,-9900000],[-63050000,-9900000],[-63050000,-9850000],[-63100000,-9850000],[-63100000,-9900000]]],\"type\":\"Polygon\"},\"boundaryCrs\":\"EPSG:4326\",\"claimedCredits\":9007199254740991,\"creditUnit\":\"tCO2e\",\"dataLabel\":\"synthetic\",\"developer\":\"0x6958d2152447ccdbc42466b6b8ae5e379b3c95e8\",\"projectId\":\"VEC-1\",\"projectType\":\"avoided_deforestation\",\"schemaVersion\":\"1.0\",\"vintageYear\":2023}",
+      "claimHash": "0x34bf7e02b6c03481f7941dcf53649d81855b64ec1cef9172e151b62418059e6a",
+      "projectKey": "0xaba11bffc616cf262941211873dfa095423bcee98733119f0ee604ff5137f645"
+    },
+    {
+      "name": "negative-zero-and-consecutive-duplicate",
+      "claim": {
+        "schemaVersion": "1.0",
+        "projectId": "VEC-1",
+        "developer": "0x6958d2152447CCDbC42466B6b8AE5e379B3C95e8",
+        "projectType": "avoided_deforestation",
+        "vintageYear": 2023,
+        "claimedCredits": 12000,
+        "creditUnit": "tCO2e",
+        "boundaryCrs": "EPSG:4326",
+        "dataLabel": "synthetic",
+        "boundary": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -0.0,
+                -0.0
+              ],
+              [
+                0.01,
+                -0.0
+              ],
+              [
+                0.01,
+                -0.0
+              ],
+              [
+                0.01,
+                0.01
+              ],
+              [
+                -0.0,
+                0.01
+              ],
+              [
+                -0.0,
+                -0.0
+              ]
+            ]
+          ]
+        }
+      },
+      "canonical": "{\"boundary\":{\"coordinates\":[[[0,0],[10000,0],[10000,10000],[0,10000],[0,0]]],\"type\":\"Polygon\"},\"boundaryCrs\":\"EPSG:4326\",\"claimedCredits\":12000,\"creditUnit\":\"tCO2e\",\"dataLabel\":\"synthetic\",\"developer\":\"0x6958d2152447ccdbc42466b6b8ae5e379b3c95e8\",\"projectId\":\"VEC-1\",\"projectType\":\"avoided_deforestation\",\"schemaVersion\":\"1.0\",\"vintageYear\":2023}",
+      "claimHash": "0x0c696b385aebf95d211b0407ada6e872a8f58253086005936e78d2f18f004a98",
+      "projectKey": "0xaba11bffc616cf262941211873dfa095423bcee98733119f0ee604ff5137f645"
     }
   ]
 }

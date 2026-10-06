@@ -143,3 +143,12 @@ def test_malformed_boundary_returns_structured_error(client, coordinates):
 def test_oversized_body_is_rejected_before_json_parsing(client):
     r = client.post("/claims/preview", content=" " * (2 * 1024 * 1024 + 1), headers={"Content-Type": "application/json"})
     assert r.status_code == 413 and r.json()["error"]["code"] == "REQUEST_TOO_LARGE"
+
+
+def test_attestation_token_is_unset_denied_and_accepts_only_exact_bytes(client, monkeypatch):
+    submit(client, make_claim(), "k1")
+    monkeypatch.delenv("ADMIN_TOKEN", raising=False)
+    assert client.post("/claims/TEST-A/attest").status_code == 403
+    monkeypatch.setenv("ADMIN_TOKEN", "test-token")
+    assert client.post("/claims/TEST-A/attest", headers={"X-Admin-Token": "wrong-token"}).status_code == 403
+    assert client.post("/claims/TEST-A/attest", headers={"X-Admin-Token": "test-token"}).status_code == 200

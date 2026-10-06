@@ -11,6 +11,8 @@ from shapely.geometry.base import BaseGeometry
 from shapely.geometry.polygon import orient
 from shapely.validation import explain_validity
 
+from .canonical import canonical_boundary
+
 CELL_RESOLUTION = 8  # must match the deployed contract's cellResolution
 MIN_AREA_HA = 1.0
 MAX_AREA_HA = 3_000_000.0  # larger than the biggest known single REDD+ projects
@@ -64,6 +66,18 @@ def validate_boundary(boundary: dict) -> BaseGeometry:
     if not geom.is_valid:
         # No silent make_valid: a repaired boundary is a different claim.
         raise GeometryError(f"invalid geometry: {explain_validity(geom)}")
+    # Hash precision is frozen; reject shapes that collapse at that precision.
+    quantized = canonical_boundary(boundary)
+
+    def degrees(coords):
+        return [degrees(c) for c in coords] if isinstance(coords, list) else coords / 1e6
+
+    try:
+        hashed_geom = shape({**quantized, "coordinates": degrees(quantized["coordinates"])})
+    except (ValueError, TypeError) as e:
+        raise GeometryError("geometry collapses at micro-degree hash precision") from e
+    if not hashed_geom.is_valid or hashed_geom.is_empty:
+        raise GeometryError("geometry is invalid at micro-degree hash precision")
     minx, _, maxx, _ = geom.bounds
     if maxx - minx > 180:
         raise GeometryError("boundaries crossing the antimeridian are not supported")
@@ -108,9 +122,9 @@ def find_overlaps(geom: BaseGeometry, others: dict[str, BaseGeometry]) -> list[O
 def h3_cover(boundary: dict, res: int = CELL_RESOLUTION) -> list[int]:
     """Cells whose CENTER lies inside the boundary.
 
-    Center containment partitions space: two non-overlapping boundaries can never both
-    contain the same cell center, so adjacent projects never collide on-chain. A boundary
-    too small to contain any center falls back to the cell holding its representative point.
+    Center containment avoids shared cells for neighbours with non-empty center covers.
+    A boundary with no center falls back to its representative-point cell; this can
+    conservatively conflict with a disjoint neighbour in that same cell.
     """
     cells = h3.h3shape_to_cells(h3.geo_to_h3shape(boundary), res)
     if not cells:
