@@ -81,6 +81,9 @@ summary:hover { color: var(--text); }
 .card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: clamp(20px, 3.4vw, 32px); }
 .section-heading { margin-bottom: 26px; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
 .section-heading h2, .section-heading p { margin-bottom: 0; }
+form.card { display: grid; gap: 18px; }
+form.card > .button { justify-self: start; }
+.page > .button { margin-bottom: 20px; }
 
 /* ---------- controls ---------- */
 .button { min-height: 44px; padding: 0 20px; white-space: nowrap; border: 1px solid transparent; border-radius: var(--radius); display: inline-flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer; text-decoration: none; font-family: var(--mono); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; transition: background 120ms ease, color 120ms ease, border-color 120ms ease; }
