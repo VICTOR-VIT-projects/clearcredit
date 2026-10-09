@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from eth_account import Account
+from eth_utils.abi import get_abi_output_types
 from eth_account.messages import encode_typed_data
 from web3 import Web3
 from web3.exceptions import TimeExhausted, TransactionNotFound
@@ -163,9 +164,33 @@ class Chain:
             raise ChainReadUnavailable("Chain snapshot is unavailable; retry shortly") from e
 
     def project(self, project_key: str) -> dict:
-        p = self._call(self.c.functions.getProject(_b32(project_key)))
+        return self._project_dict(self._call(self.c.functions.getProject(_b32(project_key))))
+
+    def projects(self, project_keys: list[str]) -> dict[str, dict]:
+        """Many getProject reads in ONE JSON-RPC batch per 50 keys, all pinned to the same block.
+        One round trip instead of one per project (a 20-row registry page: ~18 s -> well under 1 s)."""
+        block = self._read_block()
+        types = get_abi_output_types(next(x for x in self.c.abi if x.get("name") == "getProject"))
+        out = {}
+        for i in range(0, len(project_keys), 50):
+            keys = project_keys[i : i + 50]
+            calls = [("eth_call", [{"to": self.address, "data": self.c.functions.getProject(_b32(k))._encode_transaction_data()}, hex(block)])
+                     for k in keys]
+            try:
+                responses = self.w3.provider.make_batch_request(calls)
+                if not isinstance(responses, list) or len(responses) != len(keys) or any("error" in r for r in responses):
+                    raise ValueError("incomplete batch response")
+                responses = sorted(responses, key=lambda r: r["id"])
+                for k, r in zip(keys, responses):
+                    out[k] = self._project_dict(self.w3.codec.decode(types, bytes.fromhex(r["result"][2:]))[0])
+            except Exception as e:
+                raise ChainReadUnavailable("Required contract state is unavailable; retry shortly") from e
+        return out
+
+    @staticmethod
+    def _project_dict(p) -> dict:
         return {
-            "developer": p[0], "claimHash": _hex(p[1]), "vintageYear": p[2], "status": STATUS[p[3]],
+            "developer": Web3.to_checksum_address(p[0]), "claimHash": _hex(p[1]), "vintageYear": p[2], "status": STATUS[p[3]],
             "claimedCredits": p[4], "issued": p[5], "retired": p[6], "cellCount": p[7], "registeredAt": p[8],
             "cellsRoot": _hex(p[9]), "cellsHash": _hex(p[10]), "lastCell": p[11],
             "registeredBlock": p[12],

@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { GeoJSON, MapContainer, TileLayer, useMap } from 'react-leaflet'
 import type { GeoJsonObject } from 'geojson'
 import L from 'leaflet'
+import { TILE_ATTRIBUTION, TILE_URL } from '../lib/tiles'
 import type { Boundary } from '../lib/canonical'
 
 function FitBoundary({ boundary }: { boundary: Boundary }) {
@@ -19,10 +20,7 @@ export function BoundaryMap({ boundary, compact = false }: { boundary: Boundary;
   return (
     <div className={`map-frame ${compact ? 'map-compact' : ''}`}>
       <MapContainer center={[15, 0]} zoom={2} scrollWheelZoom className="leaflet-map">
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} />
         <GeoJSON data={data} style={{ color: '#c8ff00', weight: 2, fillColor: '#c8ff00', fillOpacity: 0.12 }} />
         <FitBoundary boundary={boundary} />
       </MapContainer>

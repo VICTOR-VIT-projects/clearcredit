@@ -482,3 +482,15 @@ def test_registry_map_optional_boundaries_and_explicit_historical_block(chain, d
     past = client.get(f"/registry?includeBoundary=true&atBlock={registration_block}").json()
     assert past["observedBlock"] == registration_block
     assert past["items"][0]["status"] == "pending"  # DB success cannot override the chosen chain snapshot
+
+
+def test_batched_project_reads_equal_individual_reads_at_the_same_block(chain, db_path):
+    client = client_for(chain, db_path)
+    assert submit(client, make_claim("BATCH-A"), "batch-a").status_code == 201
+    keys = [canonical.project_key("BATCH-A"), canonical.project_key("NEVER-REGISTERED")]
+    block = chain.snapshot_block()
+    with chain.read_at(block):
+        batched = chain.projects(keys)
+        single = {k: chain.project(k) for k in keys}
+    assert batched == single
+    assert batched[keys[0]]["status"] == "registered" and batched[keys[1]]["status"] == "none"

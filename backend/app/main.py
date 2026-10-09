@@ -382,8 +382,9 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
             if block > head:
                 raise ChainReadUnavailable("Requested registry snapshot is not visible")
             with chain.read_at(block):
-                for row in rows:
-                    row["status"] = chain.project(row["project_key"])["status"]
+                states = chain.projects([row["project_key"] for row in rows])  # one batched round trip
+            for row in rows:
+                row["status"] = states[row["project_key"]]["status"]
         return {
             "total": total,
             "observedBlock": block,

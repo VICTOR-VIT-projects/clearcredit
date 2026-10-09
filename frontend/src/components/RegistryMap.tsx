@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { GeoJSON, MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
+import { TILE_ATTRIBUTION, TILE_URL } from '../lib/tiles'
 import type { FeatureCollection } from 'geojson'
 import type { RegistryItem } from '../lib/types'
 import { registryFeatures } from '../lib/registryMap'
@@ -22,11 +23,11 @@ export function RegistryMap({ items, observedBlock }: { items: RegistryItem[]; o
     <p>{data.features.length} registered claims. Green: high integrity score; amber: medium; red: low. Each label includes its data category.</p>
     <div className="map-frame">
       <MapContainer center={[15, 0]} zoom={2} scrollWheelZoom className="leaflet-map">
-        <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} />
         <GeoJSON data={data} style={feature => ({ color: String(feature?.properties?.color), weight: 2, fillOpacity: 0.25 })} onEachFeature={(feature, layer) => {
           const text = document.createElement('span')
           text.textContent = String(feature.properties?.label)
-          layer.bindTooltip(text, { permanent: true })
+          layer.bindTooltip(text, { sticky: true })  // on hover: 30 permanent labels overlap into an unreadable pile
         }} />
         <FitAll data={data} />
       </MapContainer>
