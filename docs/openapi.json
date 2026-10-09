@@ -133,6 +133,17 @@
               "type": "string",
               "title": "Ref"
             }
+          },
+          {
+            "name": "minBlock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Minblock"
+            }
           }
         ],
         "responses": {
@@ -179,6 +190,17 @@
             "schema": {
               "type": "string",
               "title": "Ref"
+            }
+          },
+          {
+            "name": "minBlock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Minblock"
             }
           }
         ],

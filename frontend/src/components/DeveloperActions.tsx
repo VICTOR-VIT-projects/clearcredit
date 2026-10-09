@@ -65,7 +65,7 @@ function explorerTransactionUrl(view: ClaimView, hash: string): string | null {
   return `${base}/tx/${hash}`
 }
 
-export function DeveloperActions({ view, onConfirmed }: { view: ClaimView; onConfirmed: () => void }) {
+export function DeveloperActions({ view, onConfirmed }: { view: ClaimView; onConfirmed: (block: number) => void }) {
   const { address, chainId } = useAccount()
   const [issueAmount, setIssueAmount] = useState('')
   const [retireAmount, setRetireAmount] = useState('')
@@ -79,11 +79,11 @@ export function DeveloperActions({ view, onConfirmed }: { view: ClaimView; onCon
   const isDeveloper = Boolean(address && view.claim.developer.toLowerCase() === address.toLowerCase())
 
   useEffect(() => {
-    if (receipt.isSuccess && hash && notifiedHash.current !== hash) {
+    if (receipt.isSuccess && receipt.data?.status === 'success' && hash && notifiedHash.current !== hash) {
       notifiedHash.current = hash
-      onConfirmed()
+      onConfirmed(Number(receipt.data.blockNumber))
     }
-  }, [hash, onConfirmed, receipt.isSuccess])
+  }, [hash, onConfirmed, receipt.isSuccess, receipt.data])
 
   if (!isDeveloper || !view.onChain) return null
   const project = view.onChain.project
@@ -146,7 +146,8 @@ export function DeveloperActions({ view, onConfirmed }: { view: ClaimView; onCon
       </div>
       {isWalletPending && <div className="progress-row"><span className="spinner" /><div><strong>Waiting for wallet</strong><span>Review and confirm the transaction.</span></div></div>}
       {hash && receipt.isLoading && <div className="progress-row"><span className="spinner" /><div><strong>Transaction pending</strong><span>{shorten(hash)} is waiting for confirmation.</span></div></div>}
-      {hash && receipt.isSuccess && <div className="notice notice-success"><strong>Transaction confirmed</strong><p>{txUrl ? <a href={txUrl} target="_blank" rel="noreferrer">View transaction ↗</a> : `Transaction ${shorten(hash)} confirmed on local chain.`}</p></div>}
+      {hash && receipt.isSuccess && receipt.data?.status === 'success' && <div className="notice notice-success"><strong>Transaction confirmed</strong><p>{txUrl ? <a href={txUrl} target="_blank" rel="noreferrer">View transaction ↗</a> : `Transaction ${shorten(hash)} confirmed on local chain.`} Totals refresh at or after its receipt block.</p></div>}
+      {hash && receipt.data?.status === 'reverted' && <div className="notice notice-error" role="alert">Transaction reverted; no successful outcome is reported.</div>}
       {(error || receipt.error) && <div className="notice notice-error" role="alert"><strong>Contract action failed</strong><p>{error || contractErrorMessage(receipt.error)}</p></div>}
     </section>
   )

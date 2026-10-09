@@ -11,6 +11,7 @@ from app.store import Store
 
 
 class FakeEth:
+    block_number = 10
     def __init__(self):
         self.sent = []
         self.receipts = {}
@@ -19,6 +20,9 @@ class FakeEth:
     def get_transaction_count(self, *_):
         self.nonce_reads += 1
         return len(set(self.sent))
+
+    def get_block(self, number):
+        return {"number": number}
 
     def send_raw_transaction(self, raw):
         h = Web3.keccak(raw)
@@ -35,7 +39,7 @@ class FakeEth:
 
 
 class FakeFunction:
-    fn_name = "postAttestation"
+    fn_name = "testWrite"
 
     def __init__(self, data="0x1234"):
         self.data = data
@@ -45,6 +49,10 @@ class FakeFunction:
 
     def build_transaction(self, fields):
         return {**fields, "data": self.data}
+
+    def estimate_gas(self, fields, block_identifier):
+        assert block_identifier >= 10
+        return 100_000
 
 
 def relayer(eth, journal):
@@ -56,6 +64,7 @@ def relayer(eth, journal):
     chain.address = "0x" + "22" * 20
     chain._lock = threading.RLock()
     chain.journal = journal
+    chain._reads = threading.local()
     return chain
 
 
@@ -68,10 +77,10 @@ def test_timeout_then_restart_reuses_identical_transaction(db_path):
     second = relayer(eth, Store(db_path))
     with pytest.raises(TimeExhausted):
         second._send(FakeFunction())
-    assert eth.nonce_reads == 1
+    assert eth.nonce_reads == 2
     assert set(eth.sent) == {raw}
     h = Web3.keccak(raw)
-    eth.receipts[bytes(h)] = {"status": 1}
+    eth.receipts[bytes(h)] = {"status": 1, "blockNumber": 11}
     assert second._send(FakeFunction()) == "0x" + bytes(h).hex()
     assert len(set(eth.sent)) == 1
 
@@ -83,5 +92,5 @@ def test_unresolved_send_blocks_a_different_operation(db_path):
         chain._send(FakeFunction())
     with pytest.raises(TimeExhausted):
         chain._send(FakeFunction("0x5678"))
-    assert eth.nonce_reads == 1
+    assert eth.nonce_reads == 2
     assert len(set(eth.sent)) == 1

@@ -271,3 +271,105 @@ def test_stale_rpc_read_after_register_cannot_fake_a_registration(chain, db_path
     else:  # failing closed is acceptable; claiming success is not
         assert r.json()["error"]["code"] == "RELAY_FAILED"
         assert client.get("/claims/TEST-A").json()["status"] != "registered"
+
+
+def test_stale_attestation_read_cannot_append_duplicate(chain, db_path, monkeypatch):
+    assert submit(client_for(chain, db_path), make_claim(), "att-lag").status_code == 201
+    pk = canonical.project_key("TEST-A")
+    real = chain.attestations
+    before = real(pk)
+    chain.post_attestation(pk, 7100, "0x" + "44" * 32, "new-model")
+    nonce = chain.w3.eth.get_transaction_count(chain.account.address)
+    calls = []
+    def lagging(key):
+        calls.append(key)
+        return before if len(calls) == 1 else real(key)
+    monkeypatch.setattr(chain, "attestations", lagging)
+    chain.read_retry_delay = 0
+    assert chain.post_attestation(pk, 7100, "0x" + "44" * 32, "new-model") is None
+    assert len(calls) >= 2
+    assert chain.w3.eth.get_transaction_count(chain.account.address) == nonce
+
+
+def test_gas_estimates_and_reads_are_pinned_after_receipts(chain, db_path, monkeypatch):
+    estimates, reads, failures = [], [], []
+    send = chain._send
+    def traced_send(fn):
+        try:
+            return send(fn)
+        except Exception as e:
+            failures.append(repr(e))
+            raise
+    monkeypatch.setattr(chain, "_send", traced_send)
+    estimate = chain.w3.eth.estimate_gas
+    call = chain.w3.eth.call
+    def gas(tx, block_identifier=None, *args, **kwargs):
+        estimates.append(block_identifier)
+        assert isinstance(block_identifier, int)
+        assert block_identifier >= chain.journal.chain_head(chain._read_scope)
+        return estimate(tx, block_identifier, *args, **kwargs)
+    def read(tx, block_identifier=None, *args, **kwargs):
+        reads.append(block_identifier)
+        assert isinstance(block_identifier, int)
+        return call(tx, block_identifier, *args, **kwargs)
+    monkeypatch.setattr(chain.w3.eth, "estimate_gas", gas)
+    monkeypatch.setattr(chain.w3.eth, "call", read)
+    response = submit(client_for(chain, db_path), make_claim(), "pinned")
+    assert response.status_code == 201, (response.text, failures)
+    assert len(estimates) == 4 and reads
+    floor = chain.journal.chain_head(chain._read_scope)
+    # A different RPC node's latest may lag; our next read must still demand the floor.
+    monkeypatch.setattr(type(chain.w3.eth), "block_number", property(lambda _: 0))
+    assert chain.snapshot(canonical.project_key("TEST-A"))["observedBlock"] == floor
+
+
+def test_unavailable_receipt_block_fails_closed_after_restart(chain, db_path, monkeypatch):
+    from app.chain import ChainReadUnavailable
+    client = client_for(chain, db_path)
+    assert submit(client, make_claim(), "floor").status_code == 201
+    restarted = Chain(chain.w3.provider.endpoint_uri, HH_KEY, chain.address, journal=chain.journal)
+    monkeypatch.setattr(restarted.w3.eth, "get_block", lambda *_: (_ for _ in ()).throw(ConnectionError("lag")))
+    with pytest.raises(ChainReadUnavailable):
+        restarted.snapshot(canonical.project_key("TEST-A"))
+    response = client_for(restarted, db_path).get("/claims/TEST-A")
+    assert response.status_code == 503 and response.json()["error"]["code"] == "CHAIN_READ_UNAVAILABLE"
+
+
+def test_claim_response_stale_after_relay_never_stores_success(chain, db_path, monkeypatch):
+    client = client_for(chain, db_path)
+    real = chain.snapshot
+    def lagging(key, minimum=0):
+        value = real(key, minimum)
+        value["project"]["status"] = "pending"
+        return value
+    monkeypatch.setattr(chain, "snapshot", lagging)
+    response = submit(client, make_claim(), "view-lag")
+    assert response.status_code == 502
+    assert Store(db_path).get("TEST-A")["status"] == "relay_failed"
+
+
+def test_wallet_receipt_minimum_block_is_required(chain, db_path):
+    client = client_for(chain, db_path)
+    assert submit(client, make_claim(), "min-block").status_code == 201
+    block = chain.w3.eth.block_number
+    assert client.get(f"/claims/TEST-A?minBlock={block}").json()["onChain"]["observedBlock"] >= block
+    response = client.get(f"/claims/TEST-A?minBlock={block + 100}")
+    assert response.status_code == 503
+    assert client.get(f"/claims/TEST-A/verify?minBlock={block + 100}").status_code == 503
+
+
+def test_reconcile_compares_latest_attestation_and_fails_closed(chain, db_path, monkeypatch):
+    from scripts.reconcile import reconcile_claim
+    from app.chain import ChainReadUnavailable
+    assert submit(client_for(chain, db_path), make_claim(), "reconcile").status_code == 201
+    store = Store(db_path)
+    row = store.get("TEST-A")
+    chain.post_attestation(row["project_key"], 100, "0x" + "55" * 32, "different")
+    assert reconcile_claim(chain, store, row, dry_run=True) == "mismatch"
+    assert reconcile_claim(chain, store, row) == "repaired"
+    assert chain.attestations(row["project_key"])[-1]["modelVersion"] == row["result"]["score"]["modelVersion"]
+    monkeypatch.setattr(chain, "snapshot", lambda *_: (_ for _ in ()).throw(ChainReadUnavailable("lag")))
+    store.update_claim("TEST-A", status="relay_failed")
+    with pytest.raises(ChainReadUnavailable):
+        reconcile_claim(chain, store, store.get("TEST-A"))
+    assert store.get("TEST-A")["status"] == "relay_failed"

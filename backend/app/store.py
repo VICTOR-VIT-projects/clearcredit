@@ -40,6 +40,16 @@ CREATE TABLE IF NOT EXISTS relay_pending (
     tx_hash TEXT NOT NULL,
     raw_tx TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS chain_heads (
+    scope TEXT PRIMARY KEY,
+    block_number INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS attestation_counts (
+    scope TEXT NOT NULL,
+    project_key TEXT NOT NULL,
+    count INTEGER NOT NULL,
+    PRIMARY KEY (scope, project_key)
+);
 """
 
 
@@ -66,6 +76,35 @@ class Store:
 
     def relay_clear(self, scope: str) -> None:
         self.db.execute("DELETE FROM relay_pending WHERE scope = ?", (scope,))
+
+    def relay_confirm(self, scope: str, read_scope: str, row: dict, receipt: dict) -> None:
+        with self.lock:
+            self.db.execute("BEGIN IMMEDIATE")
+            try:
+                self.advance_chain_head(read_scope, receipt["blockNumber"])
+                if receipt["status"] == 1 and row["step"] == "postAttestation":
+                    self.remember_attestations(read_scope, row["project_key"], self.attestation_count(read_scope, row["project_key"]) + 1)
+                self.relay_clear(scope)
+                self.db.execute("COMMIT")
+            except Exception:
+                self.db.execute("ROLLBACK")
+                raise
+
+    def chain_head(self, scope: str) -> int:
+        row = self.db.execute("SELECT block_number FROM chain_heads WHERE scope = ?", (scope,)).fetchone()
+        return row[0] if row else 0
+
+    def advance_chain_head(self, scope: str, block: int) -> None:
+        self.db.execute("INSERT INTO chain_heads VALUES (?, ?) ON CONFLICT(scope) DO UPDATE "
+                        "SET block_number = MAX(block_number, excluded.block_number)", (scope, block))
+
+    def attestation_count(self, scope: str, project_key: str) -> int:
+        row = self.db.execute("SELECT count FROM attestation_counts WHERE scope = ? AND project_key = ?", (scope, project_key)).fetchone()
+        return row[0] if row else 0
+
+    def remember_attestations(self, scope: str, project_key: str, count: int) -> None:
+        self.db.execute("INSERT INTO attestation_counts VALUES (?, ?, ?) ON CONFLICT(scope, project_key) "
+                        "DO UPDATE SET count = MAX(count, excluded.count)", (scope, project_key, count))
 
     # ------------------------------------------------------------ idempotency
 

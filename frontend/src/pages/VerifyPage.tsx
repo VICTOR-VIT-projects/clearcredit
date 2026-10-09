@@ -79,10 +79,14 @@ function OnChainPanel({ view }: { view: ClaimView }) {
 export function VerifyPage() {
   const { ref = '' } = useParams()
   const decodedRef = decodeURIComponent(ref)
-  const query = useQuery({ queryKey: ['claim', decodedRef], queryFn: () => getClaim(decodedRef), enabled: Boolean(decodedRef) })
-  const serverVerification = useQuery({ queryKey: ['verify', decodedRef], queryFn: () => verifyClaim(decodedRef), enabled: Boolean(decodedRef) })
+  const [receiptFloor, setReceiptFloor] = useState<{ ref: string; block: number }>({ ref: '', block: 0 })
+  const minBlock = receiptFloor.ref === decodedRef ? receiptFloor.block : 0
+  const query = useQuery({ queryKey: ['claim', decodedRef, minBlock], queryFn: () => getClaim(decodedRef, minBlock), enabled: Boolean(decodedRef) })
+  const serverVerification = useQuery({ queryKey: ['verify', decodedRef, minBlock], queryFn: () => verifyClaim(decodedRef, minBlock), enabled: Boolean(decodedRef) })
   const [browserResult, setLocalResult] = useState<BrowserVerification | null>(null)
-  const refresh = useCallback(() => { void query.refetch(); void serverVerification.refetch() }, [query, serverVerification])
+  const refresh = useCallback((block: number) => {
+    setReceiptFloor(previous => ({ ref: decodedRef, block: Math.max(previous.ref === decodedRef ? previous.block : 0, block) }))
+  }, [decodedRef])
 
   if (!decodedRef) {
     return <div className="page verify-empty"><div className="hero"><p className="eyebrow">Independent verification</p><h1>Verify any ClearCredit claim.</h1><p>No wallet required. Search a project ID or claim hash to inspect the signed claim, recompute its hash, and compare it with the on-chain record.</p></div><VerifySearch /><div className="verify-promises"><div><strong>01</strong><span>Inspect the original claim and boundary</span></div><div><strong>02</strong><span>Recompute its tamper-evident hash locally</span></div><div><strong>03</strong><span>Review evidence, scoring, and chain activity</span></div></div></div>
@@ -92,8 +96,8 @@ export function VerifyPage() {
     <div className="page verify-page">
       <VerifySearch initial={decodedRef} />
       {query.isLoading && <LoadingBlock>Loading claim and chain state…</LoadingBlock>}
-      {query.error && <ErrorNotice title="Claim not found">{query.error.message}</ErrorNotice>}
-      {query.data && (() => {
+      {query.error && <ErrorNotice title="Claim unavailable">{query.error.message}</ErrorNotice>}
+      {query.data && !query.error && (() => {
         const view = query.data
         const localResult = currentVerification(browserResult, view)
         return <>

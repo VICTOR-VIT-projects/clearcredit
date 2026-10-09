@@ -10,6 +10,7 @@ import os
 import threading
 import time
 from functools import wraps
+from contextlib import contextmanager
 from pathlib import Path
 
 from eth_account import Account
@@ -27,6 +28,10 @@ EXPLORERS = {84532: "https://sepolia.basescan.org", 31337: None}
 
 class RegistrationCancelled(RuntimeError):
     pass
+
+
+class ChainReadUnavailable(RuntimeError):
+    """The RPC cannot provide the required coherent chain snapshot; retry later."""
 
 CLAIM_TYPES = {
     "Claim": [
@@ -95,6 +100,7 @@ class Chain:
         self._lock = threading.RLock()
         self.read_attempts, self.read_retry_delay = 15, 2.0  # ~30 s for a lagging RPC node to catch up
         self.journal = journal or Store()
+        self._reads = threading.local()
 
     @classmethod
     def from_env(cls) -> "Chain | None":
@@ -108,8 +114,52 @@ class Chain:
 
     # ------------------------------------------------------------ reads
 
+    @property
+    def _read_scope(self) -> str:
+        return f"{self.chain_id}:{self.address.lower()}"
+
+    def snapshot_block(self, minimum: int = 0) -> int:
+        floor = max(minimum, self.journal.chain_head(self._read_scope))
+        try:
+            block = max(floor, self.w3.eth.block_number)
+            # A lagging node must serve this explicit height or fail, never substitute latest.
+            if self.w3.eth.get_block(block)["number"] != block:
+                raise ChainReadUnavailable("RPC returned a different block")
+            self.journal.advance_chain_head(self._read_scope, block)
+            return block
+        except Exception as e:
+            raise ChainReadUnavailable("Required chain block is unavailable; retry shortly") from e
+
+    @contextmanager
+    def read_at(self, block: int):
+        previous = getattr(self._reads, "block", None)
+        self._reads.block = block
+        try:
+            yield
+        finally:
+            self._reads.block = previous
+
+    def _read_block(self) -> int:
+        block = getattr(self._reads, "block", None)
+        return self.snapshot_block() if block is None else block
+
+    def _call(self, fn, block: int | None = None):
+        try:
+            return fn.call(block_identifier=self._read_block() if block is None else block)
+        except Exception as e:
+            raise ChainReadUnavailable("Required contract state is unavailable; retry shortly") from e
+
+    def snapshot(self, project_key: str, minimum: int = 0) -> dict:
+        block = self.snapshot_block(minimum)
+        try:
+            with self.read_at(block):
+                return {"observedBlock": block, "project": self.project(project_key),
+                        "attestations": self._visible_attestations(project_key), "retirements": self.retirements(project_key)}
+        except Exception as e:
+            raise ChainReadUnavailable("Chain snapshot is unavailable; retry shortly") from e
+
     def project(self, project_key: str) -> dict:
-        p = self.c.functions.getProject(_b32(project_key)).call()
+        p = self._call(self.c.functions.getProject(_b32(project_key)))
         return {
             "developer": p[0], "claimHash": _hex(p[1]), "vintageYear": p[2], "status": STATUS[p[3]],
             "claimedCredits": p[4], "issued": p[5], "retired": p[6], "cellCount": p[7], "registeredAt": p[8],
@@ -120,22 +170,23 @@ class Chain:
     def check_cells(self, cells: list[int], vintage: int) -> dict[int, str]:
         """Cells already held by another project for this vintage → owner projectKey."""
         out = {}
+        block = self._read_block()
         for i in range(0, len(cells), 2000):
             chunk = cells[i : i + 2000]
-            owners = self.c.functions.checkCells(chunk, vintage).call()
+            owners = self._call(self.c.functions.checkCells(chunk, vintage), block)
             out.update({c: _hex(o) for c, o in zip(chunk, owners) if _hex(o) != ZERO32})
         return out
 
     def attestations(self, project_key: str) -> list[dict]:
         return [
             {"scoreBps": a[0], "evidenceHash": _hex(a[1]), "modelVersion": a[2], "verifier": a[3], "timestamp": a[4]}
-            for a in self.c.functions.getAttestations(_b32(project_key)).call()
+            for a in self._call(self.c.functions.getAttestations(_b32(project_key)))
         ]
 
     def retirements(self, project_key: str) -> list[dict]:
         return [
             {"serialStart": r[0], "amount": r[1], "from": r[2], "beneficiary": r[3], "timestamp": r[4]}
-            for r in self.c.functions.getRetirements(_b32(project_key)).call()
+            for r in self._call(self.c.functions.getRetirements(_b32(project_key)))
         ]
 
     def tx_url(self, tx: str) -> str | None:
@@ -160,7 +211,8 @@ class Chain:
                 if "already known" not in str(e).lower() and "known transaction" not in str(e).lower():
                     raise
             receipt = self.w3.eth.wait_for_transaction_receipt(h, timeout=180)
-        self.journal.relay_clear(self._scope)
+        # Persist before clearing uncertainty: restarts must not read behind this receipt.
+        self.journal.relay_confirm(self._scope, self._read_scope, row, receipt)
         if receipt["status"] != 1:
             raise RuntimeError(f"transaction reverted: {row['tx_hash']}")
         return row["tx_hash"]
@@ -180,7 +232,14 @@ class Chain:
             tx_hash = self._complete(row)
             if row["operation"] == operation:
                 return tx_hash
-        tx = fn.build_transaction({"from": self.account.address, "nonce": self.w3.eth.get_transaction_count(self.account.address, "pending"), "chainId": self.chain_id})
+        block = self.snapshot_block()
+        fields = {"from": self.account.address, "chainId": self.chain_id}
+        # Gas estimation is a state read. Supply gas explicitly so build_transaction
+        # cannot silently estimate against an older load-balanced node's latest state.
+        gas = fn.estimate_gas({"from": self.account.address}, block_identifier=block)
+        nonce = max(self.w3.eth.get_transaction_count(self.account.address, "pending"),
+                    self.w3.eth.get_transaction_count(self.account.address, block))
+        tx = fn.build_transaction({**fields, "nonce": nonce, "gas": gas + gas // 5})
         signed = self.account.sign_transaction(tx)
         raw = bytes(signed.raw_transaction)
         tx_hash = _hex(Web3.keccak(raw))
@@ -204,8 +263,8 @@ class Chain:
                 pk, _b32(claim_hash), Web3.to_checksum_address(developer), vintage, credits, _b32(cells_root(cells)), first, signature))})
             state = self._await_project(project_key, lambda s: s["status"] != "none", "pending")
         if state["status"] == "pending":
-            owners = self.c.functions.checkCells(cells, vintage).call() if len(cells) <= 2000 else None
-            todo = [c for c, o in zip(cells, owners) if bytes(o) != pk] if owners is not None else cells
+            owners = self.check_cells(cells, vintage)
+            todo = [c for c in cells if owners.get(c) != project_key]
             for i in range(0, len(todo), self.batch):  # re-adding owned cells is a no-op on-chain
                 txs.append({"step": "addCells", "tx": self._send(self.c.functions.addCells(pk, todo[i : i + self.batch]))})
             # finalize's gas estimate simulates against the node's view; on a lagging node the last
@@ -230,8 +289,22 @@ class Chain:
     def post_attestation(self, project_key, score_bps, evidence_hash, model_version) -> dict | None:
         """Append an attestation unless the latest one already says exactly this (retry-safe)."""
         recovered = self._reconcile(project_key)
-        latest = (self.attestations(project_key) or [None])[-1]
+        existing = self._visible_attestations(project_key)
+        latest = (existing or [None])[-1]
         if latest and (latest["scoreBps"], latest["evidenceHash"], latest["modelVersion"]) == (score_bps, evidence_hash, model_version):
             return next((t for t in recovered if t["step"] == "postAttestation"), None)
-        return {"step": "postAttestation", "tx": self._send(self.c.functions.postAttestation(
-            _b32(project_key), score_bps, _b32(evidence_hash), model_version))}
+        tx = self._send(self.c.functions.postAttestation(_b32(project_key), score_bps, _b32(evidence_hash), model_version))
+        self.journal.remember_attestations(self._read_scope, project_key, len(existing) + 1)
+        self._visible_attestations(project_key)
+        return {"step": "postAttestation", "tx": tx}
+
+    def _visible_attestations(self, project_key: str) -> list[dict]:
+        minimum = self.journal.attestation_count(self._read_scope, project_key)
+        for attempt in range(self.read_attempts):
+            values = self.attestations(project_key)
+            if len(values) >= minimum:
+                self.journal.remember_attestations(self._read_scope, project_key, len(values))
+                return values
+            if attempt + 1 < self.read_attempts:
+                time.sleep(self.read_retry_delay)
+        raise ChainReadUnavailable("Confirmed attestations are not visible; retry shortly")

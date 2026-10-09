@@ -2,7 +2,7 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 
-dotenv.config({ path: "../.env" });
+if (process.env.CLEARCREDIT_NO_ENV !== "1") dotenv.config({ path: "../.env" });
 
 const key = process.env.DEPLOYER_PRIVATE_KEY;
 

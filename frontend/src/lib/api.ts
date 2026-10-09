@@ -48,12 +48,12 @@ export async function submitClaim(claim: Claim, signature: string, idempotencyKe
   return { view, replayed: Boolean(meta.replayed) }
 }
 
-export function getClaim(ref: string): Promise<ClaimView> {
-  return request(`/claims/${encodeURIComponent(ref)}`)
+export function getClaim(ref: string, minBlock = 0): Promise<ClaimView> {
+  return request(`/claims/${encodeURIComponent(ref)}?minBlock=${minBlock}`)
 }
 
-export function verifyClaim(ref: string): Promise<VerificationResponse> {
-  return request(`/claims/${encodeURIComponent(ref)}/verify`)
+export function verifyClaim(ref: string, minBlock = 0): Promise<VerificationResponse> {
+  return request(`/claims/${encodeURIComponent(ref)}/verify?minBlock=${minBlock}`)
 }
 
 export function getOverlaps(ref: string): Promise<{ projectId: string; vintageYear: number; overlaps: ClaimView['overlaps'] }> {
