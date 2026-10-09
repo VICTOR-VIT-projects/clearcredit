@@ -240,16 +240,16 @@ against the old implementation and passing after the corresponding fix.
 
 | Commit | Finding / feature | Result |
 |---|---|---|
-| `7a8e477` | Phase A | Ranked review recorded before production changes. |
-| `3830bec` | H1 | SQLite journal persists signed public transaction bytes/hash before broadcast. Retry reconciles or rebroadcasts the same nonce/bytes; unresolved transactions block nonce allocation. Tests cover reconstruction, late mining with automining disabled, and a different operation behind an unresolved send. |
-| `83a426c` | H2 | Normalize each polygon's winding, subtract holes and sum polygon parts independently. Version rules-v3; cached evaluation unchanged. |
-| `a340815` | H3 | Serialize admission through insertion/resumption within one worker. Different-key concurrent overlap test now blocks the second claim. |
-| `6586ed1` | H4; L1 | Stream-limit requests to 2 MiB before JSON parsing, validate nesting/finite positions and stop at the vertex cap. Timing-safe admin token comparison and generic relay errors. |
-| `555f0d0` | M3, M4 | Reject geometry invalid at frozen hash precision; add tiny-neighbour fallback regression and disclose conservative cell conflicts. Canonicalization and original vectors unchanged. |
-| `b82fe80` | M6; L3, L4 | Bind browser recomputation to claim content plus chain hash and handle malformed content. Correct documentation scope; associate textarea label and improve light warning-text contrast from 3.85:1 to 5.29:1. Add three cross-language vectors without changing the original five. |
-| `15fced9` | F1; partial M5 | Commit offline issuance-history snapshot and hash-bound ev3 attestation bundle, validate committed evidence on read, and add rules-v4 history screening. Tests, decision row and evaluation/documentation updates included. |
-| `eac2a25` | F2, F3; M1, M2, M7 | EIP-712 v2 cell consent completed across contract/backend/frontend, with running commitment checked at finalization. Developer/admin can cancel expired Pending projects and release owned cells in bounded batches. Wallet account/network revisions invalidate stale preparation. Tests and migration/cancellation docs included. |
-| `49f1dc8` | F4 | Two separate registrars share one contract; Registry B's same-vintage land claim is rejected on-chain. Local script and real-H3 backend integration pass; docs and decision row included. |
+| `a7b997c` | Phase A | Ranked review recorded before production changes. |
+| `62d937c` | H1 | SQLite journal persists signed public transaction bytes/hash before broadcast. Retry reconciles or rebroadcasts the same nonce/bytes; unresolved transactions block nonce allocation. Tests cover reconstruction, late mining with automining disabled, and a different operation behind an unresolved send. |
+| `69bf937` | H2 | Normalize each polygon's winding, subtract holes and sum polygon parts independently. Version rules-v3; cached evaluation unchanged. |
+| `3b3b023` | H3 | Serialize admission through insertion/resumption within one worker. Different-key concurrent overlap test now blocks the second claim. |
+| `9c87758` | H4; L1 | Stream-limit requests to 2 MiB before JSON parsing, validate nesting/finite positions and stop at the vertex cap. Timing-safe admin token comparison and generic relay errors. |
+| `6bbd1f2` | M3, M4 | Reject geometry invalid at frozen hash precision; add tiny-neighbour fallback regression and disclose conservative cell conflicts. Canonicalization and original vectors unchanged. |
+| `b6d217e` | M6; L3, L4 | Bind browser recomputation to claim content plus chain hash and handle malformed content. Correct documentation scope; associate textarea label and improve light warning-text contrast from 3.85:1 to 5.29:1. Add three cross-language vectors without changing the original five. |
+| `83cf97f` | F1; partial M5 | Commit offline issuance-history snapshot and hash-bound ev3 attestation bundle, validate committed evidence on read, and add rules-v4 history screening. Tests, decision row and evaluation/documentation updates included. |
+| `6b135bb` | F2, F3; M1, M2, M7 | EIP-712 v2 cell consent completed across contract/backend/frontend, with running commitment checked at finalization. Developer/admin can cancel expired Pending projects and release owned cells in bounded batches. Wallet account/network revisions invalidate stale preparation. Tests and migration/cancellation docs included. |
+| `a648688` | F4 | Two separate registrars share one contract; Registry B's same-vintage land claim is rejected on-chain. Local script and real-H3 backend integration pass; docs and decision row included. |
 
 No dependencies were added. F2 deliberately supersedes brief invariant I2 as explicitly
 authorized by F2: fresh local deployment is required, v1 contracts/signatures cannot be

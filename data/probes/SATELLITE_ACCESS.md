@@ -32,7 +32,7 @@ Pixel area must be computed per row (≈30 m at the equator, shrinking with cos(
 
 The NDVI numbers above were wrong. Since processing baseline **04.00** (25 Jan 2022), Sentinel-2 L2A digital numbers carry `BOA_ADD_OFFSET = -1000`, so reflectance = (DN − 1000) / 10000. Planetary Computer serves the raw DNs. The probe did not subtract the offset, which made NDVI drop by ~0.2–0.3 in 2022 in **every** area, including intact forest with zero recorded loss. Every project would therefore have been scored "vegetation declining".
 
-**Fix** (commit 209bb2d): `satellite.boa_offset()` subtracts 1000 from B04/B08 when `s2:processing_baseline >= 04.00`; DN 0 stays no-data. The evidence cache is versioned (`ev2-…`), so pre-fix files are never read. After the fix, an intact Amazon box went from −0.062/yr to +0.005/yr.
+**Fix** (commit a82b944): `satellite.boa_offset()` subtracts 1000 from B04/B08 when `s2:processing_baseline >= 04.00`; DN 0 stays no-data. The evidence cache is versioned (`ev2-…`), so pre-fix files are never read. After the fix, an intact Amazon box went from −0.062/yr to +0.005/yr.
 
 **Lesson for the threat model:** upstream sensor-processing changes can silently bias evidence. Mitigation: versioned evidence, a control area with known-stable cover, and a per-year step-change check.
 
