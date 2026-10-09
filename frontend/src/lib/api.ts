@@ -1,5 +1,5 @@
 import type { ApiErrorBody, Claim, ClaimView, PreviewResponse, RegistryResponse, VerificationResponse } from './types'
-import type { RetirementLookup } from './types'
+import type { RetirementLookup, EvidenceDiagnostic } from './types'
 
 export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '')
 
@@ -80,4 +80,8 @@ export async function getRegistryMap(): Promise<RegistryResponse> {
   }
   if (new Set(items.map(item => item.claimHash)).size !== first.total) throw new Error('Registry changed while loading; refresh the map.')
   return { ...first, items: items.filter(item => item.status === 'registered') }
+}
+
+export function getEvidenceDiagnostic(): Promise<EvidenceDiagnostic> {
+  return request('/evidence/anomalies')
 }

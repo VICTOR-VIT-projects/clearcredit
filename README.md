@@ -10,6 +10,11 @@ A project developer submits a carbon-credit claim: a boundary polygon, a vintage
 4. **Publishes a transparent integrity score** (0–100) with plain-language reasons, as an append-only on-chain attestation. The contract refuses to issue credits while the score is below the threshold.
 5. **Offers public verification and retirement lookup.** Anyone, with no wallet, can inspect a claim, recompute its hash in the browser, and see evidence and on-chain records. Retirement lookup resolves a serial to its beneficiary, range and matching transaction. Registry boundaries have an on-demand map; a bounded history API exposes project events. See `docs/PUBLIC_LOOKUPS.md` for snapshot and range limits.
 
+The Registry page also offers a cached NDVI consistency diagnostic. It flags large
+adjacent-year steps shared across independent boundaries for processing/sampling review;
+it does not change integrity scores or establish the cause of a change. Each affected
+project retains its real/illustrative/synthetic label. See `docs/PUBLIC_LOOKUPS.md`.
+
 > **What this proves, and what it doesn't.** The chain proves a record was **not altered** and **enforces uniqueness**. It does **not** prove physical truth. Satellite data is evidence, not certification. Outputs are an *integrity score* and a *verified integrity attestation*, never a "certified emission reduction". A low score means *flagged as suspicious*, not proven fraud.
 
 ## Why it matters

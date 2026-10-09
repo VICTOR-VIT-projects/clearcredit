@@ -66,3 +66,28 @@ large registry can be expensive; future work needs server-side spatial windows/t
 Boundary geometry and score metadata remain off-chain; use each claim's verifier to
 compare its hash. An explicit historical block can correctly show Pending even when
 the convenience DB currently says registered.
+
+## Non-scoring evidence diagnostic
+
+`GET /evidence/anomalies` checks committed cache summaries for all stored projects
+(prototype cap 1,000, otherwise explicit `EVIDENCE_ANALYSIS_LIMIT`). The Registry page
+has an on-demand **Check cached evidence** control. No satellite fetches occur.
+
+Within a shared dataset/method and adjacent-year pair, at least ten independent boundary
+observations are needed. A warning requires a median absolute NDVI step of at least 0.15,
+with at least 80% of boundaries changing by at least 0.15 in that same direction.
+Identical boundary keys across different vintages count once. Missing caches and inadequate
+sample sizes are explicit; absence of a warning does not validate evidence. Each affected
+project keeps its real/illustrative/synthetic label visible.
+
+This is a review heuristic for common processing, scene-sampling or regional effects;
+it does not attribute a sensor bug. The trigger was frozen before inspecting aggregate
+cache results and is not calibrated for diagnostic accuracy. It is separate from scores,
+attestation commitments and cached measurement values: rules-v4 and ev3 are unchanged.
+
+After freezing that rule, the committed real-project caches yielded 30 independent
+boundaries, zero missing caches and zero warnings. This is an observed cache result,
+not diagnostic-accuracy validation. Tests exercise shared changes, mixed signs,
+insufficient samples, method separation, boundary deduplication, missing/nonfinite values,
+the inclusive step threshold and the API project limit. Decimal subtraction of serialized
+observations prevents binary floating-point rounding from excluding an exact 0.15 step.

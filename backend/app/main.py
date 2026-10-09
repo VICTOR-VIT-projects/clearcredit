@@ -17,7 +17,7 @@ from .chain import CLAIM_TYPES, ZERO32, Chain, ChainReadUnavailable, Registratio
 from .models import Claim, Submission
 from .limits import BodyLimit
 from .store import Store
-from . import events
+from . import anomalies, events
 
 BLOCKING_CODES = ("OVERLAP",)
 ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
@@ -398,6 +398,17 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
             "canonicalization": canonical.__doc__,
             "eip712": {"domainVersion": "2", "primaryType": "Claim", "types": CLAIM_TYPES},
         }
+
+    @app.get("/evidence/anomalies", tags=["evidence"])
+    def evidence_anomalies():
+        """Non-scoring cross-project NDVI cache diagnostic; no live evidence fetches."""
+        with store.admission_lock:
+            total, rows = store.page(0, 1000)
+            if total > 1000:
+                raise ApiError(503, "EVIDENCE_ANALYSIS_LIMIT", "This prototype diagnostic supports at most 1,000 stored projects; use an offline analysis for larger registries.")
+            projects = [{"projectId": r["project_id"], "dataLabel": r["claim"]["dataLabel"],
+                         "evidence": satellite.get_evidence(r["claim"]["boundary"], live=False)} for r in rows]
+        return anomalies.diagnose(projects)
 
     @app.get("/health", tags=["meta"])
     def health():

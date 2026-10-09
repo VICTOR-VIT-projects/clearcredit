@@ -231,3 +231,23 @@ export interface ApiErrorBody {
   }
   detail?: { loc: (string | number)[]; msg: string; type: string }[]
 }
+
+export interface EvidenceDiagnostic {
+  scoringAffected: false
+  totalProjects: number
+  uniqueCachedBoundaries: number
+  missingEvidenceProjects: number
+  note: string
+  warnings: {
+    code: string
+    dataset: string
+    method: string
+    fromYear: number
+    toYear: number
+    medianDelta: number
+    affectedCount: number
+    comparisonCount: number
+    message: string
+    projects: { projectId: string; dataLabel: DataLabel; delta: number }[]
+  }[]
+}

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { getRegistry, getRegistryMap } from '../lib/api'
 import { LabelBadge } from '../components/LabelBadge'
 import { ErrorNotice, LoadingBlock } from '../components/Inline'
+import { EvidenceDiagnostic } from '../components/EvidenceDiagnostic'
 import { formatNumber, humanize } from '../lib/format'
 
 const PAGE_SIZE = 20
@@ -51,6 +52,7 @@ export function RegistryPage() {
           <div className="pagination"><button className="button button-secondary" disabled={page === 0 || query.isFetching} onClick={() => setPage((value) => value - 1)}>Previous</button><button className="button button-secondary" disabled={page + 1 >= pages || query.isFetching} onClick={() => setPage((value) => value + 1)}>Next</button></div>
         </section>
       )}
+      <EvidenceDiagnostic />
     </div>
   )
 }

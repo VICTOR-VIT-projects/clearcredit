@@ -600,6 +600,32 @@
         }
       }
     },
+    "/evidence/anomalies": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Evidence Anomalies",
+        "description": "Non-scoring cross-project NDVI cache diagnostic; no live evidence fetches.",
+        "operationId": "evidence_anomalies_evidence_anomalies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "503": {
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
