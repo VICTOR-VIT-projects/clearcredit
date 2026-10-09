@@ -25,6 +25,7 @@ const ERROR_EXPLANATIONS: Record<string, string> = {
   REQUEST_TOO_LARGE: 'The request exceeds the 2 MiB limit. Simplify the boundary before submitting.',
   EVIDENCE_INVALID: 'Cached evidence failed its commitment check. Ask the operator to review the cache before resubmitting.',
   REGISTRATION_CANCELLED: 'The expired Pending registration was cancelled. Review the released cells and prepare a new claim with a new project ID.',
+  CHAIN_READ_UNAVAILABLE: 'The RPC cannot provide the required chain state yet. Retry the same signed request shortly.',
 }
 
 type SubmitStage = 'editing' | 'checking' | 'ready' | 'signing' | 'relaying' | 'registered'
@@ -60,16 +61,20 @@ function geometryFromGeoJson(input: unknown): Boundary {
   return { type: geometry.type, coordinates: geometry.coordinates } as Boundary
 }
 
-function errorInfo(error: unknown): { code: string; message: string; retryable: boolean } {
+export function errorInfo(error: unknown): { code: string; message: string; retryable: boolean } {
   if (error instanceof ApiError) {
     return {
       code: error.code,
       message: ERROR_EXPLANATIONS[error.code] || error.message,
-      retryable: error.status === 0 || error.status === 502 || error.code === 'REQUEST_IN_PROGRESS',
+      retryable: error.status === 0 || error.status === 502 || error.code === 'REQUEST_IN_PROGRESS' || error.code === 'CHAIN_READ_UNAVAILABLE' || error.details.retryable === true,
     }
   }
   const message = error instanceof Error ? error.message : 'An unexpected error occurred.'
   return { code: 'CLIENT_ERROR', message, retryable: false }
+}
+
+export function SubmissionError({ error }: { error: ReturnType<typeof errorInfo> }) {
+  return <ErrorNotice title={error.code.replaceAll('_', ' ')}>{error.message}</ErrorNotice>
 }
 
 export function SubmitPage() {
@@ -267,7 +272,7 @@ export function SubmitPage() {
         </aside>
       </div>
 
-      {error && <ErrorNotice title={error.code.replaceAll('_', ' ')}>{error.message}</ErrorNotice>}
+      {error && <SubmissionError error={error} />}
 
       {preview && preparedClaim && (
         <div className="results-stack">

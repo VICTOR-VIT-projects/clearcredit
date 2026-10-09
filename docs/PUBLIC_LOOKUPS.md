@@ -91,3 +91,13 @@ not diagnostic-accuracy validation. Tests exercise shared changes, mixed signs,
 insufficient samples, method separation, boundary deduplication, missing/nonfinite values,
 the inclusive step threshold and the API project limit. Decimal subtraction of serialized
 observations prevents binary floating-point rounding from excluding an exact 0.15 step.
+
+## Frontend regression coverage
+
+Mounted component tests load `docs/sample-claim-response.json` into the actual Verify
+page without wallet hooks, recompute its hash, require the confirmed receipt's minimum
+block on refresh, and hide old totals/Match results when that refresh fails. A changed
+claim clears the previous browser Match. Structured submission error tests cover overlap,
+retryable chain-read 503, invalid evidence and unknown-code fallback. jsdom is a development
+dependency for these DOM interactions. Real wallet extensions, maps, keyboard navigation
+and visual browser acceptance still require the checks in `docs/ACCEPTANCE.md`.
