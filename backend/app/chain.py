@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 import threading
 import time
 from functools import wraps
@@ -105,6 +106,9 @@ class Chain:
     @classmethod
     def from_env(cls) -> "Chain | None":
         addr, key = os.environ.get("REGISTRY_ADDRESS"), os.environ.get("DEPLOYER_PRIVATE_KEY")
+        if os.environ.get("CLEARCREDIT_READ_ONLY") == "1":
+            # Never hold a real relayer key on a public read-only host: reads only need a signer object.
+            key = "0x" + secrets.token_hex(32)
         if not (addr and key):
             return None
         return cls(os.environ.get("CHAIN_RPC_URL") or os.environ.get("BASE_SEPOLIA_RPC_URL", "https://sepolia.base.org"), key, addr)

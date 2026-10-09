@@ -1,0 +1,26 @@
+# Read-only public API for the live Base Sepolia registry.
+# Exposed only on 127.0.0.1; Tailscale Funnel publishes it (see docs/DEPLOY.md).
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: clearcredit-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8090"
+    environment:
+      REGISTRY_ADDRESS: "0x889BD5e5462139D7AA8384d520f00403De8CB2b4"
+      CHAIN_RPC_URL: "https://sepolia.base.org"
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:5173}"
+    volumes:
+      - ./state:/srv/state          # registry snapshot + read caches (clearcredit.sqlite3)
+    read_only: true                 # immutable container filesystem
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 1g
+    pids_limit: 256

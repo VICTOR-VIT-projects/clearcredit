@@ -15,7 +15,7 @@ from shapely.geometry import shape
 from . import canonical, geo, history, satellite, scoring
 from .chain import CLAIM_TYPES, ZERO32, Chain, ChainReadUnavailable, RegistrationCancelled, cells_root, recover_signer
 from .models import Claim, Submission
-from .limits import BodyLimit
+from .limits import BodyLimit, RateLimit
 from .store import Store
 from . import anomalies, events
 
@@ -41,7 +41,9 @@ class ApiError(Exception):
 
 
 def create_app(store: Store | None = None, chain: Chain | None | str = "env", live_evidence: bool = True) -> FastAPI:
-    if os.environ.get("CLEARCREDIT_OFFLINE_EVIDENCE") == "1":
+    # Public read-only deployment: no writes, no live satellite fetches, no real relayer key.
+    read_only = os.environ.get("CLEARCREDIT_READ_ONLY") == "1"
+    if os.environ.get("CLEARCREDIT_OFFLINE_EVIDENCE") == "1" or read_only:
         live_evidence = False
     if chain == "env":
         load_env_file()
@@ -55,6 +57,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
         "verified integrity attestations; it does not certify emission reductions.",
     )
     app.add_middleware(BodyLimit)
+    app.add_middleware(RateLimit)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
@@ -63,6 +66,11 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
         expose_headers=["Idempotent-Replayed"],  # browsers hide non-safelisted headers otherwise
     )
     store = store or Store()
+
+    def refuse_if_read_only() -> None:
+        if read_only:
+            raise ApiError(403, "READ_ONLY", "This public deployment is read-only: registration and attestation are "
+                           "disabled. Anyone can still verify claims; run ClearCredit locally to submit one.")
 
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, e: ApiError):
@@ -174,6 +182,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
     def submit(sub: Submission, idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")):
         """Register a signed claim. Requires `Idempotency-Key`; a retry with the same key and body
         returns the original result and never creates a second record or transaction."""
+        refuse_if_read_only()
         if not idempotency_key or len(idempotency_key) > 200:
             raise ApiError(400, "IDEMPOTENCY_KEY_REQUIRED", "Send an Idempotency-Key header (any unique string, ≤200 chars).")
         body = sub.model_dump()
@@ -346,6 +355,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
     @app.post("/claims/{ref}/attest", tags=["verifier"])
     def attest(ref: str, x_admin_token: str | None = Header(default=None)):
         """Re-score with fresh evidence and post a new attestation (verifier only)."""
+        refuse_if_read_only()
         token = os.environ.get("ADMIN_TOKEN")
         if not token or not x_admin_token or not secrets.compare_digest(x_admin_token.encode(), token.encode()):
             raise ApiError(403, "FORBIDDEN", "Verifier token required.")
@@ -412,7 +422,8 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
 
     @app.get("/health", tags=["meta"])
     def health():
-        return {"ok": True, "chain": {"chainId": chain.chain_id, "contract": chain.address} if chain else None}
+        return {"ok": True, "readOnly": read_only,
+                "chain": {"chainId": chain.chain_id, "contract": chain.address} if chain else None}
 
     return app
 

@@ -17,6 +17,7 @@ const ERROR_EXPLANATIONS: Record<string, string> = {
   DUPLICATE_CLAIM: 'This project ID or identical claim is already registered. Search the registry instead of submitting it again.',
   INVALID_GEOMETRY: 'The boundary is invalid. Check that rings do not cross, use longitude/latitude, and contain enough distinct points.',
   BAD_SIGNATURE: 'The wallet signature does not match the developer address in this claim. Reconnect the correct wallet and prepare the claim again.',
+  READ_ONLY: 'This public deployment is read-only, so nothing is registered here. You can still check a claim and verify any registered project; registration runs on a local or operator-hosted instance.',
   RELAY_FAILED: 'The claim was saved, but the on-chain relay failed. Retry with the same prepared claim; the idempotency key will be reused safely.',
   IDEMPOTENCY_KEY_REUSED: 'This retry key was used with a different request. Prepare the claim again before resubmitting.',
   REQUEST_IN_PROGRESS: 'The relay is still processing. Wait a moment, then retry; the same request key will be reused.',
