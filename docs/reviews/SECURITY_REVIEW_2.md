@@ -116,6 +116,7 @@ insertion, false cached success recovery with no new sends, and refreshed issuan
 | T1 | 36 | 83 | 17 | passed, zero type errors |
 | T2 | 36 | 89 | 17 | passed, zero type errors |
 | T3, fresh clone + venv | 36 | 91 | 17 | passed, zero type errors |
+| T4 | 36 | 91 | 17 | passed, zero type errors |
 
 Commands run in their respective directories with `CLEARCREDIT_NO_ENV=1`:
 `npx hardhat test`; `.venv/Scripts/python.exe -m pytest -q`; `npm test`; `npm run build`.
@@ -127,6 +128,9 @@ versions without adding dependencies. `docs/ACCEPTANCE.md` records the fresh clo
 30/30 local seed, downloaded-hash comparison and HTTP checks, separately from human
 browser acceptance. No interpreter/sandbox command was blocked. Dependency advisories
 reported by npm are listed there and deferred for a dedicated toolchain review.
+
+T4: `docs/DEVPOST.md` contains a 696-word main draft plus tagline/short description,
+with repository sources for quantitative claims and placeholders for repository/video.
 
 ## Not done / deferred
 
