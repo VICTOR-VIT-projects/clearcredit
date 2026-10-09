@@ -4,7 +4,8 @@ WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
-COPY docs/claim-hash-vectors.json /src/docs/claim-hash-vectors.json
+# tsc type-checks tests too; they import these shared fixtures from docs/.
+COPY docs/*.json /src/docs/
 # Same origin: the browser calls /api, nginx forwards to the isolated API container.
 ENV VITE_API_URL=/api VITE_CHAIN_ID=84532
 RUN npm run build
