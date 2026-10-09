@@ -22,7 +22,7 @@ class FakeEth:
         return len(set(self.sent))
 
     def get_block(self, number):
-        return {"number": number}
+        return {"number": self.block_number if number == "latest" else number}
 
     def send_raw_transaction(self, raw):
         h = Web3.keccak(raw)

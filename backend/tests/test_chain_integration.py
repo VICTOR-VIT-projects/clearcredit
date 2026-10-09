@@ -494,3 +494,16 @@ def test_batched_project_reads_equal_individual_reads_at_the_same_block(chain, d
         single = {k: chain.project(k) for k in keys}
     assert batched == single
     assert batched[keys[0]]["status"] == "registered" and batched[keys[1]]["status"] == "none"
+
+
+def test_batched_snapshot_fails_closed_when_a_confirmed_attestation_is_not_visible(chain, db_path):
+    from app.chain import ChainReadUnavailable
+    assert submit(client_for(chain, db_path), make_claim(), "snap-floor").status_code == 201
+    pk = canonical.project_key("TEST-A")
+    snap = chain.snapshot(pk)  # fast path: one batched read
+    assert snap["project"]["status"] == "registered" and len(snap["attestations"]) == 1
+    # We know of one more confirmed attestation than any node shows: must not serve the stale view.
+    chain.journal.remember_attestations(chain._read_scope, pk, 2)
+    chain.read_attempts, chain.read_retry_delay = 2, 0
+    with pytest.raises(ChainReadUnavailable):
+        chain.snapshot(pk)

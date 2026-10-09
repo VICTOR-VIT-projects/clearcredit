@@ -126,9 +126,11 @@ class Chain:
     def snapshot_block(self, minimum: int = 0) -> int:
         floor = max(minimum, self.journal.chain_head(self._read_scope))
         try:
-            block = max(floor, self.w3.eth.block_number)
-            # A lagging node must serve this explicit height or fail, never substitute latest.
-            if self.w3.eth.get_block(block)["number"] != block:
+            # One call: the latest block both names the height and proves this node serves it.
+            latest = self.w3.eth.get_block("latest")["number"]
+            block = max(floor, latest)
+            # Below our floor (a lagging node): it must serve the explicit height or fail, never substitute.
+            if block != latest and self.w3.eth.get_block(block)["number"] != block:
                 raise ChainReadUnavailable("RPC returned a different block")
             self.journal.advance_chain_head(self._read_scope, block)
             return block
@@ -157,11 +159,33 @@ class Chain:
     def snapshot(self, project_key: str, minimum: int = 0) -> dict:
         block = self.snapshot_block(minimum)
         try:
+            pk = _b32(project_key)
+            project, atts, rets = self._batch_calls([self.c.functions.getProject(pk), self.c.functions.getAttestations(pk),
+                                                     self.c.functions.getRetirements(pk)], block)
+            attestations = self._attestation_dicts(atts)
             with self.read_at(block):
-                return {"observedBlock": block, "project": self.project(project_key),
-                        "attestations": self._visible_attestations(project_key), "retirements": self.retirements(project_key)}
+                if len(attestations) < self.journal.attestation_count(self._read_scope, project_key):
+                    attestations = self._visible_attestations(project_key)  # rare: wait for our own confirmed append
+                else:
+                    self.journal.remember_attestations(self._read_scope, project_key, len(attestations))
+            return {"observedBlock": block, "project": self._project_dict(project),
+                    "attestations": attestations, "retirements": self._retirement_dicts(rets)}
         except Exception as e:
             raise ChainReadUnavailable("Chain snapshot is unavailable; retry shortly") from e
+
+    def _batch_calls(self, fns: list, block: int) -> list:
+        """Several eth_calls in ONE JSON-RPC batch, all pinned to `block`; returns each decoded single output.
+        Fails closed if any call errors or the response is incomplete."""
+        calls = [("eth_call", [{"to": self.address, "data": fn._encode_transaction_data()}, hex(block)]) for fn in fns]
+        try:
+            responses = self.w3.provider.make_batch_request(calls)
+            if not isinstance(responses, list) or len(responses) != len(fns) or any("error" in r for r in responses):
+                raise ValueError("incomplete batch response")
+            responses = sorted(responses, key=lambda r: r["id"])
+            return [self.w3.codec.decode(get_abi_output_types(fn.abi), bytes.fromhex(r["result"][2:]))[0]
+                    for fn, r in zip(fns, responses)]
+        except Exception as e:
+            raise ChainReadUnavailable("Required contract state is unavailable; retry shortly") from e
 
     def project(self, project_key: str) -> dict:
         return self._project_dict(self._call(self.c.functions.getProject(_b32(project_key))))
@@ -170,21 +194,11 @@ class Chain:
         """Many getProject reads in ONE JSON-RPC batch per 50 keys, all pinned to the same block.
         One round trip instead of one per project (a 20-row registry page: ~18 s -> well under 1 s)."""
         block = self._read_block()
-        types = get_abi_output_types(next(x for x in self.c.abi if x.get("name") == "getProject"))
         out = {}
         for i in range(0, len(project_keys), 50):
             keys = project_keys[i : i + 50]
-            calls = [("eth_call", [{"to": self.address, "data": self.c.functions.getProject(_b32(k))._encode_transaction_data()}, hex(block)])
-                     for k in keys]
-            try:
-                responses = self.w3.provider.make_batch_request(calls)
-                if not isinstance(responses, list) or len(responses) != len(keys) or any("error" in r for r in responses):
-                    raise ValueError("incomplete batch response")
-                responses = sorted(responses, key=lambda r: r["id"])
-                for k, r in zip(keys, responses):
-                    out[k] = self._project_dict(self.w3.codec.decode(types, bytes.fromhex(r["result"][2:]))[0])
-            except Exception as e:
-                raise ChainReadUnavailable("Required contract state is unavailable; retry shortly") from e
+            results = self._batch_calls([self.c.functions.getProject(_b32(k)) for k in keys], block)
+            out.update({k: self._project_dict(p) for k, p in zip(keys, results)})
         return out
 
     @staticmethod
@@ -207,16 +221,20 @@ class Chain:
         return out
 
     def attestations(self, project_key: str) -> list[dict]:
-        return [
-            {"scoreBps": a[0], "evidenceHash": _hex(a[1]), "modelVersion": a[2], "verifier": a[3], "timestamp": a[4]}
-            for a in self._call(self.c.functions.getAttestations(_b32(project_key)))
-        ]
+        return self._attestation_dicts(self._call(self.c.functions.getAttestations(_b32(project_key))))
 
     def retirements(self, project_key: str) -> list[dict]:
-        return [
-            {"serialStart": r[0], "amount": r[1], "from": r[2], "beneficiary": r[3], "timestamp": r[4]}
-            for r in self._call(self.c.functions.getRetirements(_b32(project_key)))
-        ]
+        return self._retirement_dicts(self._call(self.c.functions.getRetirements(_b32(project_key))))
+
+    @staticmethod
+    def _attestation_dicts(rows) -> list[dict]:
+        return [{"scoreBps": a[0], "evidenceHash": _hex(a[1]), "modelVersion": a[2],
+                 "verifier": Web3.to_checksum_address(a[3]), "timestamp": a[4]} for a in rows]
+
+    @staticmethod
+    def _retirement_dicts(rows) -> list[dict]:
+        return [{"serialStart": r[0], "amount": r[1], "from": Web3.to_checksum_address(r[2]),
+                 "beneficiary": r[3], "timestamp": r[4]} for r in rows]
 
     def tx_url(self, tx: str) -> str | None:
         return f"{self.explorer}/tx/{tx}" if self.explorer else None
