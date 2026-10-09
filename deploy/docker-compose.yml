@@ -1,27 +1,68 @@
-# Read-only public API for the live Base Sepolia registry.
-# Exposed only on 127.0.0.1; Tailscale Funnel publishes it (see docs/DEPLOY.md).
+# Public, read-only ClearCredit: UI + API for the live Base Sepolia registry.
+# Only `web` is reachable, on 127.0.0.1:8090, and Tailscale Funnel publishes it (docs/DEPLOY.md).
+#
+#   web ──(internal)──► api ──(internal)──► egress ──► sepolia.base.org:443 only
+#    └─ edge network (published port)                  └─ edge network
+#
+# `api` sits ONLY on an internal network: no route to the internet, the host or the home LAN.
+# Its single way out is the egress allowlist proxy.
+
+x-hardening: &hardening
+  restart: unless-stopped
+  read_only: true
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  tmpfs:
+    - /tmp
+
 services:
   api:
+    <<: *hardening
     build:
       context: ..
       dockerfile: deploy/Dockerfile
     container_name: clearcredit-api
-    restart: unless-stopped
     user: "${CC_UID:-1000}:${CC_GID:-1000}"   # owner of ./state on the host, so the DB is writable without sudo
-    ports:
-      - "127.0.0.1:8090:8090"
+    command: ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8090", "--root-path", "/api"]
     environment:
       REGISTRY_ADDRESS: "0x889BD5e5462139D7AA8384d520f00403De8CB2b4"
       CHAIN_RPC_URL: "https://sepolia.base.org"
-      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:5173}"
+      HTTPS_PROXY: "http://egress:8888"
+      HTTP_PROXY: "http://egress:8888"
+      NO_PROXY: "localhost,127.0.0.1"
     volumes:
-      - ./state:/srv/state          # registry snapshot + read caches (clearcredit.sqlite3)
-    read_only: true                 # immutable container filesystem
-    tmpfs:
-      - /tmp
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
+      - ./state:/srv/state
+    networks: [internal]
     mem_limit: 1g
     pids_limit: 256
+    depends_on: [egress]
+
+  egress:
+    <<: *hardening
+    build:
+      context: ..
+      dockerfile: deploy/egress/Dockerfile
+    container_name: clearcredit-egress
+    networks: [internal, edge]
+    mem_limit: 64m
+    pids_limit: 64
+
+  web:
+    <<: *hardening
+    build:
+      context: ..
+      dockerfile: deploy/web/Dockerfile
+    container_name: clearcredit-web
+    ports:
+      - "127.0.0.1:8090:8080"
+    networks: [internal, edge]
+    mem_limit: 128m
+    pids_limit: 64
+    depends_on: [api]
+
+networks:
+  internal:
+    internal: true    # no external connectivity for anything that is only on this network
+  edge: {}

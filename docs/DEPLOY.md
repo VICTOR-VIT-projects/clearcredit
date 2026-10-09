@@ -1,13 +1,16 @@
 # Public deployment (read-only)
 
 ```
-browser ──► Vercel (static frontend)  ──VITE_API_URL──►  https://<host>.ts.net:8443  (Tailscale Funnel)
-                                                              │
-                                                              ▼  127.0.0.1:8090
-                                                 Docker: ClearCredit API, read-only
-                                                              │  reads
-                                                              ▼
-                                         Base Sepolia contract 0x889BD5e5462139D7AA8384d520f00403De8CB2b4
+Internet ──► Tailscale Funnel :8443 (only this port; home IP hidden; no router ports opened)
+                 │  127.0.0.1:8090
+                 ▼
+           web     nginx (non-root): static UI + same-origin /api proxy, strict CSP   [edge + internal]
+                 │
+                 ▼  internal network: no internet, no host, no home LAN
+           api     ClearCredit API, read-only, no keys                                 [internal only]
+                 │
+                 ▼  the API's only way out
+           egress  allowlist proxy: CONNECT sepolia.base.org:443, nothing else        [edge + internal]
 ```
 
 The public API is **read-only**: `CLEARCREDIT_READ_ONLY=1`.
@@ -18,7 +21,9 @@ The public API is **read-only**: `CLEARCREDIT_READ_ONLY=1`.
 | Keys | The server **never holds the relayer key**. It uses a random throwaway signer that only performs reads; a real `DEPLOYER_PRIVATE_KEY` is ignored even if set. |
 | Satellite evidence | Served from the committed cache only. Public requests never trigger live downloads. |
 | Rate limit | Per-client budget, `RATE_LIMIT_PER_MINUTE` (default 120). |
-| Container | Non-root user, read-only root filesystem, all capabilities dropped, `no-new-privileges`, 1 GB memory limit. It listens only on `127.0.0.1`. |
+| Containers | All non-root, read-only root filesystems, all capabilities dropped, `no-new-privileges`, memory and PID limits. Only `web` publishes a port, on `127.0.0.1`. |
+| Network isolation | `api` is only on a Docker `internal` network, so it has no route to the internet, the host or the LAN. Its one way out is `egress`, which tunnels HTTPS to `sepolia.base.org` and refuses everything else. A compromised API process cannot reach other services on the server or the home network. |
+| Browser | Same origin for UI and API (no CORS). Strict CSP: no third-party scripts, no framing; external origins limited to OpenStreetMap tiles and the Base Sepolia RPC. |
 
 Live registration (signing, relaying, issuing, retiring) is demonstrated locally (`scripts/demo.py`) and in the video. A public writer would hold a funded key that anyone could spend.
 
@@ -37,8 +42,8 @@ sudo tailscale set --operator="$USER"  # manage serve/funnel without sudo
 git clone <repo> clearcredit && cd clearcredit
 mkdir -p deploy/state
 cp <registry snapshot>.sqlite3 deploy/state/clearcredit.sqlite3   # optional: pre-seeded registry
-CORS_ORIGINS=https://<your-app>.vercel.app docker compose -f deploy/docker-compose.yml up -d --build
-curl -s http://127.0.0.1:8090/health        # {"ok":true,"readOnly":true,"chain":{"chainId":84532,...}}
+docker compose -f deploy/docker-compose.yml up -d --build
+curl -s http://127.0.0.1:8090/api/health    # {"ok":true,"readOnly":true,"chain":{"chainId":84532,...}}
 ```
 
 **Publish it with Funnel** on its own port, so any existing `tailscale serve` site stays private:
@@ -57,7 +62,9 @@ tailscale funnel --https=8443 off
 docker compose -f deploy/docker-compose.yml down
 ```
 
-## Frontend on Vercel (free Hobby plan)
+## Optional: frontend on Vercel instead (free Hobby plan)
+
+The `web` container already serves the UI. Vercel is only needed if you want the UI on a separate host.
 
 1. Import the GitHub repo into Vercel and set **Root Directory** to `frontend` (framework: Vite).
 2. Environment variables:
