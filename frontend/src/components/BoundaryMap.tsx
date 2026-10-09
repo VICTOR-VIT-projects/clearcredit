@@ -23,7 +23,7 @@ export function BoundaryMap({ boundary, compact = false }: { boundary: Boundary;
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <GeoJSON data={data} style={{ color: '#0f766e', weight: 3, fillColor: '#2dd4bf', fillOpacity: 0.2 }} />
+        <GeoJSON data={data} style={{ color: '#c8ff00', weight: 2, fillColor: '#c8ff00', fillOpacity: 0.12 }} />
         <FitBoundary boundary={boundary} />
       </MapContainer>
     </div>
