@@ -117,6 +117,7 @@ insertion, false cached success recovery with no new sends, and refreshed issuan
 | T2 | 36 | 89 | 17 | passed, zero type errors |
 | T3, fresh clone + venv | 36 | 91 | 17 | passed, zero type errors |
 | T4 | 36 | 91 | 17 | passed, zero type errors |
+| T5 | 36 | 96 | 17 | passed, zero type errors |
 
 Commands run in their respective directories with `CLEARCREDIT_NO_ENV=1`:
 `npx hardhat test`; `.venv/Scripts/python.exe -m pytest -q`; `npm test`; `npm run build`.
@@ -131,6 +132,15 @@ reported by npm are listed there and deferred for a dedicated toolchain review.
 
 T4: `docs/DEVPOST.md` contains a 696-word main draft plus tagline/short description,
 with repository sources for quantitative claims and placeholders for repository/video.
+
+T5: `scripts/demo.py` starts only loopback services with public Hardhat settings and
+a fresh temp database/deployment/report. It disables environment-file reads and live
+satellite access, refuses occupied ports and stops its owned process trees on failure
+or Ctrl+C. Seed failures now exit nonzero. Smoke runs passed on both default ports and
+18545/18000/15173: 30/30 seed, downloaded hash/chain comparison and API/UI HTTP checks.
+All six ports were verified free after cleanup. Unit tests cover inherited-setting
+replacement, occupied ports, process cleanup, interrupt cleanup and seed failure exit.
+No dependency was added. Full wallet-extension/browser flows remain human acceptance.
 
 ## Not done / deferred
 

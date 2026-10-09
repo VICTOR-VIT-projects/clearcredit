@@ -10,6 +10,6 @@ export const wagmiConfig = createConfig({
   connectors: [injected()],
   transports: {
     [baseSepolia.id]: http(),
-    [hardhat.id]: http('http://127.0.0.1:8545'),
+    [hardhat.id]: http(import.meta.env.VITE_LOCAL_RPC_URL || 'http://127.0.0.1:8545'),
   },
 })

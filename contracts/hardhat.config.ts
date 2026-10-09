@@ -9,6 +9,7 @@ const key = process.env.DEPLOYER_PRIVATE_KEY;
 const config: HardhatUserConfig = {
   solidity: { version: "0.8.28", settings: { evmVersion: "cancun", optimizer: { enabled: true, runs: 200 } } },
   networks: {
+    localhost: { url: process.env.CLEARCREDIT_LOCAL_RPC_URL || "http://127.0.0.1:8545", chainId: 31337 },
     baseSepolia: {
       url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
       chainId: 84532,

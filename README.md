@@ -137,6 +137,8 @@ npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
 API/OpenAPI: `http://127.0.0.1:8000/docs`; UI: `http://127.0.0.1:5173`.
+After the one-time installation, the same fresh local flow can be started with
+`backend/.venv/Scripts/python.exe scripts/demo.py`; `--smoke` validates and stops it.
 Stop all servers with Ctrl+C. Ports must be free; stop only processes you own.
 Recompute a downloaded claim from repo root with
 `backend/.venv/Scripts/python.exe backend/app/canonical.py claim.json`.

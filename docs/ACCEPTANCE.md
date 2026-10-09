@@ -35,6 +35,15 @@ downloaded JSON and `data/claims/SEED_REPORT.json` remain there as disposable ev
 The probe asserted all 30 report entries registered and stopped its own process trees.
 No wallet extension or visual browser acceptance is inferred from those HTTP checks.
 
+The T5 one-command runner was also exercised with `--smoke`, both on default ports and
+`--node-port 18545 --api-port 18000 --ui-port 15173`. Both registered 30/30 examples,
+matched a downloaded hash, served API/UI and stopped owned processes; all six ports
+were free afterward. Logs remain in `clearcredit-demo-wr0etx6b` and
+`clearcredit-demo-2zrgqt8x` under the system temp directory. The post-T5 suites passed
+36 contracts / 96 backend / 17 frontend and production build. Actual interactive
+Ctrl+C with a browser/wallet remains a manual rehearsal; injected interrupt cleanup
+and real child-process termination are automated tests.
+
 After installation, from each relevant directory with `CLEARCREDIT_NO_ENV=1`:
 
 ```powershell

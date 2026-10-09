@@ -56,12 +56,14 @@ def main():
     # Pass data/synthetic/cases.json too to pre-seed the synthetic cases that should register.
     ap.add_argument("paths", nargs="*", default=[str(ROOT / "data" / "claims" / "real")])
     ap.add_argument("--api", default="http://localhost:8000")
+    ap.add_argument("--report", type=Path, default=ROOT / "data/claims/SEED_REPORT.json")
     args = ap.parse_args()
     report = []
     with httpx.Client(base_url=args.api, timeout=900) as http:
         for claim in load_claims(args.paths):
             account = signer_for(claim)
             if account is None:
+                report.append({"projectId": claim["projectId"], "result": "NO_DEMO_SIGNER"})
                 print(f"skip    {claim['projectId']}: no demo/test key for developer {claim['developer']}")
                 continue
             pre = http.post("/claims/preview", json=claim)
@@ -82,10 +84,11 @@ def main():
                 err = body["error"]
                 print(f"{err['code'].lower():8s}{claim['projectId']}: {err['message']}")
                 report.append({"projectId": claim["projectId"], "result": err["code"], "details": err.get("details")})
-    out = ROOT / "data" / "claims" / "SEED_REPORT.json"
+    out = args.report
     out.write_text(json.dumps(report, indent=1), encoding="utf-8")
     print(f"report: {out}")
+    return 0 if report and all(r["result"] == "registered" for r in report) else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

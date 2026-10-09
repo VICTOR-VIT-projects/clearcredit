@@ -4,11 +4,27 @@ Record against **cached evidence** and a **freshly seeded local chain**, so noth
 
 ## 0. Reset and seed (before recording, ~5 min)
 
+Install dependencies once using **README → Quickstart**, then from repo root:
+
+```powershell
+backend/.venv/Scripts/python.exe scripts/demo.py
+```
+
+This starts a loopback Hardhat node, deploys a fresh v2 contract, starts a cached-only
+API with a fresh temporary DB, seeds all real examples and starts the UI. It prints
+URLs and the temporary log/database directory. Ctrl+C stops its process trees. It
+refuses occupied ports and never deletes an existing database. For automatic HTTP,
+seed and downloaded-hash checks followed by cleanup, add `--smoke`. If ports are busy,
+use `--node-port 18545 --api-port 18000 --ui-port 15173`; configure the wallet's RPC
+to that printed local port. There is no public/testnet mode.
+
+Manual alternative:
+
 Follow **README → Quickstart** literally for installation and the three PowerShell
 terminals. It creates a fresh v2 local contract and a new temporary database, sets the
 local wallet/network/API process variables explicitly, and disables automatic environment
 file reads. Python commands use `backend/.venv`, not a globally installed pytest/uvicorn.
-No existing database is deleted. Local ports are 8545 / 8000 / 5173.
+No existing database is deleted. Default local ports are 8545 / 8000 / 5173.
 The cached-only API sets `CLEARCREDIT_OFFLINE_EVIDENCE=1`; uncached uploads report
 unavailable evidence rather than contacting satellite services.
 

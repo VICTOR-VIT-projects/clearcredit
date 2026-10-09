@@ -5,6 +5,7 @@
 //   ATTACH_ADDRESS=0x... npx hardhat run scripts/deploy.ts --network baseSepolia
 import { ethers, network } from "hardhat";
 import * as fs from "fs";
+import * as path from "path";
 
 const CELL_RESOLUTION = Number(process.env.CELL_RESOLUTION || 8);
 const ISSUE_THRESHOLD_BPS = Number(process.env.ISSUE_THRESHOLD_BPS || 6000);
@@ -40,8 +41,9 @@ async function main() {
   const out = { network: network.name, chainId: Number((await ethers.provider.getNetwork()).chainId), address,
     deployTx, cellResolution: CELL_RESOLUTION, issueThresholdBps: ISSUE_THRESHOLD_BPS,
     deployedAt: new Date().toISOString() };
-  fs.mkdirSync("deployments", { recursive: true });
-  fs.writeFileSync(`deployments/${network.name}.json`, JSON.stringify(out, null, 2));
+  const output = process.env.DEPLOYMENT_FILE || `deployments/${network.name}.json`;
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  fs.writeFileSync(output, JSON.stringify(out, null, 2));
   console.log(out);
 }
 

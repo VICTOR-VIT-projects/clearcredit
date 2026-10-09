@@ -24,3 +24,5 @@ data/probes/offsets-db.csv.zip
 data/probes/VROD-*.xlsx
 backend/.demo-registry
 backend/.tamper-originals.json
+contracts/deployments/localhost.json
+contracts/deployments/hardhat.json
