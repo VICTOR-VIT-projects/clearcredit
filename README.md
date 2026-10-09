@@ -24,7 +24,7 @@ The same forest can back credits in two registries, or two projects can claim ov
 | Duplicate claim on the same land and vintage | **Blocked**, naming the conflicting project and the overlap fraction. |
 | Bypass the backend (second operator, empty database) | **Still blocked by the contract's cell index.** |
 | Avoided-deforestation claim where Hansen shows clearing | Low score with reasons; the contract **refuses issuance**. |
-| Retry the same submission | Same response, **zero new transactions** (idempotency key + resumable relay). |
+| Retry the same submission | Same saved claim/result, refreshed chain observations, **zero new transactions** for a completed registration. If chain state is unavailable, retry fails closed. |
 | Retire more credits than were issued | **Reverts on-chain** (`ExceedsIssued`); serial ranges never overlap. |
 | Edit the stored claim off-chain | Verifier recomputes the hash → **mismatch** with the on-chain hash. |
 
@@ -123,7 +123,9 @@ Recompute any claim hash independently: `python backend/app/canonical.py claim.j
 - Tiny disjoint boundaries can share the representative-point fallback cell and require manual boundary review. No on-chain exception exists.
 - Pending registrations can be cancelled by the developer/admin after 7,200 blocks,
   releasing cells in bounded batches while preserving claim identity. Worker crashes
-  can still leave stale idempotency records needing operator recovery.
+  use timestamp leases: after a stopped worker, expired requests resume safely. Requests
+  still active in the single supported worker are never reclaimed merely due to age.
+  Multi-process admission, fencing and relayer coordination remain unsupported.
 - EIP-712 v2 commits the declared cell list and blocks mismatched finalization. A compromised
   registrar can still hold arbitrary cells while Pending until the recovery path is used;
   signing the list does not independently prove its geometry-to-cell derivation.

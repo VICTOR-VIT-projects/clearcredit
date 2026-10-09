@@ -92,13 +92,29 @@ replaced/stuck transactions require operator recovery; no blind nonce allocation
 
 ## T2–T6 resolutions
 
-Pending task execution; results and commit mapping will be recorded before completion.
+T2 revalidates completed 201 responses against a pinned chain snapshot, then refreshes
+their chain observations without sending. If the cached registration is not visible,
+it returns retryable 503 and invalidates the success while retaining the request hash;
+the next same-body retry resumes. This deliberately refines I4's byte-identical replay
+expectation as authorized by T2: stable claim/result fields remain identical, chain
+observations can advance. Offline responses still replay identically. The original
+synthetic retry test now checks stable content plus monotonic observedBlock and unchanged
+nonce, rather than requiring an old block observation to stay frozen.
+
+Abandoned in-flight requests have a 300-second timestamp lease, with an additive SQLite
+migration. A process-local active set prevents reclaiming a request still running beyond
+the lease; after a stopped/crashed worker, expired rows resume matching inserted claims
+through the journal. Mismatched bodies remain rejected. This supports one process only;
+cross-process leases require fencing and nonce coordination and are not claimed here.
+Tests cover active expiry, restart before/after expiry, old-schema migration, crash after
+insertion, false cached success recovery with no new sends, and refreshed issuance totals.
 
 ## Validation and changes
 
 | Task | Contracts | Backend | Frontend | Build |
 |---|---|---|---|---|
 | T1 | 36 | 83 | 17 | passed, zero type errors |
+| T2 | 36 | 89 | 17 | passed, zero type errors |
 
 Commands run in their respective directories with `CLEARCREDIT_NO_ENV=1`:
 `npx hardhat test`; `.venv/Scripts/python.exe -m pytest -q`; `npm test`; `npm run build`.

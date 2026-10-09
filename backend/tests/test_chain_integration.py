@@ -373,3 +373,39 @@ def test_reconcile_compares_latest_attestation_and_fails_closed(chain, db_path, 
     with pytest.raises(ChainReadUnavailable):
         reconcile_claim(chain, store, store.get("TEST-A"))
     assert store.get("TEST-A")["status"] == "relay_failed"
+
+
+def test_cached_success_is_revalidated_then_recovery_sends_nothing(chain, db_path, monkeypatch):
+    client = client_for(chain, db_path)
+    assert submit(client, make_claim(), "cache-truth").status_code == 201
+    nonce = chain.w3.eth.get_transaction_count(chain.account.address)
+    real = chain.snapshot
+    calls = []
+    def prewrite_once(key, minimum=0):
+        value = real(key, minimum)
+        calls.append(key)
+        if len(calls) == 1:
+            value["project"]["status"] = "pending"
+        return value
+    monkeypatch.setattr(chain, "snapshot", prewrite_once)
+    replay = submit(client, make_claim(), "cache-truth")
+    assert replay.status_code == 503
+    assert Store(db_path).get("TEST-A")["status"] == "relay_failed"
+    assert submit(client, make_claim(credits=999), "cache-truth").status_code == 422
+    recovered = submit(client, make_claim(), "cache-truth")
+    assert recovered.status_code == 201, recovered.text
+    assert chain.w3.eth.get_transaction_count(chain.account.address) == nonce
+
+
+def test_cached_replay_refreshes_totals_at_receipt_block(chain, db_path):
+    client = client_for(chain, db_path)
+    assert submit(client, make_claim(), "fresh-replay").status_code == 201
+    from web3 import Web3
+    chain.w3.provider.make_request("hardhat_setBalance", [DEV.address, hex(10**18)])
+    fn = chain.c.functions.issueCredits(bytes.fromhex(canonical.project_key("TEST-A")[2:]), 100)
+    tx = fn.build_transaction({"from": DEV.address, "nonce": chain.w3.eth.get_transaction_count(DEV.address)})
+    receipt = chain.w3.eth.wait_for_transaction_receipt(chain.w3.eth.send_raw_transaction(DEV.sign_transaction(tx).raw_transaction))
+    replay = submit(client, make_claim(), "fresh-replay")
+    assert replay.status_code == 201 and replay.headers["Idempotent-Replayed"] == "true"
+    assert replay.json()["onChain"]["project"]["issued"] == 100
+    assert replay.json()["onChain"]["observedBlock"] >= receipt.blockNumber

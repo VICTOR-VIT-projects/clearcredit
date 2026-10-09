@@ -71,7 +71,10 @@ def test_synthetic_cases(chain, db_path, monkeypatch):
     nonce = w3.eth.get_transaction_count(chain.account.address)
     again = submit(client, CASES[1]["claim"], "key-1")
     assert again.status_code == 201 and again.headers["Idempotent-Replayed"] == "true"
-    assert again.json() == responses[1]
+    # Replay preserves the submitted result while refreshing chain observations (T2).
+    assert {k: v for k, v in again.json().items() if k != "onChain"} == {k: v for k, v in responses[1].items() if k != "onChain"}
+    assert again.json()["onChain"]["project"] == responses[1]["onChain"]["project"]
+    assert again.json()["onChain"]["observedBlock"] >= responses[1]["onChain"]["observedBlock"]
     assert client.get("/registry").json()["total"] == 3
     assert w3.eth.get_transaction_count(chain.account.address) == nonce
 

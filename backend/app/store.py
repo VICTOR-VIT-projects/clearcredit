@@ -5,6 +5,7 @@ import json
 import os
 import sqlite3
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -64,6 +65,12 @@ class Store:
         self.db.executescript(SCHEMA)
         self.lock = threading.Lock()
         self.admission_lock = threading.Lock()
+        # Additive migration for existing databases; do not discard request hashes.
+        columns = {r[1] for r in self.db.execute("PRAGMA table_info(idempotency)")}
+        if "lease_until" not in columns:
+            self.db.execute("ALTER TABLE idempotency ADD COLUMN lease_until REAL NOT NULL DEFAULT 0")
+        self.lease_seconds = 300
+        self._active_idempotency: set[str] = set()
 
     def relay_pending(self, scope: str) -> dict | None:
         row = self.db.execute("SELECT * FROM relay_pending WHERE scope = ?", (scope,)).fetchone()
@@ -113,18 +120,33 @@ class Store:
         with self.lock:
             row = self.db.execute("SELECT * FROM idempotency WHERE key = ?", (key,)).fetchone()
             if row is None:
-                self.db.execute("INSERT INTO idempotency (key, request_hash, created_at) VALUES (?, ?, ?)", (key, request_hash, _now()))
+                self.db.execute("INSERT INTO idempotency (key, request_hash, created_at, lease_until) VALUES (?, ?, ?, ?)",
+                                (key, request_hash, _now(), time.time() + self.lease_seconds))
+                self._active_idempotency.add(key)
                 return "new", None
-        if row["request_hash"] != request_hash:
-            return "mismatch", row
-        return ("in_flight", row) if row["status_code"] is None else ("replay", row)
+            if row["request_hash"] != request_hash:
+                return "mismatch", row
+            if row["status_code"] is None and row["lease_until"] <= time.time() and key not in self._active_idempotency:
+                self.db.execute("UPDATE idempotency SET lease_until = ? WHERE key = ?", (time.time() + self.lease_seconds, key))
+                self._active_idempotency.add(key)
+                return "new", row  # recovered request: safely resume an already inserted claim
+            return ("in_flight", row) if row["status_code"] is None else ("replay", row)
 
     def idem_finish(self, key: str, status_code: int, response: dict) -> None:
-        self.db.execute("UPDATE idempotency SET status_code = ?, response = ? WHERE key = ?", (status_code, json.dumps(response), key))
+        with self.lock:
+            self.db.execute("UPDATE idempotency SET status_code = ?, response = ? WHERE key = ?", (status_code, json.dumps(response), key))
+            self._active_idempotency.discard(key)
+
+    def idem_retry(self, key: str) -> None:
+        """Invalidate a false cached success while retaining its original request binding."""
+        with self.lock:
+            self.db.execute("UPDATE idempotency SET status_code = NULL, response = NULL, lease_until = 0 WHERE key = ?", (key,))
 
     def idem_abort(self, key: str) -> None:
         """Forget an in-flight key after an unexpected server error so the client can retry."""
-        self.db.execute("DELETE FROM idempotency WHERE key = ? AND status_code IS NULL", (key,))
+        with self.lock:
+            self.db.execute("DELETE FROM idempotency WHERE key = ? AND status_code IS NULL", (key,))
+            self._active_idempotency.discard(key)
 
     # ------------------------------------------------------------ claims
 

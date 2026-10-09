@@ -177,7 +177,18 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
         request_hash = canonical.keccak(canonical._dumps({"c": canonical.canonical_claim(body["claim"]), "s": body["signature"].lower()}).encode()).hex()
         state, row = store.idem_begin(idempotency_key, request_hash)
         if state == "replay":
-            return JSONResponse(json.loads(row["response"]), status_code=row["status_code"], headers={"Idempotent-Replayed": "true"})
+            result = json.loads(row["response"])
+            if row["status_code"] == 201 and chain:
+                with store.admission_lock:
+                    saved = lookup(result["projectId"])
+                    snapshot = chain.snapshot(saved["project_key"])
+                    if snapshot["project"]["status"] != "registered":
+                        store.update_claim(saved["project_id"], status="cancelled" if snapshot["project"]["status"] == "cancelled" else "relay_failed")
+                        store.idem_retry(idempotency_key)
+                        raise ChainReadUnavailable("Cached registration is not confirmed; retry resumes safely")
+                    # Refresh chain observations, retain the original response's non-chain fields.
+                    result.update(claim_view(saved))
+            return JSONResponse(result, status_code=row["status_code"], headers={"Idempotent-Replayed": "true"})
         if state == "in_flight":
             raise ApiError(409, "REQUEST_IN_PROGRESS", "A request with this Idempotency-Key is still being processed; retry shortly.")
         if state == "mismatch":
@@ -186,7 +197,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
             # Admission + insertion must be indivisible across different retry keys.
             # Keep same-project relay resumption serialized too. One API worker only.
             with store.admission_lock:
-                result = _submit(body["claim"], body["signature"])
+                result = _submit(body["claim"], body["signature"], recovered=row is not None)
         except ApiError as e:
             if e.retryable:
                 store.idem_abort(idempotency_key)
@@ -199,11 +210,11 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
         store.idem_finish(idempotency_key, 201, result)
         return JSONResponse(result, status_code=201)
 
-    def _submit(claim: dict, signature: str) -> dict:
+    def _submit(claim: dict, signature: str, recovered: bool = False) -> dict:
         claim["submittedAt"] = claim.get("submittedAt") or datetime.now(timezone.utc).isoformat(timespec="seconds")
         h = hashes(claim)
         existing = store.get(claim["projectId"]) or store.find(claim_hash=h["claimHash"])
-        resumable = existing and existing["claim_hash"] == h["claimHash"] and existing["status"] == "relay_failed"
+        resumable = existing and existing["claim_hash"] == h["claimHash"] and (existing["status"] in ("relay_failed", "relaying", "cancelled") or recovered)
         if existing and not resumable:
             raise ApiError(409, "DUPLICATE_CLAIM", "This project ID or identical claim is already registered.",
                            {"projectId": existing["project_id"], "claimHash": existing["claim_hash"]})
