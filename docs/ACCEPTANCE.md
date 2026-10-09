@@ -27,7 +27,7 @@ backend/.venv/Scripts/python.exe -m venv "$acceptClone/backend/.venv"
 ```
 
 The retained clone is `C:/Users/amith/AppData/Local/Temp/clearcredit-acceptance-20261009-140159`.
-It started from `24a062f`; candidate T3 README/config/test/constraint changes were copied
+It started from `47207d9`; candidate T3 README/config/test/constraint changes were copied
 into this owned clone before verification. Installation initially selected newer Python
 dependencies; the constrained install then selected the already-tested versions.
 No alternate interpreter was used. The local probe logs (`node.log`, `api.log`, `ui.log`),

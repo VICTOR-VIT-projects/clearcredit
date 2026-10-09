@@ -1,6 +1,6 @@
 # ClearCredit continuation review — 2026-10-09
 
-Baseline: `c5a4d53` on main. Work branch: `finish-and-harden`.
+Baseline: `d95c249` on main. Work branch: `finish-and-harden`.
 All findings below are confirmed by tracing unless a regression test is named.
 No public RPC or environment-file contents were accessed for this review.
 
@@ -190,14 +190,14 @@ OpenAPI was compared with the current application and matches.
 
 | Commit | Task / result |
 |---|---|
-| `229e507` | T1: durable receipt floors, numbered reads/estimates, coherent API and wallet refresh |
-| `24a062f` | T2: cached-success validation and crash-stranded lease recovery |
-| `82d32ee` | T3: fresh-clone Quickstart, constraints and acceptance evidence |
-| `1aa4c9d` | T4: sourced submission narrative |
-| `6cbe92f` | T5: owned local demo lifecycle, seed failure exit and smoke checks |
-| `4bd4577` | T6: F8 public retirement, F7 map and bounded history |
-| `8cc7aaf` | T6: F6 non-scoring cached-evidence diagnostic |
-| `ede01e1` | T6: F10 mounted tests and retryable 503 UI fix; dev-dependency justification in commit |
+| `e7a7d06` | T1: durable receipt floors, numbered reads/estimates, coherent API and wallet refresh |
+| `47207d9` | T2: cached-success validation and crash-stranded lease recovery |
+| `731ccde` | T3: fresh-clone Quickstart, constraints and acceptance evidence |
+| `faed4d7` | T4: sourced submission narrative |
+| `4cf67c7` | T5: owned local demo lifecycle, seed failure exit and smoke checks |
+| `45eeea6` | T6: F8 public retirement, F7 map and bounded history |
+| `4a39d1b` | T6: F6 non-scoring cached-evidence diagnostic |
+| `d8d0ac9` | T6: F10 mounted tests and retryable 503 UI fix; dev-dependency justification in commit |
 
 R1 check, using Git for Windows' grep executable for the requested pipeline:
 `git log --format=%B main.. | grep -ci co-authored` printed `0`. Authors and committers
