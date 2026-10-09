@@ -1,0 +1,10 @@
+{
+  "network": "baseSepolia",
+  "chainId": 84532,
+  "address": "0x889BD5e5462139D7AA8384d520f00403De8CB2b4",
+  "deployTx": "0x5b2bf9b24c309f00a17c4669606cbb0812e3ef7c9fe551aaa26ab85632ea7ad0",
+  "cellResolution": 8,
+  "issueThresholdBps": 6000,
+  "deployedAt": "2026-10-09T07:32:33.139Z",
+  "note": "deployTx recovered from the explorer: the first run deployed, then crashed on a lagging RPC read before granting roles; roles were granted by re-running with ATTACH_ADDRESS (no redeploy)."
+}

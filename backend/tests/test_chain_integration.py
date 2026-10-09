@@ -244,3 +244,30 @@ def test_two_distinct_registrar_accounts_share_contract_uniqueness(chain, db_pat
     assert other.account.address != chain.account.address
     assert other.project(pk)["status"] == "none"
     assert set(other.check_cells(cells, 2023).values()) == {canonical.project_key("REGISTRY-A")}
+
+
+def test_stale_rpc_read_after_register_cannot_fake_a_registration(chain, db_path):
+    # Public RPCs are load-balanced: a read right after a confirmed write can hit a node that
+    # is a block behind. Seen on Base Sepolia: the relay read status "none" after registerProject,
+    # skipped addCells/finalize, and the API reported "registered" while the chain said "pending".
+    client = client_for(chain, db_path)
+    real_project, stale = chain.project, {"left": 1}
+
+    def lagging(project_key):
+        state = real_project(project_key)
+        if state["status"] == "pending" and stale["left"]:
+            stale["left"] -= 1
+            return {**state, "status": "none"}  # what a lagging node returns
+        return state
+
+    chain.project = lagging
+    try:
+        r = submit(client, make_claim(), "k1")  # ~42 cells, batch=40: needs addCells + finalize
+    finally:
+        chain.project = real_project
+    p = chain.project(canonical.project_key("TEST-A"))
+    if r.status_code == 201:
+        assert p["status"] == "registered" and p["cellCount"] == r.json()["cellCount"]
+    else:  # failing closed is acceptable; claiming success is not
+        assert r.json()["error"]["code"] == "RELAY_FAILED"
+        assert client.get("/claims/TEST-A").json()["status"] != "registered"

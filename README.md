@@ -109,7 +109,12 @@ Recompute any claim hash independently: `python backend/app/canonical.py claim.j
 
 ## Deployed contract
 
-Base Sepolia: *(address and BaseScan link added at deployment)*.
+**Base Sepolia (chain ID 84532):** [`0x889BD5e5462139D7AA8384d520f00403De8CB2b4`](https://sepolia.basescan.org/address/0x889BD5e5462139D7AA8384d520f00403De8CB2b4). Also on [Blockscout](https://base-sepolia.blockscout.com/address/0x889BD5e5462139D7AA8384d520f00403De8CB2b4).
+
+- EIP-712 domain `ClearCredit` v2, H3 resolution 8, issuance threshold 6000 bps (60/100).
+- One demo key holds both registrar and verifier roles; production would separate them.
+- The 30 real seed projects are registered on it through the public API, each with its signed claim, cell commitment and integrity attestation.
+- Deployment details: `contracts/deployments/baseSepolia.json`. The whole deployment and seeding cost about 0.0015 **test** ETH, from a free faucet (no real money).
 
 ## Limitations
 

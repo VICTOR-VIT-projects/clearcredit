@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import threading
+import time
 from functools import wraps
 from pathlib import Path
 
@@ -92,6 +93,7 @@ class Chain:
         self.explorer = EXPLORERS.get(self.chain_id)
         # One worker/Chain per relayer key. State checks and sends share this lock.
         self._lock = threading.RLock()
+        self.read_attempts, self.read_retry_delay = 15, 2.0  # ~30 s for a lagging RPC node to catch up
         self.journal = journal or Store()
 
     @classmethod
@@ -200,13 +202,29 @@ class Chain:
             first = cells[: self.batch]
             txs.append({"step": "registerProject", "tx": self._send(self.c.functions.registerProject(
                 pk, _b32(claim_hash), Web3.to_checksum_address(developer), vintage, credits, _b32(cells_root(cells)), first, signature))})
-            state = self.project(project_key)
+            state = self._await_project(project_key, lambda s: s["status"] != "none", "pending")
         if state["status"] == "pending":
             owners = self.c.functions.checkCells(cells, vintage).call() if len(cells) <= 2000 else None
             todo = [c for c, o in zip(cells, owners) if bytes(o) != pk] if owners is not None else cells
             for i in range(0, len(todo), self.batch):  # re-adding owned cells is a no-op on-chain
                 txs.append({"step": "addCells", "tx": self._send(self.c.functions.addCells(pk, todo[i : i + self.batch]))})
+            # finalize's gas estimate simulates against the node's view; on a lagging node the last
+            # batch is missing, the cell hash mismatches and the estimate reverts. Wait it out first.
+            self._await_project(project_key, lambda s: s["cellCount"] >= len(cells) and s["cellsHash"] == s["cellsRoot"],
+                                "all cells added")
             txs.append({"step": "finalizeRegistration", "tx": self._send(self.c.functions.finalizeRegistration(pk))})
+        # Never report success on the strength of a possibly stale read: require the chain to say so.
+        self._await_project(project_key, lambda s: s["status"] == "registered", "registered")
+
+    def _await_project(self, project_key: str, ok, want: str) -> dict:
+        """Re-read until our confirmed writes are visible. Load-balanced public RPCs can answer
+        from a node a block or two behind; a stale read must never skip steps or fake success."""
+        for attempt in range(self.read_attempts):
+            state = self.project(project_key)
+            if ok(state):
+                return state
+            time.sleep(self.read_retry_delay)
+        raise RuntimeError(f"on-chain status did not reach {want!r} (RPC lagging?); retrying resumes safely")
 
     @_serialized
     def post_attestation(self, project_key, score_bps, evidence_hash, model_version) -> dict | None:
