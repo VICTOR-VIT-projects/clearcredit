@@ -88,6 +88,11 @@ def _serialized(method):
 
 
 class Chain:
+    BATCH_SIZE = 10          # calls per JSON-RPC batch; public RPCs count each call against a per-second budget
+    RATE_LIMIT_RETRIES = 4
+    block_reuse_seconds = 0.0      # immutable defaults; __init__ sets per-instance values
+    _latest_cache = (0.0, -1)
+
     def __init__(self, rpc_url: str, private_key: str, address: str, batch: int = 200, journal: Store | None = None):
         self.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 60}))
         self.account = Account.from_key(private_key)
@@ -103,6 +108,14 @@ class Chain:
         self.read_attempts, self.read_retry_delay = 15, 2.0  # ~30 s for a lagging RPC node to catch up
         self.journal = journal or Store()
         self._reads = threading.local()
+        # Read-side load control for rate-limited public RPCs (sepolia.base.org: 25 requests/s,
+        # counting every call inside a batch). Contract state at a fixed block never changes, so
+        # results are cached by (call, block); optionally the latest block is reused for a few
+        # seconds so bursts of visitors share reads (CHAIN_BLOCK_REUSE_SECONDS, off by default).
+        self.block_reuse_seconds = float(os.environ.get("CHAIN_BLOCK_REUSE_SECONDS") or 0)
+        self._latest_cache = (0.0, -1)
+        self._call_cache: dict[tuple[str, int], str] = {}
+        self._cache_lock = threading.Lock()
 
     @classmethod
     def from_env(cls) -> "Chain | None":
@@ -125,6 +138,9 @@ class Chain:
 
     def snapshot_block(self, minimum: int = 0) -> int:
         floor = max(minimum, self.journal.chain_head(self._read_scope))
+        cached_at, cached_block = self._latest_cache
+        if self.block_reuse_seconds and time.monotonic() - cached_at < self.block_reuse_seconds and cached_block >= floor:
+            return cached_block  # a real, already-verified block no older than anything we know was confirmed
         try:
             # One call: the latest block both names the height and proves this node serves it.
             latest = self.w3.eth.get_block("latest")["number"]
@@ -133,6 +149,7 @@ class Chain:
             if block != latest and self.w3.eth.get_block(block)["number"] != block:
                 raise ChainReadUnavailable("RPC returned a different block")
             self.journal.advance_chain_head(self._read_scope, block)
+            self._latest_cache = (time.monotonic(), block)
             return block
         except Exception as e:
             raise ChainReadUnavailable("Required chain block is unavailable; retry shortly") from e
@@ -174,16 +191,38 @@ class Chain:
             raise ChainReadUnavailable("Chain snapshot is unavailable; retry shortly") from e
 
     def _batch_calls(self, fns: list, block: int) -> list:
-        """Several eth_calls in ONE JSON-RPC batch, all pinned to `block`; returns each decoded single output.
-        Fails closed if any call errors or the response is incomplete."""
-        calls = [("eth_call", [{"to": self.address, "data": fn._encode_transaction_data()}, hex(block)]) for fn in fns]
+        """eth_calls pinned to `block`, sent as small JSON-RPC batches; returns each decoded single output.
+
+        State at a fixed block is immutable, so results are cached per (calldata, block). Batches stay
+        small and are retried with back-off when the RPC rate-limits (-32007 / HTTP 429). Any other
+        error, or an incomplete response, fails closed."""
+        datas = [fn._encode_transaction_data() for fn in fns]
+        with self._cache_lock:
+            raw = {d: self._call_cache.get((d, block)) for d in datas}
+        missing = list(dict.fromkeys(d for d in datas if raw[d] is None))
         try:
-            responses = self.w3.provider.make_batch_request(calls)
-            if not isinstance(responses, list) or len(responses) != len(fns) or any("error" in r for r in responses):
-                raise ValueError("incomplete batch response")
-            responses = sorted(responses, key=lambda r: r["id"])
-            return [self.w3.codec.decode(get_abi_output_types(fn.abi), bytes.fromhex(r["result"][2:]))[0]
-                    for fn, r in zip(fns, responses)]
+            for i in range(0, len(missing), self.BATCH_SIZE):
+                chunk = missing[i : i + self.BATCH_SIZE]
+                calls = [("eth_call", [{"to": self.address, "data": d}, hex(block)]) for d in chunk]
+                for attempt in range(self.RATE_LIMIT_RETRIES + 1):
+                    responses = self.w3.provider.make_batch_request(calls)
+                    if not isinstance(responses, list):
+                        responses = [responses]  # whole-batch error object (e.g. HTTP 429)
+                    limited = any(r.get("error", {}).get("code") == -32007 for r in responses if isinstance(r, dict))
+                    if not limited:
+                        break
+                    if attempt == self.RATE_LIMIT_RETRIES:
+                        raise ValueError("RPC rate limit persisted")
+                    time.sleep(0.6 * (attempt + 1))
+                if len(responses) != len(chunk) or any("error" in r for r in responses):
+                    raise ValueError("incomplete batch response")
+                for d, r in zip(chunk, sorted(responses, key=lambda r: r["id"])):
+                    raw[d] = r["result"]
+            with self._cache_lock:
+                if len(self._call_cache) > 4096:
+                    self._call_cache.clear()
+                self._call_cache.update({(d, block): raw[d] for d in missing})
+            return [self.w3.codec.decode(get_abi_output_types(fn.abi), bytes.fromhex(raw[d][2:]))[0] for fn, d in zip(fns, datas)]
         except Exception as e:
             raise ChainReadUnavailable("Required contract state is unavailable; retry shortly") from e
 

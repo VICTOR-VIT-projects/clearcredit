@@ -29,6 +29,7 @@ services:
     environment:
       REGISTRY_ADDRESS: "0x889BD5e5462139D7AA8384d520f00403De8CB2b4"
       CHAIN_RPC_URL: "https://sepolia.base.org"
+      CHAIN_BLOCK_REUSE_SECONDS: "5"   # visitors within 5 s share one verified block + cached reads (RPC allows 25 req/s)
       HTTPS_PROXY: "http://egress:8888"
       HTTP_PROXY: "http://egress:8888"
       NO_PROXY: "localhost,127.0.0.1"
