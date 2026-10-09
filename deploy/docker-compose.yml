@@ -7,6 +7,7 @@ services:
       dockerfile: deploy/Dockerfile
     container_name: clearcredit-api
     restart: unless-stopped
+    user: "${CC_UID:-1000}:${CC_GID:-1000}"   # owner of ./state on the host, so the DB is writable without sudo
     ports:
       - "127.0.0.1:8090:8090"
     environment:
