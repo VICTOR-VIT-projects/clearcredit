@@ -2,6 +2,10 @@
 
 **Carbon-credit integrity and double-counting checker.** IEEE ClimateChain Global Hackathon 2026, track: *Carbon Markets & Emissions Transparency*.
 
+**Live demo (read-only):** https://victorserver.taile6e78d.ts.net:8443 · **Contract:** [`0x889BD5e5462139D7AA8384d520f00403De8CB2b4`](https://sepolia.basescan.org/address/0x889BD5e5462139D7AA8384d520f00403De8CB2b4) on Base Sepolia
+
+The live site serves the real registry: 30 published projects, each verifiable against the chain. It is read-only by design (see `docs/DEPLOY.md`). Registration, issuance and retirement are shown in the demo video and run locally with `python scripts/demo.py`.
+
 A project developer submits a carbon-credit claim: a boundary polygon, a vintage year and the credits claimed. ClearCredit then:
 
 1. **Registers a tamper-evident claim** on an EVM chain (Base Sepolia). The developer signs it with their wallet; the canonical claim hash goes on-chain.
