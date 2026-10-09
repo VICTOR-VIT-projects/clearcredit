@@ -5,6 +5,9 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 WORKDIR /srv
 
+# rasterio's bundled GDAL links against the system expat library, which slim images omit.
+RUN apt-get update && apt-get install -y --no-install-recommends libexpat1 && rm -rf /var/lib/apt/lists/*
+
 # Dependencies come from pyproject.toml; the lockfile is used as constraints, so its
 # Windows-only pins (pywin32, colorama) are ignored on Linux instead of breaking the build.
 COPY backend/pyproject.toml backend/requirements-lock.txt backend/
