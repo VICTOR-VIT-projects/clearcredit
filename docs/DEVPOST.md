@@ -30,7 +30,9 @@ Developers sign a canonical claim hash and cell-list commitment. Exact polygon o
 is checked off-chain; the contract enforces cell/vintage uniqueness. Satellite forest
 loss, vegetation trend and prior issuance inform an integrity score with readable reasons.
 Low scores restrict issuance. Retirement amounts are capped by issued credits and receive
-sequential serial ranges. Anyone can inspect the public verifier without a wallet.
+sequential serial ranges. Public retirement lookup links a serial to its beneficiary
+and transaction; the registry map labels each boundary's data category and score.
+Anyone can inspect the public verifier without a wallet.
 Source: [claim schema](CLAIM_SCHEMA.md), [threat model](THREAT_MODEL.md).
 
 ## How it was built
@@ -99,7 +101,7 @@ Source: [README](../README.md), [threat model](THREAT_MODEL.md).
 ## What's next
 
 Record the cached-data demo, complete browser/wallet acceptance, expand independently
-justified evidence coverage and add buyer-facing retirement lookup. Assess operational
+justified evidence coverage and expand buyer-facing audit integration. Assess operational
 coordination and registry partnerships before production use. Source: [acceptance](ACCEPTANCE.md).
 
 ## Built with

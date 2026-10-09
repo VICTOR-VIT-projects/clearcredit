@@ -37,7 +37,7 @@
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
           "503": {
-            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
           },
           "422": {
             "description": "Validation Error",
@@ -101,7 +101,7 @@
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
           "503": {
-            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
           },
           "422": {
             "description": "Validation Error",
@@ -159,7 +159,7 @@
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
           "503": {
-            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
           },
           "422": {
             "description": "Validation Error",
@@ -217,7 +217,157 @@
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
           "503": {
-            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/claims/{ref}/history": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Claim History",
+        "description": "Project events in an explicit window (at most 10,000 blocks / 1,000 events).",
+        "operationId": "claim_history_claims__ref__history_get",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ref"
+            }
+          },
+          {
+            "name": "fromBlock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fromblock"
+            }
+          },
+          {
+            "name": "toBlock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Toblock"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "503": {
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/claims/{ref}/retirements/{serial}": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Retirement Lookup",
+        "description": "Public lookup by a serial inside the contract's half-open retirement range.",
+        "operationId": "retirement_lookup_claims__ref__retirements__serial__get",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ref"
+            }
+          },
+          {
+            "name": "serial",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0,
+              "title": "Serial"
+            }
+          },
+          {
+            "name": "minBlock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Minblock"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "413": {
+            "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
+          },
+          "503": {
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
           },
           "422": {
             "description": "Validation Error",
@@ -263,7 +413,7 @@
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
           "503": {
-            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
           },
           "422": {
             "description": "Validation Error",
@@ -326,7 +476,7 @@
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
           "503": {
-            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
           },
           "422": {
             "description": "Validation Error",
@@ -368,6 +518,33 @@
               "default": 50,
               "title": "Limit"
             }
+          },
+          {
+            "name": "includeBoundary",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Includeboundary"
+            }
+          },
+          {
+            "name": "atBlock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Atblock"
+            }
           }
         ],
         "responses": {
@@ -383,7 +560,7 @@
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
           "503": {
-            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
           },
           "422": {
             "description": "Validation Error",
@@ -418,7 +595,7 @@
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
           "503": {
-            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
           }
         }
       }
@@ -443,7 +620,7 @@
             "description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."
           },
           "503": {
-            "description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."
+            "description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."
           }
         }
       }

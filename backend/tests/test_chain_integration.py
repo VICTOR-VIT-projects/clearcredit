@@ -409,3 +409,76 @@ def test_cached_replay_refreshes_totals_at_receipt_block(chain, db_path):
     assert replay.status_code == 201 and replay.headers["Idempotent-Replayed"] == "true"
     assert replay.json()["onChain"]["project"]["issued"] == 100
     assert replay.json()["onChain"]["observedBlock"] >= receipt.blockNumber
+
+
+def retire_for_lookup(chain, client):
+    assert submit(client, make_claim(), "retirement-lookup").status_code == 201
+    chain.w3.provider.make_request("hardhat_setBalance", [DEV.address, hex(10**18)])
+    pk = bytes.fromhex(canonical.project_key("TEST-A")[2:])
+    receipts = []
+    for fn in (chain.c.functions.issueCredits(pk, 100), chain.c.functions.retireCredits(pk, 40, "Buyer <A>"),
+               chain.c.functions.retireCredits(pk, 20, "Buyer B")):
+        tx = fn.build_transaction({"from": DEV.address, "nonce": chain.w3.eth.get_transaction_count(DEV.address)})
+        receipts.append(chain.w3.eth.wait_for_transaction_receipt(chain.w3.eth.send_raw_transaction(DEV.sign_transaction(tx).raw_transaction)))
+    return receipts
+
+
+def test_public_retirement_serial_ranges_and_transaction_links(chain, db_path):
+    client = client_for(chain, db_path)
+    receipts = retire_for_lookup(chain, client)
+    for serial, start, end, receipt in ((0, 0, 40, receipts[1]), (39, 0, 40, receipts[1]), (40, 40, 60, receipts[2]), (59, 40, 60, receipts[2])):
+        response = client.get(f"/claims/TEST-A/retirements/{serial}?minBlock={receipts[-1].blockNumber}")
+        assert response.status_code == 200, response.text
+        record = response.json()
+        assert (record["serialStart"], record["serialEndExclusive"]) == (str(start), str(end))
+        assert record["transactionHash"] == "0x" + bytes(receipt.transactionHash).hex()
+        assert record["dataLabel"] == "synthetic" and record["transactionUrl"] is None
+    assert client.get("/claims/TEST-A/retirements/60").status_code == 404
+    assert client.get("/claims/TEST-A/retirements/-1").status_code == 422
+    assert client.get(f"/claims/TEST-A/retirements/{2**64}").status_code == 422
+
+
+def test_retirement_missing_event_fails_closed_not_fake_not_found(chain, db_path, monkeypatch):
+    client = client_for(chain, db_path)
+    retire_for_lookup(chain, client)
+    monkeypatch.setattr(chain.w3.eth, "get_logs", lambda *_: [])
+    response = client.get("/claims/TEST-A/retirements/0")
+    assert response.status_code == 503 and response.json()["error"]["code"] == "CHAIN_READ_UNAVAILABLE"
+
+
+def test_bounded_history_splits_rpc_ranges_and_never_returns_partial_failure(chain, db_path, monkeypatch):
+    client = client_for(chain, db_path)
+    retire_for_lookup(chain, client)
+    real = chain.w3.eth.get_logs
+    attempts = []
+    def limited(params):
+        attempts.append(params)
+        if params["toBlock"] > params["fromBlock"]:
+            raise ValueError("provider range limit")
+        values = real(params)
+        return list(values) + list(values)  # duplicate transport rows are deduplicated
+    monkeypatch.setattr(chain.w3.eth, "get_logs", limited)
+    response = client.get("/claims/TEST-A/history")
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["dataLabel"] == "synthetic" and body["earlierHistoryOmitted"] is False
+    assert [e["event"] for e in body["events"]].count("Retired") == 2
+    assert any(e["event"] == "ProjectRegistered" for e in body["events"])
+    assert len(attempts) > 1
+    monkeypatch.setattr(chain.w3.eth, "get_logs", lambda *_: (_ for _ in ()).throw(ConnectionError("offline")))
+    assert client.get("/claims/TEST-A/history").status_code == 503
+    assert client.get("/claims/TEST-A/history?fromBlock=0&toBlock=10000").status_code == 422
+
+
+def test_registry_map_optional_boundaries_and_explicit_historical_block(chain, db_path):
+    client = client_for(chain, db_path)
+    assert submit(client, make_claim(), "map").status_code == 201
+    normal = client.get("/registry").json()
+    assert "boundary" not in normal["items"][0]
+    mapped = client.get("/registry?includeBoundary=true").json()
+    assert mapped["items"][0]["boundary"] == make_claim()["boundary"]
+    assert mapped["items"][0]["dataLabel"] == "synthetic" and mapped["observedBlock"] is not None
+    registration_block = chain.project(canonical.project_key("TEST-A"))["registeredBlock"]
+    past = client.get(f"/registry?includeBoundary=true&atBlock={registration_block}").json()
+    assert past["observedBlock"] == registration_block
+    assert past["items"][0]["status"] == "pending"  # DB success cannot override the chosen chain snapshot

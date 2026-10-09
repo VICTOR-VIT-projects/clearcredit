@@ -118,6 +118,7 @@ insertion, false cached success recovery with no new sends, and refreshed issuan
 | T3, fresh clone + venv | 36 | 91 | 17 | passed, zero type errors |
 | T4 | 36 | 91 | 17 | passed, zero type errors |
 | T5 | 36 | 96 | 17 | passed, zero type errors |
+| T6 checkpoint: F8, F7, history | 36 | 100 | 22 | passed, zero type errors |
 
 Commands run in their respective directories with `CLEARCREDIT_NO_ENV=1`:
 `npx hardhat test`; `.venv/Scripts/python.exe -m pytest -q`; `npm test`; `npm run build`.
@@ -141,6 +142,15 @@ or Ctrl+C. Seed failures now exit nonzero. Smoke runs passed on both default por
 All six ports were verified free after cleanup. Unit tests cover inherited-setting
 replacement, occupied ports, process cleanup, interrupt cleanup and seed failure exit.
 No dependency was added. Full wallet-extension/browser flows remain human acceptance.
+
+T6 checkpoint: public retirement lookup and page resolve exact serial ranges to matching
+Retired event transactions, with decimal strings for uint64 quantities. Bounded project
+history supports adaptive RPC range splitting and fails without partial results. The
+registry map loads all known Registered boundaries on demand at one explicit block,
+with permanent data labels and score colors. Tests cover serial endpoints, missing events,
+RPC rejection/deduplication, historical registry status, complete pagination and escaped
+labels/beneficiaries. API details and limits: `docs/PUBLIC_LOOKUPS.md`. No scoring or evidence
+semantics changed, and no dependency was added for these features.
 
 ## Not done / deferred
 

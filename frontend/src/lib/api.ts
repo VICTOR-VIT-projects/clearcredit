@@ -1,4 +1,5 @@
 import type { ApiErrorBody, Claim, ClaimView, PreviewResponse, RegistryResponse, VerificationResponse } from './types'
+import type { RetirementLookup } from './types'
 
 export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '')
 
@@ -62,4 +63,21 @@ export function getOverlaps(ref: string): Promise<{ projectId: string; vintageYe
 
 export function getRegistry(offset: number, limit: number): Promise<RegistryResponse> {
   return request(`/registry?offset=${offset}&limit=${limit}`)
+}
+
+export function getRetirement(ref: string, serial: string): Promise<RetirementLookup> {
+  return request(`/claims/${encodeURIComponent(ref)}/retirements/${encodeURIComponent(serial)}`)
+}
+
+export async function getRegistryMap(): Promise<RegistryResponse> {
+  const first = await request<RegistryResponse>('/registry?offset=0&limit=200&includeBoundary=true')
+  const items = [...first.items]
+  while (items.length < first.total) {
+    const block = first.observedBlock == null ? '' : `&atBlock=${first.observedBlock}`
+    const next = await request<RegistryResponse>(`/registry?offset=${items.length}&limit=200&includeBoundary=true${block}`)
+    if (next.total !== first.total || next.items.length === 0) throw new Error('Registry changed while loading; refresh the map.')
+    items.push(...next.items)
+  }
+  if (new Set(items.map(item => item.claimHash)).size !== first.total) throw new Error('Registry changed while loading; refresh the map.')
+  return { ...first, items: items.filter(item => item.status === 'registered') }
 }

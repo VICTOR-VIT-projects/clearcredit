@@ -150,6 +150,23 @@ export interface Retirement {
   timestamp: number
 }
 
+export interface RetirementLookup {
+  projectId: string
+  claimHash: Hash
+  dataLabel: DataLabel
+  serial: string
+  serialStart: string
+  serialEndExclusive: string
+  amount: string
+  beneficiary: string
+  from: Address
+  timestamp: number
+  transactionHash: Hash
+  transactionUrl: string | null
+  blockNumber: number
+  observedBlock: number
+}
+
 export interface ClaimView {
   projectId: string
   projectKey: Hash
@@ -197,11 +214,13 @@ export interface RegistryItem {
   band: IntegrityScore['band']
   status: string
   sourceRegistry: string | null
+  boundary?: Claim['boundary']
 }
 
 export interface RegistryResponse {
   total: number
   items: RegistryItem[]
+  observedBlock?: number | null
 }
 
 export interface ApiErrorBody {

@@ -14,6 +14,7 @@ export function Layout() {
             <NavLink to="/submit">Submit</NavLink>
             <NavLink to="/verify">Verify</NavLink>
             <NavLink to="/registry">Registry</NavLink>
+            <NavLink to="/retirements">Retirements</NavLink>
             <NavLink to="/about">About</NavLink>
           </nav>
           <WalletButton />

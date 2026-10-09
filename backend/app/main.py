@@ -7,7 +7,7 @@ import secrets
 from pathlib import Path
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, Header, Request, Query
+from fastapi import FastAPI, Header, Request, Query, Path as PathParam
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from shapely.geometry import shape
@@ -17,6 +17,7 @@ from .chain import CLAIM_TYPES, ZERO32, Chain, ChainReadUnavailable, Registratio
 from .models import Claim, Submission
 from .limits import BodyLimit
 from .store import Store
+from . import events
 
 BLOCKING_CODES = ("OVERLAP",)
 ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
@@ -49,7 +50,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
         title="ClearCredit API",
         version="0.1.0",
         responses={413: {"description": "REQUEST_TOO_LARGE: request bodies are limited to 2 MiB before parsing."},
-                   503: {"description": "EVIDENCE_INVALID: cached evidence commitment failed; operator review required."}},
+                   503: {"description": "EVIDENCE_INVALID, CHAIN_UNAVAILABLE or CHAIN_READ_UNAVAILABLE: evidence review or retry of required chain state is necessary."}},
         description="Carbon-credit integrity and double-counting checker. Produces integrity scores and "
         "verified integrity attestations; it does not certify emission reductions.",
     )
@@ -290,6 +291,51 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
             "note": "A mismatch means the off-chain claim record was altered after registration." if onchain and recomputed != onchain else None,
         }
 
+    @app.get("/claims/{ref}/history", tags=["claims"])
+    def claim_history(ref: str, from_block: int | None = Query(default=None, ge=0, alias="fromBlock"),
+                      to_block: int | None = Query(default=None, ge=0, alias="toBlock")):
+        """Project events in an explicit window (at most 10,000 blocks / 1,000 events)."""
+        row = lookup(ref)
+        if not chain:
+            raise ApiError(503, "CHAIN_UNAVAILABLE", "No chain configured; history is unavailable.", retryable=True)
+        snapshot = chain.snapshot(row["project_key"])
+        end = snapshot["observedBlock"] if to_block is None else to_block
+        start = max(snapshot["project"]["registeredBlock"], end - events.MAX_BLOCKS + 1) if from_block is None else from_block
+        if end > snapshot["observedBlock"] or end < start or end - start + 1 > events.MAX_BLOCKS:
+            raise ApiError(422, "INVALID_BLOCK_RANGE", "Choose an observed, ordered range of at most 10,000 blocks.")
+        return {"projectId": row["project_id"], "dataLabel": row["claim"]["dataLabel"],
+                "fromBlock": start, "toBlock": end, "observedBlock": snapshot["observedBlock"],
+                "earlierHistoryOmitted": start > snapshot["project"]["registeredBlock"],
+                "events": events.history(chain, row["project_key"], start, end)}
+
+    @app.get("/claims/{ref}/retirements/{serial}", tags=["claims"])
+    def retirement_lookup(ref: str, serial: int = PathParam(ge=0, le=2**64 - 1),
+                          minimum_block: int = Query(default=0, ge=0, alias="minBlock")):
+        """Public lookup by a serial inside the contract's half-open retirement range."""
+        row = lookup(ref)
+        if not chain:
+            raise ApiError(503, "CHAIN_UNAVAILABLE", "No chain configured; retirement lookup is unavailable.", retryable=True)
+        snapshot = chain.snapshot(row["project_key"], minimum_block)
+        record = next((r for r in snapshot["retirements"] if r["serialStart"] <= serial < r["serialStart"] + r["amount"]), None)
+        if record is None:
+            raise ApiError(404, "RETIREMENT_NOT_FOUND", "No retirement contains this serial at the observed block.", {"observedBlock": snapshot["observedBlock"]})
+        if canonical.claim_hash(row["claim"]) != snapshot["project"]["claimHash"]:
+            raise ApiError(409, "CLAIM_HASH_MISMATCH", "Stored claim metadata does not match the chain; inspect the verifier before using it.")
+        start, end = events.timestamp_range(chain, record["timestamp"], snapshot["project"]["registeredBlock"], snapshot["observedBlock"])
+        matching = [e for e in events.history(chain, row["project_key"], start, end) if e["event"] == "Retired"
+                    and str(e["args"]["serialStart"]) == str(record["serialStart"])
+                    and str(e["args"]["amount"]) == str(record["amount"])
+                    and e["args"]["beneficiary"] == record["beneficiary"] and e["args"]["from"].lower() == record["from"].lower()]
+        if len(matching) != 1:
+            raise ChainReadUnavailable("Retirement exists but its matching event is unavailable; retry shortly")
+        event = matching[0]
+        return {"projectId": row["project_id"], "claimHash": row["claim_hash"], "dataLabel": row["claim"]["dataLabel"],
+                "serial": str(serial), "serialStart": str(record["serialStart"]),
+                "serialEndExclusive": str(record["serialStart"] + record["amount"]), "amount": str(record["amount"]),
+                "beneficiary": record["beneficiary"], "from": record["from"], "timestamp": record["timestamp"],
+                "transactionHash": event["transactionHash"], "transactionUrl": event["url"],
+                "blockNumber": event["blockNumber"], "observedBlock": snapshot["observedBlock"]}
+
     @app.get("/overlaps/{ref}", tags=["claims"])
     def overlaps(ref: str):
         row = lookup(ref)
@@ -316,15 +362,21 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
         return {"projectId": row["project_id"], "score": a["score"], "attestation": att}
 
     @app.get("/registry", tags=["registry"])
-    def registry(offset: int = 0, limit: int = 50):
+    def registry(offset: int = 0, limit: int = 50, include_boundary: bool = Query(default=False, alias="includeBoundary"),
+                 at_block: int | None = Query(default=None, ge=0, alias="atBlock")):
         total, rows = store.page(max(0, offset), min(max(1, limit), 200))
+        block = None
         if chain:
-            block = chain.snapshot_block()
+            head = chain.snapshot_block()
+            block = head if at_block is None else at_block
+            if block > head:
+                raise ChainReadUnavailable("Requested registry snapshot is not visible")
             with chain.read_at(block):
                 for row in rows:
                     row["status"] = chain.project(row["project_key"])["status"]
         return {
             "total": total,
+            "observedBlock": block,
             "items": [
                 {
                     "projectId": r["project_id"], "claimHash": r["claim_hash"], "dataLabel": r["claim"]["dataLabel"],
@@ -332,6 +384,7 @@ def create_app(store: Store | None = None, chain: Chain | None | str = "env", li
                     "claimedCredits": r["claim"]["claimedCredits"], "areaHa": r["result"]["areaHa"],
                     "score": r["result"]["score"]["score"], "band": r["result"]["score"]["band"], "status": r["status"],
                     "sourceRegistry": r["claim"].get("sourceRegistry"),
+                    **({"boundary": r["claim"]["boundary"]} if include_boundary else {}),
                 }
                 for r in rows
             ],

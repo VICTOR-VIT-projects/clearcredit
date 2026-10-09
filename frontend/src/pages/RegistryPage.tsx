@@ -1,21 +1,28 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { getRegistry } from '../lib/api'
+import { getRegistry, getRegistryMap } from '../lib/api'
 import { LabelBadge } from '../components/LabelBadge'
 import { ErrorNotice, LoadingBlock } from '../components/Inline'
 import { formatNumber, humanize } from '../lib/format'
 
 const PAGE_SIZE = 20
+const RegistryMap = lazy(() => import('../components/RegistryMap').then(module => ({ default: module.RegistryMap })))
 
 export function RegistryPage() {
   const [page, setPage] = useState(0)
+  const [showMap, setShowMap] = useState(false)
+  const mapQuery = useQuery({ queryKey: ['registry-map'], queryFn: getRegistryMap, enabled: showMap })
   const query = useQuery({ queryKey: ['registry', page], queryFn: () => getRegistry(page * PAGE_SIZE, PAGE_SIZE) })
   const pages = query.data ? Math.max(1, Math.ceil(query.data.total / PAGE_SIZE)) : 1
 
   return (
     <div className="page">
       <div className="hero compact-hero"><p className="eyebrow">Public registry</p><h1>Inspect every registered claim.</h1><p>Project boundaries, evidence, integrity scores, and on-chain activity are public and independently verifiable.</p></div>
+      <button className="button button-secondary" onClick={() => { setShowMap(true); if (showMap) void mapQuery.refetch() }}>Load / refresh registry map</button>
+      {showMap && mapQuery.isLoading && <LoadingBlock>Loading all registry pages at one observed block…</LoadingBlock>}
+      {showMap && mapQuery.error && <ErrorNotice>{mapQuery.error.message}</ErrorNotice>}
+      {showMap && mapQuery.data && !mapQuery.error && <Suspense fallback={<LoadingBlock>Loading map…</LoadingBlock>}><RegistryMap key={`${mapQuery.data.observedBlock}-${mapQuery.dataUpdatedAt}`} items={mapQuery.data.items} observedBlock={mapQuery.data.observedBlock ?? null} /></Suspense>}
       {query.isLoading && <LoadingBlock>Loading registry…</LoadingBlock>}
       {query.error && <ErrorNotice>{query.error.message}</ErrorNotice>}
       {query.data && (
