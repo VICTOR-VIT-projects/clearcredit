@@ -74,7 +74,10 @@ Details: `docs/ARCHITECTURE.md` · Threat model: `docs/THREAT_MODEL.md` · Claim
 
 ## Quickstart
 
-Requirements: Node 20+, Python 3.11.
+Requirements: Node 20.19+ (or 22.12+), Python 3.11, Git and three terminals. Commands
+below are PowerShell on Windows, each starting in the repository root. On macOS/Linux
+use `export NAME=value` and `.venv/bin/python`. Installation needs internet; the demo
+and evaluation use committed evidence/history with no satellite fetches.
 
 Run the API with **one worker** and one relayer instance per key. Admission checks and
 relay state transitions are serialized in that worker; multi-worker deployment needs
@@ -83,29 +86,62 @@ before broadcast and reconciled before a new nonce is allocated.
 
 The current contract uses **EIP-712 v2** with a signed cell-list commitment. A fresh
 local deployment is required; this backend rejects v1 deployments. Schema 1.0 claim
-hashes and existing hash vectors remain unchanged. No public deployment is included.
+hashes and existing hash vectors remain unchanged. The documented public deployment is
+separate from this local setup. Never reuse its address or a previous local database
+after resetting Hardhat. `.env.example` is a configuration reference; these commands
+use process variables and disable automatic environment-file reads.
 
-```bash
-cp .env.example .env
+```powershell
+# One-time installation, from repo root
+npm --prefix contracts ci
+python -m venv backend/.venv
+backend/.venv/Scripts/python.exe -m pip install -c backend/requirements-lock.txt -e './backend[dev]'
+npm --prefix frontend ci
 
-# Contracts: tests, local chain, deploy
-cd contracts && npm install && npx hardhat test
-npx hardhat node                                          # terminal 1
-npx hardhat run scripts/deploy.ts --network localhost     # terminal 2 → contract address
-
-# Backend
-cd ../backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"   # (bin/ on macOS/Linux)
-pytest                                                    # includes real-chain integration tests
-# local chain: CHAIN_RPC_URL=http://127.0.0.1:8545, REGISTRY_ADDRESS=<address>,
-# DEPLOYER_PRIVATE_KEY=<hardhat account #0>, set in .env
-uvicorn app.main:create_app --factory --port 8000        # OpenAPI at http://localhost:8000/docs
-python -m scripts.seed                                    # register the 30 real claims via the API
-
-# Frontend
-cd ../frontend && npm install && npm run dev              # http://localhost:5173
+# Terminal 1, from repo root: tests, then leave the local node running
+$env:CLEARCREDIT_NO_ENV='1'
+Set-Location contracts
+npx hardhat test
+npx hardhat node --hostname 127.0.0.1 --port 8545
 ```
 
-Recompute any claim hash independently: `python backend/app/canonical.py claim.json`.
+```powershell
+# Terminal 2, from repo root: fresh v2 deployment, then leave the API running
+$env:CLEARCREDIT_NO_ENV='1'
+Set-Location contracts
+npx hardhat run scripts/deploy.ts --network localhost
+$localRegistry = (Get-Content deployments/localhost.json -Raw | ConvertFrom-Json).address
+Set-Location ../backend
+$env:CHAIN_RPC_URL='http://127.0.0.1:8545'
+$env:REGISTRY_ADDRESS=$localRegistry
+# Public Hardhat account #0; use only on this disposable local chain.
+$env:DEPLOYER_PRIVATE_KEY='0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+$env:CLEARCREDIT_DB=Join-Path $env:TEMP ('clearcredit-local-' + [guid]::NewGuid() + '.sqlite3')
+$env:CLEARCREDIT_OFFLINE_EVIDENCE='1'
+$env:ADMIN_TOKEN='local-demo-only'
+.venv/Scripts/python.exe -m pytest -q
+.venv/Scripts/python.exe -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000
+```
+
+```powershell
+# Terminal 3, from repo root: seed through the API, then leave the UI running
+$env:CLEARCREDIT_NO_ENV='1'
+Set-Location backend
+.venv/Scripts/python.exe -m scripts.seed --api http://127.0.0.1:8000
+Set-Location ../frontend
+$env:VITE_API_URL='http://127.0.0.1:8000'
+$env:VITE_CHAIN_ID='31337'
+npm test
+npm run build
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+API/OpenAPI: `http://127.0.0.1:8000/docs`; UI: `http://127.0.0.1:5173`.
+Stop all servers with Ctrl+C. Ports must be free; stop only processes you own.
+Recompute a downloaded claim from repo root with
+`backend/.venv/Scripts/python.exe backend/app/canonical.py claim.json`.
+The rehearsal and public-key wallet setup are in `docs/DEMO_SCRIPT.md`;
+acceptance evidence is in `docs/ACCEPTANCE.md`.
 
 ## Deployed contract
 
@@ -136,6 +172,14 @@ Recompute any claim hash independently: `python backend/app/canonical.py claim.j
 - Satellite evidence has limits: clouds, 30 m resolution, loss data lagging about a year, and sensor processing changes. One such change, the Sentinel-2 2022 baseline offset, is corrected and documented.
 - Sybil developers and legal identity are out of scope; production needs registry-verified identities.
 - Evaluation measures injected faults, not real-world fraud prevalence.
+- Transparent rules can be gamed by claims chosen just inside thresholds; production
+  needs human review and independently justified rule updates. There is no learned model
+  or project hold-out split in this evaluation.
+- RPC snapshots are labeled with their block height. Read-after-write uses a persisted
+  receipt floor and fails with a retryable error if that height is unavailable. This can
+  reduce availability on lagging providers; it cannot establish unseen future state.
+- Stored claims can be altered off-chain; recomputation exposes changes to hashed fields.
+  Raw satellite scene/mask provenance remains incomplete despite committed summaries.
 
 ## License
 

@@ -40,6 +40,8 @@ class ApiError(Exception):
 
 
 def create_app(store: Store | None = None, chain: Chain | None | str = "env", live_evidence: bool = True) -> FastAPI:
+    if os.environ.get("CLEARCREDIT_OFFLINE_EVIDENCE") == "1":
+        live_evidence = False
     if chain == "env":
         load_env_file()
         chain = Chain.from_env()

@@ -115,10 +115,18 @@ insertion, false cached success recovery with no new sends, and refreshed issuan
 |---|---|---|---|---|
 | T1 | 36 | 83 | 17 | passed, zero type errors |
 | T2 | 36 | 89 | 17 | passed, zero type errors |
+| T3, fresh clone + venv | 36 | 91 | 17 | passed, zero type errors |
 
 Commands run in their respective directories with `CLEARCREDIT_NO_ENV=1`:
 `npx hardhat test`; `.venv/Scripts/python.exe -m pytest -q`; `npm test`; `npm run build`.
 The existing venv works. One upstream Starlette/TestClient deprecation warning remains.
+
+T3 fixed the mixed-shell/global-interpreter Quickstart, explicit local UI chain settings,
+fresh contract/DB lifecycle and cached-only API mode. Python constraints capture tested
+versions without adding dependencies. `docs/ACCEPTANCE.md` records the fresh clone,
+30/30 local seed, downloaded-hash comparison and HTTP checks, separately from human
+browser acceptance. No interpreter/sandbox command was blocked. Dependency advisories
+reported by npm are listed there and deferred for a dedicated toolchain review.
 
 ## Not done / deferred
 

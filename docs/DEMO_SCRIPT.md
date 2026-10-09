@@ -4,21 +4,13 @@ Record against **cached evidence** and a **freshly seeded local chain**, so noth
 
 ## 0. Reset and seed (before recording, ~5 min)
 
-```bash
-# terminal 1: local chain
-cd contracts && npx hardhat node
-
-# terminal 2: fresh contract, empty database, API
-cd contracts && npx hardhat run scripts/deploy.ts --network localhost      # note the address
-cd ../backend && rm -f clearcredit.sqlite3
-CHAIN_RPC_URL=http://127.0.0.1:8545 REGISTRY_ADDRESS=<address> \
-DEPLOYER_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
-ADMIN_TOKEN=demo-admin uvicorn app.main:create_app --factory --port 8000
-
-# terminal 3: seed the 30 real projects through the API, then start the UI
-cd backend && python -m scripts.seed
-cd ../frontend && npm run dev            # .env.local: VITE_API_URL=http://localhost:8000, VITE_CHAIN_ID=31337
-```
+Follow **README → Quickstart** literally for installation and the three PowerShell
+terminals. It creates a fresh v2 local contract and a new temporary database, sets the
+local wallet/network/API process variables explicitly, and disables automatic environment
+file reads. Python commands use `backend/.venv`, not a globally installed pytest/uvicorn.
+No existing database is deleted. Local ports are 8545 / 8000 / 5173.
+The cached-only API sets `CLEARCREDIT_OFFLINE_EVIDENCE=1`; uncached uploads report
+unavailable evidence rather than contacting satellite services.
 
 **Wallet (MetaMask):**
 1. Add the network: RPC `http://127.0.0.1:8545`, chain ID `31337`.
@@ -69,7 +61,7 @@ On its claim page, open **Developer actions** → **Issue 100** → the contract
 
 ## 5. Retry safety (20 s)
 
-On SYN-01's success card, press **Send the same request again**. This resends the identical request with the same `Idempotency-Key`. A green **"Same request replayed"** notice appears: the API returned the stored result, with **no new record and no new transaction** (the API sends the response header `Idempotent-Replayed: true`).
+On SYN-01's success card, press **Send the same request again**. This resends the identical request with the same `Idempotency-Key`. A green **"Same request replayed"** notice appears: the API returned the saved result with refreshed chain observations, with **no new record and no new transaction** (the API sends the response header `Idempotent-Replayed: true`).
 
 ## 6. Verifier page (45 s)
 

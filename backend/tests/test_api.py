@@ -26,6 +26,29 @@ def test_preview_returns_hashes_score_and_reasons(client):
     assert "typedData" not in body  # no chain configured
 
 
+def test_cached_only_environment_never_enables_live_evidence(db_path, monkeypatch):
+    from app import satellite
+    monkeypatch.setenv("CLEARCREDIT_OFFLINE_EVIDENCE", "1")
+    seen = []
+    def evidence(boundary, *, live):
+        seen.append(live)
+        assert live is False
+        return None
+    monkeypatch.setattr(satellite, "get_evidence", evidence)
+    client = TestClient(create_app(Store(db_path), chain=None))
+    assert client.post("/claims/preview", json=make_claim()).status_code == 200
+    assert seen == [False]
+
+
+def test_no_env_mode_does_not_probe_or_read_environment_files(monkeypatch):
+    from app.main import load_env_file
+    monkeypatch.setenv("CLEARCREDIT_NO_ENV", "1")
+    class ForbiddenFile:
+        def exists(self):
+            raise AssertionError("Environment file must not even be probed")
+    load_env_file(ForbiddenFile())
+
+
 def test_invalid_geometry_has_machine_readable_code(client):
     bad = make_claim(boundary={"type": "Polygon", "coordinates": [[[0, 0], [2, 2], [2, 0], [0, 2], [0, 0]]]})
     r = client.post("/claims/preview", json=bad)
