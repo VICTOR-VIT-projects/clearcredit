@@ -44,6 +44,19 @@ were free afterward. Logs remain in `clearcredit-demo-wr0etx6b` and
 Ctrl+C with a browser/wallet remains a manual rehearsal; injected interrupt cleanup
 and real child-process termination are automated tests.
 
+The final T6 checkout passed **36 contract / 109 backend / 29 frontend tests**, plus
+production build with zero type errors. Public retirement tests verify exact half-open
+serial bounds and matching transaction events; history tests exercise adaptive RPC
+splitting, limits and no partial success. Registry tests pin map pagination and preserve
+data labels. Mounted Verify tests use the committed sample to recompute the hash without
+wallet hooks and hide stale results on failed receipt-block refresh. These supplement
+the original acceptance items; they do not replace real-browser/wallet acceptance.
+The cache diagnostic found 30 distinct real-project boundaries, zero missing caches
+and zero warnings after its review trigger was frozen; diagnostic accuracy is unvalidated.
+Frozen canonicalization/vectors, scoring, satellite measurements, real claims, Solidity
+and evaluation outputs were compared with main and remain unchanged. OpenAPI matches
+the current application. No command was blocked by the sandbox.
+
 After installation, from each relevant directory with `CLEARCREDIT_NO_ENV=1`:
 
 ```powershell
@@ -62,7 +75,8 @@ needs a separate compatibility/security review; no blind `npm audit fix --force`
 ## Human checks before submission
 
 - Browser with no wallet: search, download/recompute, tampered JSON, reload/navigation,
-  light/dark labels and keyboard focus.
+  light/dark labels and keyboard focus; public retirement serial lookup and shareable URL;
+  registry map labels/colors and cached-evidence diagnostic, including failures.
 - MetaMask on local 31337: reject signing; switch account/network during preparation;
   register/retry; issue/retire; verify totals refresh only at/after the receipt block;
   over-issue/over-retire rejection; cancelled Pending cleanup in multiple batches.

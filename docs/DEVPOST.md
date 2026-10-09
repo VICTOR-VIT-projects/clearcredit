@@ -32,8 +32,9 @@ loss, vegetation trend and prior issuance inform an integrity score with readabl
 Low scores restrict issuance. Retirement amounts are capped by issued credits and receive
 sequential serial ranges. Public retirement lookup links a serial to its beneficiary
 and transaction; the registry map labels each boundary's data category and score.
+An optional cached NDVI diagnostic flags shared step changes for review without changing scores.
 Anyone can inspect the public verifier without a wallet.
-Source: [claim schema](CLAIM_SCHEMA.md), [threat model](THREAT_MODEL.md).
+Source: [claim schema](CLAIM_SCHEMA.md), [threat model](THREAT_MODEL.md), [public lookups](PUBLIC_LOOKUPS.md).
 
 ## How it was built
 
@@ -86,7 +87,7 @@ state was not reverified during this local hardening pass. Source: [README](../R
 
 Writes are batched; cached summaries avoid repeated satellite processing. The prototype
 supports one API worker/relayer per key. Production needs cross-process admission and nonce
-coordination, indexed spatial search, bounded event/history queries and independent
+coordination, indexed spatial search, indexed event/history access and independent
 operators. Source: [architecture](ARCHITECTURE.md), [threat model](THREAT_MODEL.md).
 
 ## Limitations

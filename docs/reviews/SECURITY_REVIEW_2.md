@@ -67,6 +67,15 @@ storing registration. Per-claim read failures do not terminate the whole repair 
 all chain reads, while an abandoned in-flight row has no expiry. T2 addresses both;
 see the task resolution below.
 
+### S6 — MEDIUM: the submission UI treats a retryable chain-read 503 as terminal
+
+`frontend/src/pages/SubmitPage.tsx:63-68`: retry classification recognizes network errors,
+502 and REQUEST_IN_PROGRESS but not the new CHAIN_READ_UNAVAILABLE response. A temporary
+RPC visibility failure therefore hides the signed-request retry flow. Fix: honor that
+code and explicit `details.retryable`, with a clear message. Confirmed by the mounted
+error test: restoring the previous retry predicate produces one failure (false vs true);
+restoring the fix passes all four error cases. Found and fixed during T6 F10.
+
 ### Inventory and classification
 
 | Read / decision | Classification and treatment |
@@ -119,6 +128,7 @@ insertion, false cached success recovery with no new sends, and refreshed issuan
 | T4 | 36 | 91 | 17 | passed, zero type errors |
 | T5 | 36 | 96 | 17 | passed, zero type errors |
 | T6 checkpoint: F8, F7, history | 36 | 100 | 22 | passed, zero type errors |
+| T6 final: all five requested features | 36 | 109 | 29 | passed, zero type errors |
 
 Commands run in their respective directories with `CLEARCREDIT_NO_ENV=1`:
 `npx hardhat test`; `.venv/Scripts/python.exe -m pytest -q`; `npm test`; `npm run build`.
@@ -131,7 +141,7 @@ versions without adding dependencies. `docs/ACCEPTANCE.md` records the fresh clo
 browser acceptance. No interpreter/sandbox command was blocked. Dependency advisories
 reported by npm are listed there and deferred for a dedicated toolchain review.
 
-T4: `docs/DEVPOST.md` contains a 696-word main draft plus tagline/short description,
+T4: `docs/DEVPOST.md` contains a main draft below 900 words plus tagline/short description,
 with repository sources for quantitative claims and placeholders for repository/video.
 
 T5: `scripts/demo.py` starts only loopback services with public Hardhat settings and
@@ -152,7 +162,58 @@ RPC rejection/deduplication, historical registry status, complete pagination and
 labels/beneficiaries. API details and limits: `docs/PUBLIC_LOOKUPS.md`. No scoring or evidence
 semantics changed, and no dependency was added for these features.
 
+T6 F6 adds a cache-only diagnostic outside the scoring/evidence commitment path. Its
+rule was frozen before aggregate inspection: adjacent-year absolute median NDVI step
+at least 0.15, shared in direction and magnitude by at least 80% of at least ten distinct
+boundaries using the same dataset/method. Ten samples avoid treating a few boundaries
+as cross-project consensus; an 80% majority permits a minority of local exceptions;
+0.15 is a large absolute NDVI discontinuity chosen as a conservative review policy.
+These are uncalibrated screening choices, not ecological bounds or accuracy claims.
+The committed real-project caches gave 30 distinct boundaries, no missing cache and
+no warnings. Absence of warnings does not validate evidence. Nine tests cover positive,
+negative, threshold-boundary, independence and API-limit cases; no new data was fetched.
+
+T6 F10 adds seven mounted component cases with jsdom (development dependency only).
+The actual Verify page loads the committed sample, recomputes its hash without wallet
+hooks, hides old Match/totals on an unavailable receipt-block refresh, and clears an old
+Match after changed claim content. Error rendering covers four API codes including the
+retryable chain-read fix above. Maps/wallet controls are mocked; this is not browser
+extension or visual acceptance.
+
+All six ranked findings are resolved: three High and three Medium; no Critical finding
+was established in this continuation audit. Scoring remains rules-v4, evidence remains
+ev3, and canonical implementations, existing hash vectors, satellite measurements, real
+claims, contract Solidity and evaluation results are unchanged from main. Generated
+OpenAPI was compared with the current application and matches.
+
+### Commit-to-task map
+
+| Commit | Task / result |
+|---|---|
+| `229e507` | T1: durable receipt floors, numbered reads/estimates, coherent API and wallet refresh |
+| `24a062f` | T2: cached-success validation and crash-stranded lease recovery |
+| `82d32ee` | T3: fresh-clone Quickstart, constraints and acceptance evidence |
+| `1aa4c9d` | T4: sourced submission narrative |
+| `6cbe92f` | T5: owned local demo lifecycle, seed failure exit and smoke checks |
+| `4bd4577` | T6: F8 public retirement, F7 map and bounded history |
+| `8cc7aaf` | T6: F6 non-scoring cached-evidence diagnostic |
+| `ede01e1` | T6: F10 mounted tests and retryable 503 UI fix; dev-dependency justification in commit |
+
+R1 check, using Git for Windows' grep executable for the requested pipeline:
+`git log --format=%B main.. | grep -ci co-authored` printed `0`. Authors and committers
+for every task commit are the configured repository user. No pushes were made.
+
 ## Not done / deferred
 
 Real-browser wallet flows, public reconciliation, submission video and publication are
 human-only. No public transactions, pushes, accounts or new satellite fetches are allowed.
+Exact human commands and acceptance checks are in `docs/ACCEPTANCE.md`.
+
+F5 biome-aware thresholds remain intentionally excluded: committed evidence cannot
+support the proposed calibration. Multi-worker admission/nonce fencing, spatial indexes,
+raw-scene provenance and a dedicated npm toolchain advisory review are deferred because
+they require separate operational/data or compatibility work. No unsupported production
+guarantees are inferred from the local demo. An independent verifier can race an append
+between observation and send; the current contract permits append-only attestations and
+does not promise global exactly-once deduplication. The durable journal prevents this
+single relayer from allocating another nonce for its own unresolved transaction.
